@@ -1,0 +1,177 @@
+Plan: Drug Management System Enhancement and Refinement
+
+1. Core Data Model Validation and Enhancement
+
+Review and validate all SharePoint list schemas in sharepoint/assets folder
+Ensure Categories.xml supports DocumentCategory, Group, SubGroup, ArtifactName, TemplateName fields with proper choice values
+Verify Templates.xml has MappingType, MappedCTDFolderId, eCTDSection, eCTDSubsection, Country, Status fields
+Confirm Documents.xml includes Drug, Country, Template, CTDFolder, CTDModule, Submodule, Status, Reviewer, Approver, Comments fields
+
+
+Validate CTDFolders.xml hierarchical structure with FolderId, ParentFolderId, EctdSection lookup
+Ensure DrugsDatabase.xml has all required drug information fields
+Cross-reference eCTDSections.xml with CTD dossier reference documents
+Validate UserRolesPermissions list schema for UI-level permission control
+Review WorkflowsApprovals.xml for approval workflow tracking
+Confirm SignedDocuments library schema for final approved documents
+
+
+2. Admin Dashboard Landing Page Enhancement
+
+Set AdminDashboard as the default landing view for users in DMS Admins SharePoint group
+Display six summary tiles: Total Documents, Templates, Categories, Users, Review Pending, Approved Documents
+Show Recent Documents table with latest 5 documents including proper document icons
+Display Recent Users table with latest 5 active system users
+Add Create New Document primary action button
+Implement document preview panel with View/Edit/Delete actions
+Ensure all documents from Project Documents folder are visible to Admin
+Add proper sorting, filtering, and search capabilities
+Display document metadata including CTD/eCTD classification
+Implement document download functionality with proper SharePoint URL handling
+
+
+3. Manage Templates Module Complete Implementation
+
+Build template upload form with Category, Country, Status, MappingType dropdowns
+Implement conditional mapping fields: when MappingType = eCTD, show Mapped CTD Folder, eCTD Section, eCTD Subsection
+Create template grid with document-type icons for Word, Excel, PDF files
+Add CRUD operations: Add, Edit, Delete, View, Download
+Implement template preview in Fluent UI Panel with document viewer
+Build Excel bulk upload feature referencing EquipmentAsset.tsx upload pattern
+Parse DIA_GMP_vs_eCTD_MAPPING.xlsx and DIA_GMP_Reference_Model_List.xlsx for mapping logic
+Display CTD dossier.pdf reference for eCTD structure understanding
+Add summary cards showing Total Templates, Active, Inactive, eCTD Mapped counts
+Implement status filter, search, and pagination on template grid
+Show mapping metadata visually with badges and color coding
+Add validation to ensure required fields before save
+4. Manage Categories Module with Hierarchical Navigation
+
+Implement folder-style hierarchical navigation: DocumentCategory → Group → SubGroup → Items
+Build breadcrumb navigation showing current hierarchy level
+Display folder icons with item counts at each navigation level
+Create category form with DocumentCategory, Group, SubGroup, ArtifactName, TemplateName fields
+Implement cascading dropdowns: SubGroup loads based on Group selection
+Add CTD/eCTD mapping fields: CTDModule, eCTDSection, eCTDSubsection, eCTDCode
+Reference Excel files for mapping: DIA_GMP_vs_eCTD_MAPPING.xlsx, DIA_GMP_Reference_Model_List.xlsx
+Build category grid at leaf level with full CRUD operations
+Implement Excel bulk upload modal for category data import
+Add summary cards: Total Categories, Active, Inactive, Unique Document Categories
+Enable status filtering and search across all hierarchy levels
+Show category details in view/edit panel with all metadata fields
+Add validation for required fields and cascading dependencies
+5. User Permission Management Refinement
+
+Clarify user creation approach: UI-driven vs SharePoint group membership based
+Build user grid showing Name, Email, Role, Status with avatar display
+Implement Add User form with role selection and email validation
+Map users to roles: Admin, HR, Member (Author), Approver
+Display SharePoint group membership alongside UI role assignments
+Show permissions matrix: which role can perform which actions
+Add Edit User functionality to update role and status
+Implement Delete User with confirmation dialog
+Create user search and filter by role and status
+Show recent activity or last login information
+Reference UserRolesPermissions list for UI-level permission control
+Clarify that SharePoint groups enforce actual security, UI permissions control visibility
+6. Reports Tab Enhancement and Chart Integration
+
+Implement proper Fluent UI-compatible charting using Recharts library
+Reference TopLowSitesChart.tsx for chart implementation patterns
+Build Document Status Distribution bar chart with color-coded status
+Create Documents by Category pie chart with percentage labels
+Add Monthly Document Trends area chart showing Created, Approved, Rejected over time
+Implement Workflow Stage Analysis funnel visualization
+Display KPI summary cards: Total Documents, In Draft, Pending Approval, Approved/Final, Rejected, Approval Rate
+Add comprehensive filters: Category, Status, CTD Folder, Template, Date Range
+Implement Export to Excel functionality with proper formatting
+Add Export to PDF functionality with chart images
+Create Email Report button with icon
+Add chart type toggle: Bar, Pie, Line, Table views
+Show category summary table with status breakdown by category
+Implement filter reset functionality
+Display approval success rate gauge visualization
+7. Drug Database CRUD Operations
+
+Build drug entry form with all required fields from DrugsDatabase.xml schema
+Implement drug grid with search, filter, sort, and pagination
+Add CRUD operations: Create Drug, Edit Drug, Delete Drug, View Drug Details
+Display drug information in panel with proper Fluent UI layout
+Add validation for required fields and data formats
+Implement confirmation dialogs for delete operations
+Show drug-related documents count and link to documents
+Add drug status management if applicable
+Create drug import from Excel functionality if needed
+Display drug selection in Document Creation workflow
+8. Create CTD Folder Module Implementation
+
+Build CTD folder creation form with hierarchical parent/child structure
+Implement FolderId, ParentFolderId, IsFolder, SortOrder fields
+Display existing CTD folder tree structure with expand/collapse
+Add CRUD operations: Create, Edit, Delete, View CTD folders
+Show eCTD Section mapping for each folder node
+Reference CTD dossier.pdf for proper CTD Module 1-5 structure
+Implement folder navigation with breadcrumb
+Add icons and visual indicators for folder vs item
+Enable reordering of folders by SortOrder
+Show folder hierarchy in tree view component
+Add validation to prevent circular parent-child relationships
+Display description and metadata for each folder
+9. Document Creation Workflow Enhancement
+
+Implement cascading dropdown flow: Drug → Country → Template (country-specific) → Approver
+Auto-populate Document Name from Template's Artifact Name
+Auto-apply CTD/eCTD structure based on Template mapping metadata
+Display CTD/eCTD placement visually without creating physical folders
+Show Module / Section / Subsection information from template
+Add optional Comments field with add/remove comment functionality
+Implement document status workflow: Draft → Pending Approval → In Review → Approved → Signed → Final
+Add Reject flow that loops back for revision
+Generate Final and Commented versions upon approval
+Log all workflow actions in AuditLogs list
+Display workflow status visually with progress indicator
+Enable document upload or creation from template
+Show CTD classification as metadata, not physical folder structure
+10. CTD/eCTD Virtual Structure Strategy
+
+Store CTD/eCTD classification as document metadata fields
+Display virtual CTD folder structure in UI based on metadata queries
+Show Module 1-5 navigation without creating physical SharePoint folders
+Group documents by CTD Module, Section, Subsection in grid views
+Add CTD Module filter and search across all document views
+Implement breadcrumb showing: All Documents → Module 2 → Section 2.3 → Documents
+Generate actual eCTD folders and index.xml only during final submission/export
+Add Export to eCTD functionality that creates physical structure on demand
+Show CTD structure diagram or tree view for navigation
+Enable toggling between flat document list and CTD hierarchy view
+11. Global UI/UX Consistency and Standards
+
+Use only Fluent UI controls throughout the application
+Apply styles from style.css consistently across all components
+Display document icons (Word, Excel, PDF) using FileIconHelper utility
+Implement panels for View/Edit operations using Fluent UI Panel component
+Add loaders using Loader component for all async operations
+Show validation errors with proper error messages and red borders
+Implement confirmation dialogs using CustomModal for delete operations
+Add success/error messages using MessageDialog or ToastHost
+Enable filters and search on all data grids using MemoizedDataGridComponent
+Add pagination on all large data sets
+Show breadcrumb navigation consistently across modules
+Use consistent color scheme: Primary Blue (#1E88E5), Success Green (#43A047), Warning Orange (#FB8C00), Error Red (#E53935)
+Implement responsive layout using ms-Grid system
+Add action buttons with icons consistently
+12. End-to-End Workflow and Integration Testing
+
+Validate complete document lifecycle from creation to final approval
+Test role-based access: Admin sees all, Author sees own, Approver sees pending
+Verify SharePoint group security enforcement
+Test UI permission control based on UserRolesPermissions list
+Validate template-to-category-to-document relationships
+Test CTD folder mapping from template to document
+Verify eCTD section mapping and display
+Test Excel upload for templates and categories
+Validate export functionality for reports
+Test document download and preview
+Verify audit log entries for all workflow actions
+Test cascading dropdowns in document creation
+Validate metadata storage for virtual CTD structure
+Test filter, search, sort, pagination across all grids

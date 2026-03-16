@@ -232,7 +232,7 @@ export default class Service implements IDataProvider {
             if (fetchTop) result = result.top(fetchTop);
             if (orderBy) result = result.orderBy(orderBy, isSortOrderAsc);
             if (skip) result = result.skip(skip);
-            let listItems = [];
+            let listItems: any[] = [];
             let items: any;
             items = await result.getPaged();
             listItems = items.results;
