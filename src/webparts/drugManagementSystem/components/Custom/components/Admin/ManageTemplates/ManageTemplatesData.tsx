@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import * as CamlBuilder from 'camljs';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 import { ListNames } from '../../../../../../Shared/Enum/ListNames';
 
 export function ManageTemplatesData() {
   const [appGlobalState, setAppGlobalState] = useAtom(appGlobalStateAtom);
   const { provider, context } = appGlobalState;
+
   const [templates, setTemplates] = useState<any[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
-  const [categoryFilter, setCategoryFilter] = useState<number | 'All'>('All');
+  const [mappingTypeFilter, setMappingTypeFilter] = useState<'All' | 'eCTD' | 'GMP' | 'TMF' | 'None'>('All');
   const [countryFilter, setCountryFilter] = useState<number | 'All'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<number | 'All'>('All');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteIds, setDeleteIds] = useState<number[]>([]);
@@ -22,6 +24,13 @@ export function ManageTemplatesData() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
+  const [countries, setCountries] = useState<Array<{ id: number; name: string }>>([]);
+  const [ctdFolders, setCtdFolders] = useState<Array<{ id: number; name: string }>>([]);
+  const [ectdSections, setEctdSections] = useState<Array<{ id: number; name: string }>>([]);
+  const [gmpModels, setGmpModels] = useState<Array<{ id: number; name: string }>>([]);
+  const [tmfFolders, setTmfFolders] = useState<Array<{ id: number; name: string }>>([]);
 
   const parseLookupText = (value: any): string => {
     if (!value) return '';
@@ -60,56 +69,31 @@ export function ManageTemplatesData() {
     return undefined;
   };
 
-  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
-  const [countries, setCountries] = useState<Array<{ id: number; name: string }>>([]);
-  const [ctdFolders, setCtdFolders] = useState<Array<{ id: number; name: string }>>([]);
-  const [ectdSections, setEctdSections] = useState<Array<{ id: number; name: string }>>([]);
-  const [gmpModels, setGmpModels] = useState<Array<{ id: number; name: string }>>([]);
-  const [tmfFolders, setTmfFolders] = useState<Array<{ id: number; name: string }>>([]);
-
   const loadTemplates = async () => {
     if (!provider) return;
     setIsLoading(true);
     try {
       const camlQuery = new CamlBuilder()
-        // Templates library schema (Templates.xml) uses LinkFilename for file name; Title may not exist.
         .View([
-          'ID',
-          'LinkFilename',
-          'FileLeafRef',
-          'FileRef',
-          'Status',
-          'UploadDate',
-          'Category',
-          'CategoryId',
-          'Country',
-          'CountryId',
-          'MappingType',
-          'MappedCTDFolder',
-          'MappedCTDFolderId',
-          'eCTDSection',
-          'eCTDSectionId',
-          'eCTDSubsection',
-          'IsEctdMapped',
-          'MappedGMPModel',
-          'MappedGMPModelId',
-          'MappedTMFFolder',
-          'MappedTMFFolderId',
-          'ServerRedirectedEmbedUrl',
-          'FileLeafRef',
-          'FileRef'
+          'ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status', 'UploadDate',
+          'Category', 'CategoryId', 'Country', 'CountryId', 'MappingType',
+          'MappedCTDFolder', 'MappedCTDFolderId', 'eCTDSection', 'eCTDSectionId',
+          'eCTDSubsection', 'IsEctdMapped', 'MappedGMPModel', 'MappedGMPModelId',
+          'MappedTMFFolder', 'MappedTMFFolderId', 'ServerRedirectedEmbedUrl', 'Version'
         ])
         .RowLimit(5000, true)
         .Query();
       camlQuery.OrderByDesc('UploadDate');
+
       const data = await provider.getItemsByCAMLQuery(ListNames.Templates, camlQuery.ToString());
       setTemplates(
         (data || []).map((item: any) => ({
           id: item.ID,
           name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
+          version: item.Version || '1.0',
           category: parseLookupText(item.Category),
           country: parseLookupText(item.Country),
-          uploadDate: item.UploadDate ? new Date(item.UploadDate).toISOString().split('T')[0] : '',
+          uploadDate: item.UploadDate ? new Date(item.UploadDate).toLocaleDateString('en-GB') : '',
           status: (item.Status as 'Active' | 'Inactive') || 'Active',
           mappingType: item.MappingType || 'None',
           mappedCTDFolder: parseLookupText(item.MappedCTDFolder),
@@ -118,7 +102,6 @@ export function ManageTemplatesData() {
           mappedGMPModel: parseLookupText(item.MappedGMPModel),
           mappedTMFFolder: parseLookupText(item.MappedTMFFolder),
           isEctdMapped: Boolean(item.IsEctdMapped),
-          // extra fields used for preview/edit
           fileRef: item.FileRef || '',
           fileName: item.FileLeafRef || item.LinkFilename || '',
           categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,
@@ -142,32 +125,23 @@ export function ManageTemplatesData() {
   const loadLookups = async () => {
     if (!provider) return;
     try {
+      const safeGetItems = async (listName: string, query: string) => {
+        try { return await provider.getItemsByCAMLQuery(listName, query); }
+        catch (e) { console.warn(`List "${listName}" not accessible:`, e); return []; }
+      };
+
       const categoriesQuery = new CamlBuilder().View(['ID', 'Title', 'Status']).RowLimit(5000, true).Query();
       categoriesQuery.OrderBy('Title');
-
       const countriesQuery = new CamlBuilder().View(['ID', 'Title']).RowLimit(5000, true).Query();
       countriesQuery.OrderBy('Title');
-
       const foldersQuery = new CamlBuilder().View(['ID', 'Title', 'FolderId', 'SortOrder']).RowLimit(5000, true).Query();
       foldersQuery.OrderBy('SortOrder');
-
       const sectionsQuery = new CamlBuilder().View(['ID', 'Title', 'SectionCode']).RowLimit(5000, true).Query();
       sectionsQuery.OrderBy('SectionCode');
-
       const gmpQuery = new CamlBuilder().View(['ID', 'Title']).RowLimit(5000, true).Query();
       gmpQuery.OrderBy('Title');
-
       const tmfQuery = new CamlBuilder().View(['ID', 'Title', 'FolderId', 'SortOrder']).RowLimit(5000, true).Query();
       tmfQuery.OrderBy('SortOrder');
-
-      const safeGetItems = async (listName: string, query: string) => {
-        try {
-          return await provider.getItemsByCAMLQuery(listName, query);
-        } catch (e) {
-          console.warn(`List "${listName}" not found or inaccessible:`, e);
-          return [];
-        }
-      };
 
       const [cats, ctys, folders, sections, gmps, tmfs] = await Promise.all([
         safeGetItems(ListNames.Categories, categoriesQuery.ToString()),
@@ -178,11 +152,7 @@ export function ManageTemplatesData() {
         safeGetItems(ListNames.TMFFolders, tmfQuery.ToString())
       ]);
 
-      setCategories(
-        (cats || [])
-          .filter((c: any) => (c.Status || 'Active') === 'Active')
-          .map((c: any) => ({ id: c.ID, name: c.Title }))
-      );
+      setCategories((cats || []).filter((c: any) => (c.Status || 'Active') === 'Active').map((c: any) => ({ id: c.ID, name: c.Title })));
       setCountries((ctys || []).map((c: any) => ({ id: c.ID, name: c.Title })));
       setCtdFolders((folders || []).map((f: any) => ({ id: f.ID, name: f.FolderId ? `${f.FolderId} - ${f.Title}` : f.Title })));
       setEctdSections((sections || []).map((s: any) => ({ id: s.ID, name: s.SectionCode ? `${s.SectionCode} - ${s.Title}` : s.Title })));
@@ -206,25 +176,35 @@ export function ManageTemplatesData() {
   }, [provider]);
 
   useEffect(() => {
-    let filtered = templates.filter((t: any) =>
-      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = [...templates];
+
+    if (searchTerm.trim()) {
+      const s = searchTerm.trim().toLowerCase();
+      filtered = filtered.filter(t =>
+        t.name.toLowerCase().includes(s) ||
+        t.country.toLowerCase().includes(s) ||
+        t.category.toLowerCase().includes(s)
+      );
+    }
 
     if (statusFilter !== 'All') {
       filtered = filtered.filter(t => t.status === statusFilter);
     }
 
-    if (categoryFilter !== 'All') {
-      filtered = filtered.filter(t => t.categoryId === categoryFilter);
+    if (mappingTypeFilter !== 'All') {
+      filtered = filtered.filter(t => t.mappingType === mappingTypeFilter);
     }
 
     if (countryFilter !== 'All') {
       filtered = filtered.filter(t => t.countryId === countryFilter);
     }
 
+    if (categoryFilter !== 'All') {
+      filtered = filtered.filter(t => t.categoryId === categoryFilter);
+    }
+
     setFilteredTemplates(filtered);
-  }, [searchTerm, statusFilter, categoryFilter, countryFilter, templates]);
+  }, [searchTerm, statusFilter, mappingTypeFilter, countryFilter, categoryFilter, templates]);
 
   const openDeleteDialog = (ids: number[]) => {
     if (!ids || ids.length === 0) return;
@@ -233,8 +213,7 @@ export function ManageTemplatesData() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!provider) return;
-    if (deleteIds.length === 0) return;
+    if (!provider || deleteIds.length === 0) return;
     setIsLoading(true);
     try {
       await provider.DeleteItemsWithBatch(ListNames.Templates, deleteIds.map(id => ({ Id: id })));
@@ -269,9 +248,6 @@ export function ManageTemplatesData() {
   const buildAbsoluteFileUrl = (fileRef: string): string => {
     if (!fileRef) return '';
     if (fileRef.startsWith('http')) return fileRef;
-
-    // fileRef from SharePoint is usually server-relative (starts with /sites/...)
-    // origin gives https://tenant.sharepoint.com
     const origin = window.location.origin;
     const cleanRef = fileRef.startsWith('/') ? fileRef : `/${fileRef}`;
     return `${origin}${cleanRef}`;
@@ -284,8 +260,9 @@ export function ManageTemplatesData() {
     filteredTemplates,
     searchTerm,
     statusFilter,
-    categoryFilter,
+    mappingTypeFilter,
     countryFilter,
+    categoryFilter,
     selectedIds,
     isDeleteDialogOpen,
     deleteIds,
@@ -303,14 +280,16 @@ export function ManageTemplatesData() {
     tmfFolders,
     setSearchTerm,
     setStatusFilter,
-    setCategoryFilter,
+    setMappingTypeFilter,
     setCountryFilter,
+    setCategoryFilter,
     setSelectedIds,
     setIsDeleteDialogOpen,
     setIsViewModalOpen,
     setViewingTemplate,
     setIsCreatePageOpen,
     setSuccessMessage,
+    setErrorMessage,
     loadTemplates,
     openDeleteDialog,
     handleDeleteConfirm,
@@ -318,5 +297,3 @@ export function ManageTemplatesData() {
     buildAbsoluteFileUrl
   };
 }
-
-
