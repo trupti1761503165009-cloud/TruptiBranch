@@ -59,8 +59,24 @@ const HTML = `<!DOCTYPE html>
     .confirm-box p  { color:#555;font-size:14px;margin-bottom:22px; }
     /* ── FILTER ROW ── */
     .filter-row { display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center; }
-    .filter-select { padding:8px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;min-width:160px;background:#fff; }
+    .filter-row-4 { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:center; }
+    .filter-select { padding:8px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;min-width:160px;background:#fff;width:100%; }
     .filter-select:focus { border-color:#1E88E5; }
+    /* ── WHITE CARD SECTION ── */
+    .white-card-section { background:#fff;border-radius:5px;box-shadow:0 4px 10px rgba(166,166,166,.55);padding:16px 20px;margin-bottom:16px; }
+    /* ── UPLOAD TEMPLATE FORM ── */
+    .upload-form-overlay { width:100%; }
+    .upload-form-card { background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);padding:24px; }
+    .upload-form-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px; }
+    .form-grid-4 { display:grid;grid-template-columns:repeat(4,1fr);gap:16px; }
+    @media(max-width:768px){.form-grid-4{grid-template-columns:1fr 1fr;}}
+    .fg { display:flex;flex-direction:column;gap:4px; }
+    .fl { font-size:13px;font-weight:600;color:#444; }
+    .fi { padding:8px 10px;border:1px solid #d0d0d0;border-radius:5px;font-size:13px;outline:none;background:#fff; }
+    .fi:focus { border-color:#1300a6; }
+    .req { color:#c0392b; }
+    .btn-sm { padding:6px 14px;font-size:12px; }
+    .mainTitle { font-size:22px;font-weight:700;color:#1B2A4A;margin:0 0 16px; }
     /* ── BREADCRUMB OVERRIDE ── */
     .dms-breadcrumb { margin-bottom:16px; }
     /* ── GRID TOOLBAR ── */
@@ -182,12 +198,12 @@ const TEMPLATES = [
   { id:6, name:'TMF Index Template.docx',               ext:'docx', mappingType:'TMF',  tmfFolder:'Zone 1',   section:'-',                              country:'Global', ver:'1.0', status:'Active', date:'2025-09-18' },
 ];
 const CATEGORIES = [
-  { id:1, name:'Administrative',     group:'Module 1', level:1, docs:12, status:'Active' },
-  { id:2, name:'Clinical',           group:'Module 5', level:1, docs:34, status:'Active' },
-  { id:3, name:'Nonclinical',        group:'Module 4', level:1, docs:18, status:'Active' },
-  { id:4, name:'Quality',            group:'Module 3', level:1, docs:27, status:'Active' },
-  { id:5, name:'Summary Documents',  group:'Module 2', level:2, docs:8,  status:'Active' },
-  { id:6, name:'Archived Clinical',  group:'Module 5', level:1, docs:4,  status:'Inactive' },
+  { id:1, name:'Administrative',          documentCategory:'Regulatory',  group:'Module 1', level:1, docs:12, status:'Active' },
+  { id:2, name:'Clinical Study Report',   documentCategory:'Clinical',    group:'Module 5', level:1, docs:34, status:'Active' },
+  { id:3, name:'Nonclinical Overview',    documentCategory:'Nonclinical', group:'Module 4', level:1, docs:18, status:'Active' },
+  { id:4, name:'Quality Summary',         documentCategory:'Quality',     group:'Module 3', level:1, docs:27, status:'Active' },
+  { id:5, name:'CTD Summaries',           documentCategory:'Regulatory',  group:'Module 2', level:2, docs:8,  status:'Active' },
+  { id:6, name:'Archived Clinical Data',  documentCategory:'Clinical',    group:'Module 5', level:1, docs:4,  status:'Inactive' },
 ];
 const DRUGS = [
   { id:1, name:'Aspirin',       generic:'Acetylsalicylic Acid', indication:'Pain, Fever, Inflammation', status:'Active', phase:'Marketed' },
@@ -288,7 +304,7 @@ function Breadcrumb({ items }) {
   );
 }
 
-function GridToolbar({ search, onSearch, onAdd, onUpload, onRefresh, editBtns }) {
+function GridToolbar({ search, onSearch, onAdd, onUpload, onRefresh, editBtns, addLabel }) {
   return React.createElement('div', { className: 'grid-toolbar' },
     React.createElement('div', { className: 'grid-toolbar-left' },
       React.createElement('div', { className: 'grid-search' },
@@ -302,7 +318,7 @@ function GridToolbar({ search, onSearch, onAdd, onUpload, onRefresh, editBtns })
     ),
     React.createElement('div', { className: 'grid-toolbar-right' },
       onAdd && React.createElement('button', { className: 'btn btn-primary', onClick: onAdd },
-        React.createElement('i', {className:'fas fa-plus', style:{marginRight:6}}), 'Add'
+        React.createElement('i', {className:'fas fa-plus', style:{marginRight:6}}), addLabel || 'Add'
       ),
       onUpload && React.createElement('button', { className: 'act-btn upload', title:'Excel Upload', onClick: onUpload },
         React.createElement('i', {className:'fas fa-file-excel'})
@@ -513,6 +529,164 @@ function AdminDashboard() {
 /* ===================================================
    SCREEN: MANAGE TEMPLATES
 =================================================== */
+const ECTD_MODULES_SERVER = [
+  {value:'1', label:'Module 1 – Administrative & Prescribing Info'},
+  {value:'2', label:'Module 2 – CTD Summaries'},
+  {value:'3', label:'Module 3 – Quality'},
+  {value:'4', label:'Module 4 – Nonclinical Study Reports'},
+  {value:'5', label:'Module 5 – Clinical Study Reports'},
+];
+const ECTD_SECTIONS_BY_MODULE = {
+  '1': ['1.1 Cover Letter','1.2 Investigator Brochure','1.3 Prescribing Information','1.4 Information about the Experts'],
+  '2': ['2.1 CTD Table of Contents','2.2 Introduction to the CTD','2.3 Quality Overall Summary','2.4 Nonclinical Overview','2.5 Clinical Overview','2.6 Nonclinical Summary','2.7 Clinical Summary'],
+  '3': ['3.1 Module 3 TOC','3.2.S Drug Substance','3.2.P Drug Product','3.2.A Appendices','3.2.R Regional Information'],
+  '4': ['4.1 Table of Contents','4.2.1 Pharmacology','4.2.2 Pharmacokinetics','4.2.3 Toxicology'],
+  '5': ['5.1 TOC of Module 5','5.2 Tabular Listing of Studies','5.3 Clinical Study Reports','5.4 Literature References'],
+};
+
+function UploadTemplateForm({ onClose, onSave, editData }) {
+  const isEdit = !!editData;
+  const [form, setForm] = useState({
+    name: editData ? editData.name : '',
+    mappingType: editData ? editData.mappingType : 'None',
+    module: '',
+    section: '',
+    ctdFolder: editData ? (editData.ctdFolder||'') : '',
+    country: editData ? editData.country : 'Global',
+    status: editData ? editData.status : 'Active',
+    categoryId: '',
+    file: null,
+  });
+  const [valError, setValError] = useState('');
+
+  const sectionOptions = form.module ? ECTD_SECTIONS_BY_MODULE[form.module] || [] : [];
+
+  const handleSave = () => {
+    const errors = [];
+    if (!form.name.trim()) errors.push('Template Name is required.');
+    if (!isEdit && !form.file) errors.push('Please select a file to upload.');
+    if (form.mappingType === 'eCTD') {
+      if (!form.module) errors.push('eCTD Module (1–5) is required.');
+      if (!form.ctdFolder) errors.push('CTD Folder / Section is required.');
+    }
+    if (errors.length > 0) { setValError(errors.join('\\n')); return; }
+    onSave(form);
+  };
+
+  return React.createElement('div', {className:'upload-form-overlay'},
+    React.createElement('div', {className:'upload-form-card'},
+      React.createElement('div', {className:'upload-form-header'},
+        React.createElement('h2', {style:{margin:0,fontSize:18}}, isEdit ? 'Edit Template' : 'Upload Template'),
+        React.createElement('button', {className:'btn btn-danger btn-sm', onClick:onClose}, 'Close')
+      ),
+      React.createElement(Breadcrumb, {items:[
+        {label:'Manage Templates', onClick:onClose},
+        {label: isEdit ? 'Edit Template' : 'Upload Template', active:true}
+      ]}),
+
+      valError && React.createElement('div', {className:'val-error-box', style:{background:'#fff3f3',border:'1px solid #f5c6c6',borderRadius:6,padding:'10px 14px',marginBottom:12,color:'#c0392b',fontSize:13}},
+        React.createElement('strong', null, 'Please fix the following:'),
+        React.createElement('ul', {style:{marginTop:6,paddingLeft:20}},
+          valError.split('\\n').map((e,i) => React.createElement('li',{key:i},e))
+        )
+      ),
+
+      React.createElement('div', {className:'form-grid-4'},
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'Template Name', React.createElement('span',{className:'req'},' *')),
+          React.createElement('input', {className:'fi', value:form.name, onChange:e=>setForm({...form,name:e.target.value}), placeholder:'e.g., Clinical Trial Protocol'})
+        ),
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'Country'),
+          React.createElement('select', {className:'fi', value:form.country, onChange:e=>setForm({...form,country:e.target.value})},
+            ['Global','US','EU','India','Japan','Canada'].map(c=>React.createElement('option',{key:c},c))
+          )
+        ),
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'Status'),
+          React.createElement('select', {className:'fi', value:form.status, onChange:e=>setForm({...form,status:e.target.value})},
+            ['Active','Inactive'].map(s=>React.createElement('option',{key:s},s))
+          )
+        ),
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'Mapping Type'),
+          React.createElement('select', {className:'fi', value:form.mappingType, onChange:e=>setForm({...form,mappingType:e.target.value,module:'',section:'',ctdFolder:''})},
+            ['None','eCTD','GMP','TMF'].map(m=>React.createElement('option',{key:m},m))
+          )
+        ),
+      ),
+
+      form.mappingType === 'eCTD' && React.createElement('div', {className:'form-grid-4', style:{marginTop:12}},
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'eCTD Module', React.createElement('span',{className:'req'},' *')),
+          React.createElement('select', {className:'fi', value:form.module, onChange:e=>setForm({...form,module:e.target.value,ctdFolder:'',section:''})},
+            [React.createElement('option',{key:'',value:''},'-- Select Module --'),
+             ...ECTD_MODULES_SERVER.map(m=>React.createElement('option',{key:m.value,value:m.value},m.label))]
+          )
+        ),
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'CTD Section', React.createElement('span',{className:'req'},' *')),
+          React.createElement('select', {className:'fi', value:form.ctdFolder, onChange:e=>setForm({...form,ctdFolder:e.target.value}), disabled:!form.module},
+            [React.createElement('option',{key:'',value:''},form.module ? '-- Select Section --' : '-- Select Module First --'),
+             ...sectionOptions.map(s=>React.createElement('option',{key:s,value:s},s))]
+          )
+        ),
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'Subsection (Optional)'),
+          React.createElement('input', {className:'fi', value:form.section, onChange:e=>setForm({...form,section:e.target.value}), placeholder:'e.g., 5.3.1'})
+        ),
+      ),
+
+      form.mappingType === 'GMP' && React.createElement('div', {className:'form-grid-4', style:{marginTop:12}},
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'GMP Model', React.createElement('span',{className:'req'},' *')),
+          React.createElement('select', {className:'fi', value:form.ctdFolder, onChange:e=>setForm({...form,ctdFolder:e.target.value})},
+            [React.createElement('option',{key:'',value:''},'-- Select Model --'),
+             ...['ICH Q7','ICH Q8','ICH Q9','ICH Q10'].map(m=>React.createElement('option',{key:m,value:m},m))]
+          )
+        )
+      ),
+
+      form.mappingType === 'TMF' && React.createElement('div', {className:'form-grid-4', style:{marginTop:12}},
+        React.createElement('div', {className:'fg'},
+          React.createElement('label', {className:'fl'}, 'TMF Folder', React.createElement('span',{className:'req'},' *')),
+          React.createElement('select', {className:'fi', value:form.ctdFolder, onChange:e=>setForm({...form,ctdFolder:e.target.value})},
+            [React.createElement('option',{key:'',value:''},'-- Select Folder --'),
+             ...['01 – Trial Management','02 – Risk Management','03 – Investigational Product','04 – IRB/IEC'].map(f=>React.createElement('option',{key:f,value:f},f))]
+          )
+        )
+      ),
+
+      !isEdit && React.createElement('div', {style:{marginTop:16}},
+        React.createElement('label', {className:'fl'}, 'Upload File', React.createElement('span',{className:'req'},' *')),
+        React.createElement('div', {className:'file-drop-zone', style:{border:'2px dashed #c0c7d6',borderRadius:6,padding:'20px 16px',textAlign:'center',background:'#f8f9ff',cursor:'pointer',marginTop:4}},
+          React.createElement('i', {className:'fas fa-cloud-upload-alt', style:{fontSize:28,color:'#1300a6',marginBottom:8,display:'block'}}),
+          React.createElement('p', {style:{margin:'0 0 8px',color:'#444',fontSize:13}}, 'Drag & drop file here or'),
+          React.createElement('label', {style:{cursor:'pointer',color:'#1300a6',fontWeight:600,fontSize:13}},
+            'Browse File',
+            React.createElement('input', {type:'file', style:{display:'none'}, accept:'.doc,.docx,.pdf,.xls,.xlsx',
+              onChange:e=>setForm({...form, file:e.target.files[0]})
+            })
+          ),
+          form.file && React.createElement('div', {style:{marginTop:10,fontSize:12,color:'#555'}},
+            React.createElement('i',{className:'fas fa-file',style:{marginRight:6}}), form.file.name, ' (', (form.file.size/1024).toFixed(1), ' KB)'
+          ),
+          React.createElement('p', {style:{fontSize:11,color:'#999',margin:'8px 0 0'}}, 'Accepted: DOC, DOCX, PDF, XLS, XLSX')
+        )
+      ),
+
+      React.createElement('div', {style:{marginTop:20,display:'flex',gap:10}},
+        React.createElement('button', {className:'btn btn-primary', onClick:handleSave},
+          React.createElement('i',{className:'fas fa-save',style:{marginRight:6}}), isEdit ? 'Update Template' : 'Save Template'
+        ),
+        React.createElement('button', {className:'btn btn-danger', onClick:onClose},
+          React.createElement('i',{className:'fas fa-times',style:{marginRight:6}}), 'Cancel'
+        )
+      )
+    )
+  );
+}
+
 function ManageTemplates() {
   const [templates, setTemplates] = useState(TEMPLATES);
   const [search, setSearch] = useState('');
@@ -523,9 +697,12 @@ function ManageTemplates() {
   const [viewTpl, setViewTpl] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editTpl, setEditTpl] = useState(null);
   const [page, setPage] = useState(1);
 
-  const filtered = templates.filter(t =>
+  const visibleTemplates = templates.filter(t => !t.isDeleted);
+
+  const filtered = visibleTemplates.filter(t =>
     (t.name.toLowerCase().includes(search.toLowerCase())) &&
     (mapFilter === 'All' || t.mappingType === mapFilter) &&
     (statusFilter === 'All' || t.status === statusFilter) &&
@@ -536,42 +713,86 @@ function ManageTemplates() {
   const counts = { total: filtered.length, ectd: filtered.filter(t=>t.mappingType==='eCTD').length,
     gmp: filtered.filter(t=>t.mappingType==='GMP').length, tmf: filtered.filter(t=>t.mappingType==='TMF').length };
 
-  const countries = [...new Set(templates.map(t=>t.country))];
-
+  const countries = [...new Set(visibleTemplates.map(t=>t.country))];
   const toggleSelect = (id) => setSelected(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
 
+  const handleSaveTemplate = (form) => {
+    const existing = templates.find(t => !t.isDeleted && t.name.toLowerCase() === form.name.toLowerCase().trim());
+    const newVer = existing ? (parseFloat(existing.ver||'1.0') + 1).toFixed(1) : '1.0';
+    if (existing) {
+      setTemplates(prev => prev.map(t => t.id === existing.id ? {...t, isDeleted:true} : t));
+    }
+    const newTpl = {
+      id: Date.now(), name: form.name.trim(), ext: form.file ? form.file.name.split('.').pop() : 'docx',
+      mappingType: form.mappingType, ctdFolder: form.ctdFolder || '',
+      section: form.section || '', country: form.country, ver: newVer,
+      status: form.status, date: new Date().toISOString().split('T')[0], isDeleted: false,
+    };
+    setTemplates(prev => [newTpl, ...prev]);
+    setAddOpen(false);
+    showToast(existing ? 'New version ' + newVer + ' uploaded (prev marked inactive)' : 'Template uploaded successfully');
+  };
+
+  const handleDeleteFromPanel = (tpl) => {
+    setTemplates(prev => prev.map(t => t.id === tpl.id ? {...t, isDeleted:true} : t));
+    setViewTpl(null);
+    showToast('Template removed', 'error');
+  };
+
+  const resetFilters = () => { setMapFilter('All'); setStatusFilter('All'); setCountryFilter('All'); setPage(1); };
+
+  if (addOpen) return React.createElement(UploadTemplateForm, { onClose:()=>setAddOpen(false), onSave:handleSaveTemplate });
+  if (editTpl) return React.createElement(UploadTemplateForm, { onClose:()=>setEditTpl(null), onSave:(form)=>{
+    setTemplates(prev=>prev.map(t=>t.id===editTpl.id?{...t,...form,ver:t.ver}:t));
+    setEditTpl(null); showToast('Template updated');
+  }, editData:editTpl });
+
   return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Manage Templates')
-    ),
-    React.createElement('div', {className:'summary-cards-container'},
-      React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Templates', value:counts.total, subtitle:'All templates',    color:'blue'}),
-      React.createElement(SummaryCard, {icon:'fas fa-dna',         title:'eCTD Templates',  value:counts.ectd,  subtitle:'Mapped to eCTD',  color:'purple'}),
-      React.createElement(SummaryCard, {icon:'fas fa-flask',       title:'GMP Templates',   value:counts.gmp,   subtitle:'Mapped to GMP',   color:'orange'}),
-      React.createElement(SummaryCard, {icon:'fas fa-folder-tree', title:'TMF Templates',   value:counts.tmf,   subtitle:'Mapped to TMF',   color:'green'}),
-    ),
-    React.createElement('div', {className:'filter-row'},
-      React.createElement('select', {className:'filter-select', value:mapFilter, onChange:e=>{setMapFilter(e.target.value);setPage(1);}},
-        ['All Types','eCTD','GMP','TMF','None'].map(v=>React.createElement('option',{key:v,value:v==='All Types'?'All':v},v))
-      ),
-      React.createElement('select', {className:'filter-select', value:statusFilter, onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('select', {className:'filter-select', value:countryFilter, onChange:e=>{setCountryFilter(e.target.value);setPage(1);}},
-        [React.createElement('option',{key:'all',value:'All'},'All Countries'),
-          ...countries.map(c=>React.createElement('option',{key:c,value:c},c))]
+    React.createElement('h1', {className:'mainTitle', style:{marginTop:0,marginBottom:16}}, 'Manage Templates'),
+
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div', {className:'summary-cards-container', style:{marginBottom:0}},
+        React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Templates', value:counts.total, subtitle:'All templates',    color:'blue'}),
+        React.createElement(SummaryCard, {icon:'fas fa-dna',         title:'eCTD Templates',  value:counts.ectd,  subtitle:'Mapped to eCTD',  color:'purple'}),
+        React.createElement(SummaryCard, {icon:'fas fa-flask',       title:'GMP Templates',   value:counts.gmp,   subtitle:'Mapped to GMP',   color:'orange'}),
+        React.createElement(SummaryCard, {icon:'fas fa-folder-tree', title:'TMF Templates',   value:counts.tmf,   subtitle:'Mapped to TMF',   color:'green'}),
       )
     ),
-    React.createElement(Breadcrumb, {items:[{label:'Home'},{label:'Manage Templates',active:true}]}),
-    React.createElement('div', {className:'boxCard-demo'},
+
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div', {className:'filter-row-4'},
+        React.createElement('select', {className:'filter-select', value:mapFilter, onChange:e=>{setMapFilter(e.target.value);setPage(1);}},
+          ['All Types','eCTD','GMP','TMF','None'].map(v=>React.createElement('option',{key:v,value:v==='All Types'?'All':v},v))
+        ),
+        React.createElement('select', {className:'filter-select', value:statusFilter, onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('select', {className:'filter-select', value:countryFilter, onChange:e=>{setCountryFilter(e.target.value);setPage(1);}},
+          [React.createElement('option',{key:'all',value:'All'},'All Countries'),
+            ...countries.map(c=>React.createElement('option',{key:c,value:c},c))]
+        ),
+        React.createElement('button', {className:'btn btn-secondary btn-sm', onClick:resetFilters},
+          React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}), 'Reset Filters'
+        )
+      )
+    ),
+
+    React.createElement(Breadcrumb, {items:[{label:'Manage Templates',active:true}]}),
+
+    React.createElement('div', {className:'boxCard-demo', style:{margin:0}},
       React.createElement(GridToolbar, {
         search, onSearch:v=>{setSearch(v);setPage(1);},
+        addLabel: 'Upload Template',
         onAdd: ()=>setAddOpen(true),
         onUpload: ()=>showToast('Excel Upload opened'),
-        onRefresh: ()=>{ setSearch(''); setMapFilter('All'); setStatusFilter('All'); setCountryFilter('All'); showToast('Refreshed'); },
+        onRefresh: resetFilters,
         editBtns: selected.length > 0 ? React.createElement('div', {className:'dfs', style:{marginLeft:8}},
-          selected.length === 1 && React.createElement('button', {className:'act-btn edit', title:'Edit', onClick:()=>showToast('Edit template')}, React.createElement('i',{className:'fas fa-pen-to-square'})),
-          React.createElement('button', {className:'act-btn del', title:'Delete', onClick:()=>setDeleteTarget(selected)}, React.createElement('i',{className:'fas fa-trash-can'}))
+          selected.length === 1 && React.createElement('button', {className:'act-btn edit', title:'Edit',
+            onClick:()=>setEditTpl(visibleTemplates.find(t=>t.id===selected[0]))},
+            React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button', {className:'act-btn del', title:'Delete',
+            onClick:()=>setDeleteTarget(selected)},
+            React.createElement('i',{className:'fas fa-trash-can'}))
         ) : null
       }),
       React.createElement('table', {className:'dms-table'},
@@ -612,18 +833,24 @@ function ManageTemplates() {
       ),
       React.createElement(Pagination, {total:filtered.length, page, perPage:6, onChange:setPage})
     ),
+
     deleteTarget && React.createElement(ConfirmModal, {
       title:'Delete Template(s)',
       message:'This template will be deleted permanently. Are you sure?',
-      onConfirm: () => { setTemplates(templates.filter(t=>!deleteTarget.includes(t.id))); setSelected([]); setDeleteTarget(null); showToast('Deleted successfully','error'); },
+      onConfirm: () => {
+        setTemplates(prev => prev.map(t => deleteTarget.includes(t.id) ? {...t, isDeleted:true} : t));
+        setSelected([]); setDeleteTarget(null); showToast('Deleted successfully','error');
+      },
       onCancel: () => setDeleteTarget(null)
     }),
+
     viewTpl && React.createElement(Panel, {
       title: 'Template: ' + viewTpl.name,
       onClose: ()=>setViewTpl(null),
       footer: [
         React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),
-        React.createElement('button',{key:'e',className:'btn btn-secondary'},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'e',className:'btn btn-secondary',onClick:()=>{setViewTpl(null);setEditTpl(viewTpl);}},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'del',className:'btn btn-danger',onClick:()=>handleDeleteFromPanel(viewTpl)},React.createElement('i',{className:'fas fa-trash-can',style:{marginRight:6}}),'Delete'),
         React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewTpl(null)},'Close'),
       ]
     },
@@ -638,7 +865,7 @@ function ManageTemplates() {
           )
         )
       ),
-      React.createElement('div',{style:{height:300,background:'#f5f5f5',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'#bbb'}},
+      React.createElement('div',{style:{height:250,background:'#f5f5f5',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'#bbb'}},
         React.createElement('div',{style:{textAlign:'center'}},
           React.createElement('i',{className:'fas fa-file-alt',style:{fontSize:48,marginBottom:12,display:'block'}}),
           React.createElement('p',null,'File preview available in SharePoint')
@@ -655,41 +882,57 @@ function ManageCategories() {
   const [cats, setCats] = useState(CATEGORIES);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [docCatFilter, setDocCatFilter] = useState('All');
+  const [groupFilter, setGroupFilter] = useState('All');
   const [selected, setSelected] = useState([]);
   const [viewCat, setViewCat] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [page, setPage] = useState(1);
 
+  const docCatOptions = ['All Doc Categories', ...Array.from(new Set(cats.map(c=>c.documentCategory)))];
+  const groupOptions = ['All Groups', ...Array.from(new Set((docCatFilter==='All'?cats:cats.filter(c=>c.documentCategory===docCatFilter)).map(c=>c.group)))];
+
   const filtered = cats.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) &&
-    (statusFilter==='All' || c.status===statusFilter)
+    (statusFilter==='All' || c.status===statusFilter) &&
+    (docCatFilter==='All' || c.documentCategory===docCatFilter) &&
+    (groupFilter==='All' || c.group===groupFilter)
   );
   const paged = filtered.slice((page-1)*6, page*6);
 
   const counts = { total:cats.length, active:cats.filter(c=>c.status==='Active').length, inactive:cats.filter(c=>c.status==='Inactive').length };
   const toggleSelect = id => setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const resetFilters = () => { setStatusFilter('All'); setDocCatFilter('All'); setGroupFilter('All'); setSearch(''); setPage(1); };
 
   return React.createElement('div', null,
     React.createElement('div',{className:'page-header'},
       React.createElement('h1',{className:'page-title'},'Manage Categories')
     ),
     React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-folder',       title:'Total Categories', value:counts.total,    subtitle:'All categories',  color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder',       title:'Total Categories', value:counts.total,    subtitle:'All categories',    color:'blue'}),
       React.createElement(SummaryCard,{icon:'fas fa-folder-open',  title:'Active',           value:counts.active,   subtitle:'Active categories', color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',         value:counts.inactive, subtitle:'Inactive categories', color:'orange'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',         value:counts.inactive, subtitle:'Inactive categories',color:'orange'}),
+      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Groups',     value:new Set(cats.map(c=>c.group)).size, subtitle:'Unique groups', color:'purple'}),
     ),
-    React.createElement('div',{className:'filter-row'},
+    React.createElement('div',{className:'filter-row-4'},
       React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
         ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      )
+      ),
+      React.createElement('select',{className:'filter-select',value:docCatFilter,onChange:e=>{setDocCatFilter(e.target.value);setGroupFilter('All');setPage(1);}},
+        docCatOptions.map(v=>React.createElement('option',{key:v,value:v==='All Doc Categories'?'All':v},v))
+      ),
+      React.createElement('select',{className:'filter-select',value:groupFilter,onChange:e=>{setGroupFilter(e.target.value);setPage(1);}},
+        groupOptions.map(v=>React.createElement('option',{key:v,value:v==='All Groups'?'All':v},v))
+      ),
+      React.createElement('button',{className:'btn btn-secondary',onClick:resetFilters,style:{height:38}},'Reset Filters')
     ),
-    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'Manage Categories',active:true}]}),
+    React.createElement(Breadcrumb,{items:[{label:'Manage Categories',active:true}]}),
     React.createElement('div',{className:'boxCard-demo'},
       React.createElement(GridToolbar,{
         search, onSearch:v=>{setSearch(v);setPage(1);},
         onAdd:()=>showToast('Add Category'),
         onUpload:()=>showToast('Excel Upload'),
-        onRefresh:()=>{setSearch('');setStatusFilter('All');showToast('Refreshed');},
+        onRefresh:()=>{resetFilters();showToast('Refreshed');},
         editBtns: selected.length>0 ? React.createElement('div',{className:'dfs',style:{marginLeft:8}},
           selected.length===1&&React.createElement('button',{className:'act-btn edit',title:'Edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
           React.createElement('button',{className:'act-btn del',title:'Delete',onClick:()=>setDeleteTarget(selected)},React.createElement('i',{className:'fas fa-trash-can'}))
@@ -699,7 +942,7 @@ function ManageCategories() {
         React.createElement('thead',null,
           React.createElement('tr',null,
             React.createElement('th',{style:{width:36}},''),
-            ['Category Name','Group / Module','Level','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h))
+            ['Category Name','Doc Category','Group / Module','Level','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h))
           )
         ),
         React.createElement('tbody',null,
@@ -712,6 +955,7 @@ function ManageCategories() {
                   React.createElement('span',{className:'fw500'},c.name)
                 )
               ),
+              React.createElement('td',null,c.documentCategory),
               React.createElement('td',null,c.group),
               React.createElement('td',null,React.createElement('span',{className:'map-badge map-none'},'Level '+c.level)),
               React.createElement('td',null,c.docs+' docs'),

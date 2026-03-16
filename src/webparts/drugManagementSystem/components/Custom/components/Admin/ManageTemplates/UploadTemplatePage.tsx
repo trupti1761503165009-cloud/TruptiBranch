@@ -7,7 +7,7 @@ import ReactDropdown from '../../../../Common/ReactSelectDropdown';
 import DragandDropFilePicker from '../../../../Common/dragandDrop/DragandDropFilePicker';
 import { Loader } from '../../../../Common/Loader/Loader';
 import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
-import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/MessageDialog';
+import { CustomModal } from '../../../../Common/CustomModal';
 import { UploadTemplateModalData } from '../UploadTemplateModal/UploadTemplateModalData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +19,14 @@ interface UploadTemplatePageProps {
   editData?: any;
 }
 
+const ECTD_MODULES = [
+  { label: 'Module 1 – Administrative & Prescribing Information', value: '1' },
+  { label: 'Module 2 – CTD Summaries', value: '2' },
+  { label: 'Module 3 – Quality', value: '3' },
+  { label: 'Module 4 – Nonclinical Study Reports', value: '4' },
+  { label: 'Module 5 – Clinical Study Reports', value: '5' },
+];
+
 export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel, onSuccess, editMode = false, editData }) => {
   const {
     formData,
@@ -29,9 +37,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     ectdSections,
     selectedFiles,
     errorMessage,
-    fieldErrors,
     isUploading,
-    canUpload,
     handleFileSelection,
     handleUpload,
     closeAndReset,
@@ -39,17 +45,11 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     tmfFolders
   } = UploadTemplateModalData({ onClose: onCancel, onSuccess });
 
-  // Local validation state
-  const [localErrors, setLocalErrors] = React.useState<Record<string, string>>({});
-  const [messageDialog, setMessageDialog] = React.useState<{
-    hidden: boolean;
-    type: MessageType;
-    title: string;
-    message: string;
-    fields: string[];
-  }>({ hidden: true, type: 'info', title: '', message: '', fields: [] });
+  const [selectedModule, setSelectedModule] = React.useState<string>('');
 
-  // Initialize edit data
+  const [validationModal, setValidationModal] = React.useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [errorModal, setErrorModal] = React.useState<{ open: boolean; message: string }>({ open: false, message: '' });
+
   React.useEffect(() => {
     if (editMode && editData) {
       setFormData({
@@ -65,23 +65,41 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
         mappedGMPModelId: editData.mappedGMPModelId || 0,
         mappedTMFFolderId: editData.mappedTMFFolderId || 0
       });
+      if (editData.mappingType === 'eCTD' && editData.mappedCTDFolder) {
+        const match = String(editData.mappedCTDFolder).match(/^(\d)/);
+        if (match) setSelectedModule(match[1]);
+      }
     }
   }, [editMode, editData]);
 
-  const showMessage = (type: MessageType, title: string, message: string, fields: string[] = []) => {
-    setMessageDialog({ hidden: false, type, title, message, fields });
-  };
+  React.useEffect(() => {
+    if (errorMessage) {
+      setErrorModal({ open: true, message: errorMessage });
+    }
+  }, [errorMessage]);
 
-  const hideMessage = () => {
-    setMessageDialog(prev => ({ ...prev, hidden: true }));
-  };
-
-  const categoryOptions = React.useMemo(() => categories.map(category => ({ label: category.name, value: category.id })), [categories]);
+  const categoryOptions = React.useMemo(() => categories.map(c => ({ label: c.name, value: c.id })), [categories]);
   const countryOptions = React.useMemo(() => countries.map(c => ({ label: c.name, value: c.id })), [countries]);
-  const ctdFolderOptions = React.useMemo(() => ctdFolders.map(f => ({ label: f.name, value: f.id })), [ctdFolders]);
-  const ectdSectionOptions = React.useMemo(() => ectdSections.map(s => ({ label: s.name, value: s.id })), [ectdSections]);
   const gmpModelOptions = React.useMemo(() => (gmpModels || []).map(m => ({ label: m.name, value: m.id })), [gmpModels]);
   const tmfFolderOptions = React.useMemo(() => (tmfFolders || []).map(f => ({ label: f.name, value: f.id })), [tmfFolders]);
+
+  const ctdFolderOptions = React.useMemo(() => {
+    const all = (ctdFolders || []).map(f => ({ label: f.name, value: f.id }));
+    if (!selectedModule) return all;
+    return all.filter(o => {
+      const stripped = o.label.replace(/^\d+ - /, '');
+      return o.label.startsWith(selectedModule + '.') || stripped.startsWith(selectedModule + '.');
+    });
+  }, [ctdFolders, selectedModule]);
+
+  const ectdSectionOptions = React.useMemo(() => {
+    const all = (ectdSections || []).map(s => ({ label: s.name, value: s.id }));
+    if (!selectedModule) return all;
+    return all.filter(o => {
+      const label = o.label || '';
+      return label.startsWith(selectedModule + '.') || label.startsWith(selectedModule + ' ');
+    });
+  }, [ectdSections, selectedModule]);
 
   const editStatusOptions = React.useMemo(() => [
     { label: 'Active', value: 'Active' },
@@ -95,64 +113,34 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     { label: 'TMF', value: 'TMF' }
   ], []);
 
-  const categoryDefault = React.useMemo(
-    () => categoryOptions.find(o => o.value === formData.categoryId) ?? null,
-    [categoryOptions, formData.categoryId]
-  );
-  const countryDefault = React.useMemo(
-    () => countryOptions.find(o => o.value === formData.countryId) ?? null,
-    [countryOptions, formData.countryId]
-  );
-  const ctdFolderDefault = React.useMemo(
-    () => ctdFolderOptions.find(o => o.value === formData.mappedCTDFolderId) ?? null,
-    [ctdFolderOptions, formData.mappedCTDFolderId]
-  );
-  const ectdSectionDefault = React.useMemo(
-    () => ectdSectionOptions.find(o => o.value === formData.ectdSectionId) ?? null,
-    [ectdSectionOptions, formData.ectdSectionId]
-  );
-  const gmpModelDefault = React.useMemo(
-    () => gmpModelOptions.find(o => o.value === (formData as any).mappedGMPModelId) ?? null,
-    [gmpModelOptions, (formData as any).mappedGMPModelId]
-  );
-  const tmfFolderDefault = React.useMemo(
-    () => tmfFolderOptions.find(o => o.value === (formData as any).mappedTMFFolderId) ?? null,
-    [tmfFolderOptions, (formData as any).mappedTMFFolderId]
-  );
+  const categoryDefault = React.useMemo(() => categoryOptions.find(o => o.value === formData.categoryId) ?? null, [categoryOptions, formData.categoryId]);
+  const countryDefault = React.useMemo(() => countryOptions.find(o => o.value === formData.countryId) ?? null, [countryOptions, formData.countryId]);
+  const ctdFolderDefault = React.useMemo(() => ctdFolderOptions.find(o => o.value === formData.mappedCTDFolderId) ?? null, [ctdFolderOptions, formData.mappedCTDFolderId]);
+  const ectdSectionDefault = React.useMemo(() => ectdSectionOptions.find(o => o.value === formData.ectdSectionId) ?? null, [ectdSectionOptions, formData.ectdSectionId]);
+  const gmpModelDefault = React.useMemo(() => gmpModelOptions.find(o => o.value === (formData as any).mappedGMPModelId) ?? null, [gmpModelOptions, (formData as any).mappedGMPModelId]);
+  const tmfFolderDefault = React.useMemo(() => tmfFolderOptions.find(o => o.value === (formData as any).mappedTMFFolderId) ?? null, [tmfFolderOptions, (formData as any).mappedTMFFolderId]);
+  const moduleDefault = React.useMemo(() => ECTD_MODULES.find(m => m.value === selectedModule) ?? null, [selectedModule]);
 
-  React.useEffect(() => {
-    if (errorMessage) {
-      showMessage('error', 'Error', errorMessage);
-    }
-  }, [errorMessage]);
-
-  // Validate before submit
   const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+    const errors: string[] = [];
 
-    if (!formData.name?.trim()) {
-      errors.name = 'Template Name is required';
-    }
-
-    if (!editMode && selectedFiles.length === 0) {
-      errors.file = 'Please upload a file';
-    }
+    if (!formData.name?.trim()) errors.push('Template Name is required.');
+    if (!editMode && selectedFiles.length === 0) errors.push('Please select a file to upload.');
 
     if (formData.mappingType === 'eCTD') {
-      if (!formData.mappedCTDFolderId) errors.mappedCTDFolderId = 'CTD Folder is required for eCTD mapping';
-      if (!formData.ectdSectionId) errors.ectdSectionId = 'eCTD Section is required';
+      if (!selectedModule) errors.push('eCTD Module (1–5) is required.');
+      if (!formData.mappedCTDFolderId) errors.push('CTD Folder is required for eCTD mapping.');
+      if (!formData.ectdSectionId) errors.push('eCTD Section is required for eCTD mapping.');
     } else if (formData.mappingType === 'GMP') {
-      if (!(formData as any).mappedGMPModelId) errors.mappedGMPModelId = 'GMP Model is required';
+      if (!(formData as any).mappedGMPModelId) errors.push('GMP Model is required.');
     } else if (formData.mappingType === 'TMF') {
-      if (!(formData as any).mappedTMFFolderId) errors.mappedTMFFolderId = 'TMF Folder is required';
+      if (!(formData as any).mappedTMFFolderId) errors.push('TMF Folder is required.');
     }
 
-    setLocalErrors(errors);
-
-    if (Object.keys(errors).length > 0) {
+    if (errors.length > 0) {
+      setValidationModal({ open: true, message: errors.join('\n') });
       return false;
     }
-
     return true;
   };
 
@@ -162,50 +150,44 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     }
   };
 
-  const getFieldErrorStyle = (fieldName: string) => {
-    const hasError = localErrors[fieldName] || (fieldErrors as Record<string, string> | undefined)?.[fieldName];
-    return hasError ? { borderColor: '#d32f2f', borderWidth: 2 } : undefined;
-  };
-
   return (
-    <div className="boxCard">
+    <div className="boxCard" style={{ margin: 0, minHeight: 'auto' }}>
       <div className="formGroup">
         <div className="ms-Grid">
           {isUploading && <Loader />}
 
-          <MessageDialog
-            hidden={messageDialog.hidden}
-            onDismiss={hideMessage}
-            type={messageDialog.type}
-            title={messageDialog.title}
-            message={messageDialog.message}
-            fields={messageDialog.fields}
+          <CustomModal
+            isModalOpenProps={validationModal.open}
+            setModalpopUpFalse={() => setValidationModal({ open: false, message: '' })}
+            subject="Validation Error"
+            message={validationModal.message}
+            closeButtonText="OK"
           />
 
-          {/* Header Row */}
+          <CustomModal
+            isModalOpenProps={errorModal.open}
+            setModalpopUpFalse={() => setErrorModal({ open: false, message: '' })}
+            subject="Error"
+            message={errorModal.message}
+            closeButtonText="Close"
+          />
+
           <div className="ms-Grid-row">
-            <div className="ms-Grid-col ms-sm12 ms-md12 ms-lg12 dFlex justifyContentBetween alignItemsCenter">
-              <div><h1 className="mainTitle">{editMode ? 'Edit Template' : 'Upload Template'}</h1></div>
-              <div>
-                <PrimaryButton className="btn btn-danger" text="Close" onClick={closeAndReset} />
-              </div>
+            <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
+              <h1 className="mainTitle" style={{ margin: 0 }}>{editMode ? 'Edit Template' : 'Upload Template'}</h1>
+              <PrimaryButton className="btn btn-danger" text="Close" onClick={closeAndReset} />
             </div>
           </div>
 
-          {/* Breadcrumb Row */}
-          <div className="ms-Grid-row">
+          <div className="ms-Grid-row" style={{ marginBottom: 12 }}>
             <div className="ms-Grid-col ms-sm12">
-              <div className="customebreadcrumb">
-                <Breadcrumb items={[
-                  { label: 'Home', onClick: () => { } },
-                  { label: 'Manage Templates', onClick: onCancel },
-                  { label: editMode ? 'Edit Template' : 'Upload Template', isActive: true }
-                ]} />
-              </div>
+              <Breadcrumb items={[
+                { label: 'Manage Templates', onClick: onCancel },
+                { label: editMode ? 'Edit Template' : 'Upload Template', isActive: true }
+              ]} />
             </div>
           </div>
 
-          {/* Template Name */}
           <div className="ms-Grid-row mt-20">
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <Label className="formLabel">Template Name<span className="required">*</span></Label>
@@ -213,12 +195,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 className="formControl"
                 placeholder="e.g., Clinical Trial Protocol v3.0"
                 value={formData.name}
-                onChange={(_e, v) => {
-                  setFormData((prev) => ({ ...prev, name: v ?? '' }));
-                  if (localErrors.name) setLocalErrors((errs: any) => ({ ...errs, name: '' }));
-                }}
-                errorMessage={localErrors.name || fieldErrors?.name}
-                styles={{ fieldGroup: getFieldErrorStyle('name') }}
+                onChange={(_e, v) => setFormData((prev) => ({ ...prev, name: v ?? '' }))}
               />
             </div>
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
@@ -261,7 +238,6 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
             </div>
           </div>
 
-          {/* Mapping Type Row */}
           <div className="ms-Grid-row mt-20">
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <Label className="formLabel">Mapping Type</Label>
@@ -271,6 +247,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 defaultOption={mappingTypeOptions.find(o => o.value === formData.mappingType) ?? mappingTypeOptions[0]}
                 onChange={(opt) => {
                   const nextValue = ((opt?.value as any) ?? 'None') as any;
+                  setSelectedModule('');
                   setFormData((prev) => ({
                     ...prev,
                     mappingType: nextValue,
@@ -287,6 +264,53 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
               />
             </div>
 
+            {formData.mappingType === 'eCTD' && (
+              <>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                  <Label className="formLabel">eCTD Module<span className="required">*</span></Label>
+                  <ReactDropdown
+                    name="ectdModule"
+                    options={ECTD_MODULES}
+                    defaultOption={moduleDefault}
+                    placeholder="-- Select Module --"
+                    onChange={(opt) => {
+                      setSelectedModule(opt?.value ? String(opt.value) : '');
+                      setFormData((prev) => ({ ...prev, mappedCTDFolderId: 0, ectdSectionId: 0 }));
+                    }}
+                    isCloseMenuOnSelect={true}
+                    isSorted={false}
+                    isClearable={false}
+                  />
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                  <Label className="formLabel">CTD Folder<span className="required">*</span></Label>
+                  <ReactDropdown
+                    name="mappedCTDFolder"
+                    options={ctdFolderOptions}
+                    defaultOption={ctdFolderDefault}
+                    placeholder={selectedModule ? '-- Select CTD Folder --' : '-- Select Module First --'}
+                    onChange={(opt) => setFormData((prev) => ({ ...prev, mappedCTDFolderId: Number(opt?.value) || 0 }))}
+                    isCloseMenuOnSelect={true}
+                    isSorted={true}
+                    isClearable={false}
+                  />
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                  <Label className="formLabel">eCTD Section<span className="required">*</span></Label>
+                  <ReactDropdown
+                    name="ectdSection"
+                    options={ectdSectionOptions}
+                    defaultOption={ectdSectionDefault}
+                    placeholder={selectedModule ? '-- Select Section --' : '-- Select Module First --'}
+                    onChange={(opt) => setFormData((prev) => ({ ...prev, ectdSectionId: Number(opt?.value) || 0 }))}
+                    isCloseMenuOnSelect={true}
+                    isSorted={true}
+                    isClearable={false}
+                  />
+                </div>
+              </>
+            )}
+
             {formData.mappingType === 'GMP' && (
               <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
                 <Label className="formLabel">Mapped GMP Model<span className="required">*</span></Label>
@@ -295,15 +319,11 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                   options={gmpModelOptions}
                   defaultOption={gmpModelDefault}
                   placeholder="-- Select GMP Model --"
-                  onChange={(opt) => {
-                    setFormData((prev) => ({ ...prev, mappedGMPModelId: Number(opt?.value) || 0 }));
-                    if (localErrors.mappedGMPModelId) setLocalErrors((errs: any) => ({ ...errs, mappedGMPModelId: '' }));
-                  }}
+                  onChange={(opt) => setFormData((prev) => ({ ...prev, mappedGMPModelId: Number(opt?.value) || 0 }))}
                   isCloseMenuOnSelect={true}
                   isSorted={true}
                   isClearable={false}
                 />
-                {localErrors.mappedGMPModelId && <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 4 }}>{localErrors.mappedGMPModelId}</div>}
               </div>
             )}
 
@@ -315,61 +335,18 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                   options={tmfFolderOptions}
                   defaultOption={tmfFolderDefault}
                   placeholder="-- Select TMF Folder --"
-                  onChange={(opt) => {
-                    setFormData((prev) => ({ ...prev, mappedTMFFolderId: Number(opt?.value) || 0 }));
-                    if (localErrors.mappedTMFFolderId) setLocalErrors((errs: any) => ({ ...errs, mappedTMFFolderId: '' }));
-                  }}
+                  onChange={(opt) => setFormData((prev) => ({ ...prev, mappedTMFFolderId: Number(opt?.value) || 0 }))}
                   isCloseMenuOnSelect={true}
                   isSorted={true}
                   isClearable={false}
                 />
-                {localErrors.mappedTMFFolderId && <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 4 }}>{localErrors.mappedTMFFolderId}</div>}
               </div>
-            )}
-
-            {formData.mappingType === 'eCTD' && (
-              <>
-                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
-                  <Label className="formLabel">Mapped CTD Folder<span className="required">*</span></Label>
-                  <ReactDropdown
-                    name="mappedCTDFolder"
-                    options={ctdFolderOptions}
-                    defaultOption={ctdFolderDefault}
-                    placeholder="-- Select CTD Folder --"
-                    onChange={(opt) => {
-                      setFormData((prev) => ({ ...prev, mappedCTDFolderId: Number(opt?.value) || 0 }));
-                      if (localErrors.mappedCTDFolderId) setLocalErrors((errs: any) => ({ ...errs, mappedCTDFolderId: '' }));
-                    }}
-                    isCloseMenuOnSelect={true}
-                    isSorted={true}
-                    isClearable={false}
-                  />
-                  {localErrors.mappedCTDFolderId && <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 4 }}>{localErrors.mappedCTDFolderId}</div>}
-                </div>
-                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
-                  <Label className="formLabel">eCTD Section<span className="required">*</span></Label>
-                  <ReactDropdown
-                    name="ectdSection"
-                    options={ectdSectionOptions}
-                    defaultOption={ectdSectionDefault}
-                    placeholder="-- Select eCTD Section --"
-                    onChange={(opt) => {
-                      setFormData((prev) => ({ ...prev, ectdSectionId: Number(opt?.value) || 0 }));
-                      if (localErrors.ectdSectionId) setLocalErrors((errs: any) => ({ ...errs, ectdSectionId: '' }));
-                    }}
-                    isCloseMenuOnSelect={true}
-                    isSorted={true}
-                    isClearable={false}
-                  />
-                  {localErrors.ectdSectionId && <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 4 }}>{localErrors.ectdSectionId}</div>}
-                </div>
-              </>
             )}
           </div>
 
           {formData.mappingType === 'eCTD' && (
             <div className="ms-Grid-row mt-20">
-              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
                 <Label className="formLabel">eCTD Subsection (Optional)</Label>
                 <TextField
                   className="formControl"
@@ -382,25 +359,21 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
 
           {!editMode && (
             <div className="ms-Grid-row mt-20">
-              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
                 <Label className="formLabel">Upload File<span className="required">*</span></Label>
-                <div style={{ border: localErrors.file ? '2px solid #d32f2f' : '1px solid #e0e0e0', borderRadius: 4, padding: 8 }}>
-                  <DragandDropFilePicker setFilesToState={handleFileSelection} isMultiple={false} />
-                </div>
-                {localErrors.file && <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 4 }}>{localErrors.file}</div>}
+                <DragandDropFilePicker setFilesToState={handleFileSelection} isMultiple={false} />
                 {selectedFiles.length > 0 && (
-                  <div style={{ marginTop: 10, fontSize: 13 }}>
+                  <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
                     <strong>{selectedFiles[0].name}</strong> ({(selectedFiles[0].size / 1024).toFixed(2)} KB)
                   </div>
                 )}
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                  Accepted formats: DOC, DOCX, PDF, XLS, XLSX
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                  Accepted: DOC, DOCX, PDF, XLS, XLSX
                 </p>
               </div>
             </div>
           )}
 
-          {/* Save/Close buttons */}
           <div className="ms-Grid-row mt-20">
             <div className="ms-Grid-col ms-sm12">
               <PrimaryButton
@@ -421,6 +394,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
               </DefaultButton>
             </div>
           </div>
+
         </div>
       </div>
     </div>

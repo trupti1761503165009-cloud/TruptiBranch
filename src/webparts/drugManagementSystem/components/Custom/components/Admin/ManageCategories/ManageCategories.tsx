@@ -79,6 +79,37 @@ export const ManageCategories: React.FC<any> = (props) => {
 
   const [isExcelUploadOpen, setIsExcelUploadOpen] = React.useState(false);
 
+  // Extra filter state
+  const [docCatFilter, setDocCatFilter] = React.useState('All');
+  const [groupFilter, setGroupFilter] = React.useState('All');
+
+  // Derived filter dropdown options (named with prefix to avoid conflict with ManageCategoriesData)
+  const filterDocCatOptions = React.useMemo(() => {
+    const unique = Array.from(new Set(filteredCategories.map((c: any) => c.documentCategory).filter(Boolean)));
+    return [{ label: 'All Doc Categories', value: 'All' }, ...unique.map((v: string) => ({ label: v, value: v }))];
+  }, [filteredCategories]);
+
+  const filterGroupOptions = React.useMemo(() => {
+    const base = docCatFilter === 'All' ? filteredCategories : filteredCategories.filter((c: any) => c.documentCategory === docCatFilter);
+    const unique = Array.from(new Set(base.map((c: any) => c.group).filter(Boolean)));
+    return [{ label: 'All Groups', value: 'All' }, ...unique.map((v: string) => ({ label: v, value: v }))];
+  }, [filteredCategories, docCatFilter]);
+
+  // displayCategories applies docCat + group filters on top of filteredCategories
+  const displayCategories = React.useMemo(() => {
+    return filteredCategories
+      .filter((c: any) => docCatFilter === 'All' || c.documentCategory === docCatFilter)
+      .filter((c: any) => groupFilter === 'All' || c.group === groupFilter);
+  }, [filteredCategories, docCatFilter, groupFilter]);
+
+  const filterDocCatDefault = React.useMemo(() =>
+    filterDocCatOptions.find(o => o.value === docCatFilter) || filterDocCatOptions[0],
+    [docCatFilter, filterDocCatOptions]);
+
+  const filterGroupDefault = React.useMemo(() =>
+    filterGroupOptions.find(o => o.value === groupFilter) || filterGroupOptions[0],
+    [groupFilter, filterGroupOptions]);
+
   // Unified Panel State for Add/Edit/View
   const [isPanelOpen, setIsPanelOpen] = React.useState(false);
   const [panelMode, setPanelMode] = React.useState<'add' | 'edit' | 'view'>('add');
@@ -249,7 +280,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
     if (hierarchyLevel === 'documentCategory') {
       const map = new Map<string, number>();
-      filteredCategories.forEach((c: any) => {
+      displayCategories.forEach((c: any) => {
         const key = normalized(c.documentCategory);
         map.set(key, (map.get(key) || 0) + 1);
       });
@@ -264,7 +295,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
     if (hierarchyLevel === 'group') {
       const map = new Map<string, number>();
-      filteredCategories
+      displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .forEach((c: any) => {
           const key = normalized(c.group);
@@ -281,7 +312,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
     if (hierarchyLevel === 'subGroup') {
       const map = new Map<string, number>();
-      filteredCategories
+      displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
         .forEach((c: any) => {
@@ -299,7 +330,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
     if (hierarchyLevel === 'artifactName') {
       const map = new Map<string, number>();
-      filteredCategories
+      displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
         .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
@@ -318,7 +349,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
     if (hierarchyLevel === 'templateName') {
       const map = new Map<string, number>();
-      filteredCategories
+      displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
         .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
@@ -336,13 +367,13 @@ export const ManageCategories: React.FC<any> = (props) => {
       }));
     }
 
-    return filteredCategories
+    return displayCategories
       .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
       .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
       .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
       .filter((c: any) => normalized(c.artifactName) === normalized(hierarchyPath.artifactName))
       .filter((c: any) => normalized(c.templateName) === normalized(hierarchyPath.templateName));
-  }, [filteredCategories, hierarchyLevel, hierarchyPath]);
+  }, [displayCategories, hierarchyLevel, hierarchyPath]);
 
   // Define onInvokeHierarchyItem BEFORE hierarchyColumns since it's used in the render
   const onInvokeHierarchyItem = React.useCallback(
@@ -556,8 +587,8 @@ export const ManageCategories: React.FC<any> = (props) => {
           color="green"
         />
         <SummaryCard
-          title="Document Categories"
-          value={new Set(filteredCategories.map((c: any) => c.documentCategory)).size}
+          title="Inactive"
+          value={filteredCategories.filter((c: any) => c.status === 'Inactive').length}
           icon={faFolderTree}
           color="orange"
         />
@@ -569,23 +600,55 @@ export const ManageCategories: React.FC<any> = (props) => {
         />
       </div>
 
-      {/* Filters row (below cards, above grid) */}
+      {/* Filters row — 4-column layout */}
       <div className="ms-Grid mt-3">
         <div className="ms-Grid-row ptop-5">
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl3">
+          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
             <div className="formControl ims-site-pad">
-              <div className="formControl">
-                <ReactDropdown
-                  name="statusFilter"
-                  options={filterStatusOptions}
-                  defaultOption={statusDefault}
-                  onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
-                  isCloseMenuOnSelect={true}
-                  isSorted={false}
-                  isClearable={false}
-                />
-              </div>
+              <ReactDropdown
+                name="statusFilter"
+                options={filterStatusOptions}
+                defaultOption={statusDefault}
+                onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
+                isCloseMenuOnSelect={true}
+                isSorted={false}
+                isClearable={false}
+              />
             </div>
+          </div>
+          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+            <div className="formControl ims-site-pad">
+              <ReactDropdown
+                name="docCatFilter"
+                options={filterDocCatOptions}
+                defaultOption={filterDocCatDefault}
+                onChange={(opt: any) => { setDocCatFilter(opt?.value ?? 'All'); setGroupFilter('All'); }}
+                isCloseMenuOnSelect={true}
+                isSorted={false}
+                isClearable={false}
+              />
+            </div>
+          </div>
+          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+            <div className="formControl ims-site-pad">
+              <ReactDropdown
+                name="filterGroupFilter"
+                options={filterGroupOptions}
+                defaultOption={filterGroupDefault}
+                onChange={(opt: any) => setGroupFilter(opt?.value ?? 'All')}
+                isCloseMenuOnSelect={true}
+                isSorted={false}
+                isClearable={false}
+              />
+            </div>
+          </div>
+          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 4 }}>
+            <DefaultButton
+              text="Reset Filters"
+              onClick={() => { setStatusFilter('All'); setDocCatFilter('All'); setGroupFilter('All'); }}
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+            />
           </div>
         </div>
       </div>

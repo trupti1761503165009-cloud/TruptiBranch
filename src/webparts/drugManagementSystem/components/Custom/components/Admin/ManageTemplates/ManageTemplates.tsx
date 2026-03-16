@@ -367,89 +367,115 @@ export const ManageTemplates: React.FC<any> = (props) => {
   }
 
   return (
-    <div className="pageContainer">
+    <div className="pageContainer" style={{ paddingTop: 0 }}>
       {isLoading && <Loader />}
 
-      {/* ===== Page Header ===== */}
-      <div className="page-header">
-        <h1 className="mainTitle">Manage Templates</h1>
-      </div>
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Templates</h1>
 
       {/* ===== SECTION 1: Summary Cards ===== */}
-      <div className="summary-cards-container">
-        <SummaryCard
-          title="Total Templates"
-          value={totalTemplates}
-          icon={faFileAlt}
-          color="blue"
-          subtitle="All templates"
-        />
-        <SummaryCard
-          title="eCTD Templates"
-          value={ectdCount}
-          icon={faDna}
-          color="purple"
-          subtitle="Mapped to eCTD"
-        />
-        <SummaryCard
-          title="GMP Templates"
-          value={gmpCount}
-          icon={faFlask}
-          color="orange"
-          subtitle="Mapped to GMP"
-        />
-        <SummaryCard
-          title="TMF Templates"
-          value={tmfCount}
-          icon={faFolderTree}
-          color="green"
-          subtitle="Mapped to TMF"
-        />
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          <SummaryCard
+            title="Total Templates"
+            value={totalTemplates}
+            icon={faFileAlt}
+            color="blue"
+            subtitle="All templates"
+          />
+          <SummaryCard
+            title="eCTD Templates"
+            value={ectdCount}
+            icon={faDna}
+            color="purple"
+            subtitle="Mapped to eCTD"
+          />
+          <SummaryCard
+            title="GMP Templates"
+            value={gmpCount}
+            icon={faFlask}
+            color="orange"
+            subtitle="Mapped to GMP"
+          />
+          <SummaryCard
+            title="TMF Templates"
+            value={tmfCount}
+            icon={faFolderTree}
+            color="green"
+            subtitle="Mapped to TMF"
+          />
+        </div>
       </div>
 
       {/* ===== SECTION 2: Filters ===== */}
-      <div className="ms-Grid mt-3 mb-3">
-        <div className="ms-Grid-row ptop-5">
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            <div className="formControl ims-site-pad">
-              <ReactDropdown
-                name="mappingTypeFilter"
-                options={mappingTypeOptions}
-                defaultOption={mappingTypeOptions.find(o => o.value === mappingTypeFilter) || mappingTypeOptions[0]}
-                onChange={(opt: any) => setMappingTypeFilter(opt?.value ?? 'All')}
-                isCloseMenuOnSelect={true}
-                isSorted={false}
-                isClearable={false}
-              />
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+        <div className="ms-Grid">
+          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown
+                  name="mappingTypeFilter"
+                  options={mappingTypeOptions}
+                  defaultOption={mappingTypeOptions.find(o => o.value === mappingTypeFilter) || mappingTypeOptions[0]}
+                  onChange={(opt: any) => setMappingTypeFilter(opt?.value ?? 'All')}
+                  isCloseMenuOnSelect={true}
+                  isSorted={false}
+                  isClearable={false}
+                />
+              </div>
             </div>
-          </div>
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            <div className="formControl ims-site-pad">
-              <ReactDropdown
-                name="statusFilter"
-                options={statusOptions}
-                defaultOption={statusOptions.find(o => o.value === statusFilter) || statusOptions[0]}
-                onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
-                isCloseMenuOnSelect={true}
-                isSorted={false}
-                isClearable={false}
-              />
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown
+                  name="statusFilter"
+                  options={statusOptions}
+                  defaultOption={statusOptions.find(o => o.value === statusFilter) || statusOptions[0]}
+                  onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
+                  isCloseMenuOnSelect={true}
+                  isSorted={false}
+                  isClearable={false}
+                />
+              </div>
             </div>
-          </div>
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            <div className="formControl ims-site-pad">
-              <ReactDropdown
-                name="countryFilter"
-                options={[{ label: 'All Countries', value: 'All' }, ...countryOptions]}
-                defaultOption={
-                  countryFilter === 'All'
-                    ? { label: 'All Countries', value: 'All' }
-                    : countryOptions.find((c: any) => c.value === countryFilter) || { label: 'All Countries', value: 'All' }
-                }
-                onChange={(opt: any) => setCountryFilter(opt?.value === 'All' ? 'All' : Number(opt?.value))}
-                isCloseMenuOnSelect={true}
-                isSorted={false}
-                isClearable={false}
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown
+                  name="countryFilter"
+                  options={[{ label: 'All Countries', value: 'All' }, ...countryOptions]}
+                  defaultOption={
+                    countryFilter === 'All'
+                      ? { label: 'All Countries', value: 'All' }
+                      : countryOptions.find((c: any) => c.value === countryFilter) || { label: 'All Countries', value: 'All' }
+                  }
+                  onChange={(opt: any) => setCountryFilter(opt?.value === 'All' ? 'All' : Number(opt?.value))}
+                  isCloseMenuOnSelect={true}
+                  isSorted={false}
+                  isClearable={false}
+                />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3" style={{ paddingBottom: 4 }}>
+              <DefaultButton
+                className="btn btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => {
+                  setMappingTypeFilter('All');
+                  setStatusFilter('All');
+                  setCountryFilter('All');
+                }}
+                text="Reset Filters"
               />
             </div>
           </div>
@@ -457,17 +483,16 @@ export const ManageTemplates: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 3: Breadcrumb ===== */}
-      <div className="mb-3">
+      <div style={{ marginBottom: 16 }}>
         <Breadcrumb
           items={[
-            { label: 'Home', onClick: () => { } },
             { label: 'Manage Templates', isActive: true }
           ]}
         />
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div className="boxCard" style={{ padding: 0 }}>
+      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           items={filteredTemplates}
           columns={columns}
@@ -501,11 +526,11 @@ export const ManageTemplates: React.FC<any> = (props) => {
             isVisibleCrud.current
               ? (
                 <div className="dflex pb-1">
-                  <TooltipHost content="Add New Template" id={tooltipId}>
+                  <TooltipHost content="Upload New Template" id={tooltipId}>
                     <PrimaryButton
                       className="btn btn-primary"
                       onClick={() => setIsCreatePageOpen(true)}
-                      text="Add"
+                      text="Upload Template"
                     />
                   </TooltipHost>
                   <Link
