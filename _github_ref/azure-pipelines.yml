@@ -1,0 +1,368 @@
+# The Pipeline will start when code is pushed or merged to the main branch
+trigger:
+  branches:
+    include:
+      # - defaultTrupti
+      - master
+      # - liveDenish
+      - codeTrupti
+      - reportDenish
+      - defaultSurbhi
+      # - defaultShubham
+      - clientDeploy2608
+      - QuaySafeDeploy
+      - zoneDesignUpdate
+      - dailyAshish
+      # - newDesignUpdate
+      # - surbhiMergeCode
+      # - auditLogShubham
+      # - NewBGT
+    # - workplaceClientDeploy
+    
+    # - devShubham
+    # - clientDeploy0512
+    #- Inspection_Count
+
+# The Pipeline will run on an ubuntu machine/agent
+pool:
+  vmImage: "ubuntu-latest"
+
+# Some central variables that we need, in this case the Product ID of the SPFx app
+# you can find it in the package-solution.json file.
+variables:
+  - group: "Global Deployment Setting"
+
+stages:
+  # The build stage takes care of bundling and packaging the SPFx application. It will publish the SPPKG as an artifact.
+  - stage: Build
+    jobs:
+      - job: "Build"
+        steps:
+          - task: NodeTool@0
+            displayName: "Use Node 18.x"
+            inputs:
+              versionSpec: "18.x"
+
+          - task: Npm@1
+            displayName: "Npm install packages"
+            inputs:
+              command: "install"
+
+          - task: CmdLine@2
+            inputs:
+              script: |
+                gulp clean
+                gulp build --ship
+                gulp bundle --ship
+                gulp package-solution --ship
+                dir
+
+          - task: CopyFiles@2
+            displayName: "Copy Package file to artifact staging directory"
+            inputs:
+              SourceFolder: "$(Build.SourcesDirectory)/sharepoint/solution"
+              Contents: "$(PackageName)"
+              TargetFolder: "$(Build.ArtifactStagingDirectory)/drop/solution"
+
+          - task: CopyFiles@2
+            displayName: "Copy Script files to artifact staging directory"
+            inputs:
+              SourceFolder: "$(Build.SourcesDirectory)/DeploymentScript"
+              Contents: "*"
+              TargetFolder: $(Build.ArtifactStagingDirectory)/drop/script
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish staged artifacts"
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)/drop"
+              ArtifactName: "drop"
+              publishLocation: "Container"
+
+  # **********************************************Release to Development Start****************************************************************************
+  # The 'Release to Development stage deploys The SPPKG to the Development Environment
+  # It will only do so if the Build-stage has completed successfully.
+  - stage: "ReleaseToAcceptance"
+    displayName: "Release to Acceptance"
+    condition: succeeded('Build')
+
+    # It will include all variables from the correct Variable Group
+    variables:
+      - group: "Global Deployment Setting"
+      - group: "Development Deployment"
+
+    jobs:
+      - deployment: "ReleaseToAcceptance"
+        displayName: "Release to Acceptance"
+
+        # It will publish the releases to the environment that you can go to in the DevOps portal
+        environment: "Acceptance environment"
+
+        # We're using a standard, simple runOnce deployment strategy
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Configure the Node.JS version we want to use
+                - task: NodeTool@0
+                  displayName: "Use Node 18.x"
+                  inputs:
+                    versionSpec: 18.x
+
+                # Download the certificate to the agent
+                - task: DownloadSecureFile@1
+                  name: caCertificate
+                  displayName: "Download secure file"
+                  inputs:
+                    secureFile: "Treta.pfx"
+
+                # Install the CLI for Microsoft 365
+                - task: Npm@1
+                  displayName: "Install CLI for Microsoft 365"
+                  inputs:
+                    command: custom
+                    verbose: false
+                    customCommand: "install -g @pnp/office365-cli"
+
+                # Execute a CLI script to deploy the app to SharePoint
+                - powershell: |
+                    o365 login "$(SharePointBaseUrl)/$(SiteURL)" --authType certificate --certificateFile $(caCertificate.secureFilePath) --thumbprint "$(DevThumbprint)" --password "$(CertificatePassword)"
+                    o365 spo app add -p "$(Pipeline.Workspace)/drop/solution/$(PackageName)" -s sitecollection --appCatalogUrl "$(SharePointBaseUrl)/$(AppCatalogSiteURL)" --overwrite
+                    o365 spo app deploy --name "$(PackageName)" -s sitecollection --appCatalogUrl "$(SharePointBaseUrl)/$(AppCatalogSiteURL)" --skipFeatureDeployment
+                  displayName: "Add, deploy and upgrade app"
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/Template.xml"
+                    Write-Output "##vso[task.setvariable variable=FileExists]$fileExists"
+                    Write-Host variables['FileExists']
+                  displayName: "Check xml file exists"
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml"
+                    Write-Output "##vso[task.setvariable variable=RemoveFileExists]$fileExists"
+                    Write-Host variables['RemoveFileExists']
+                    Write-Host $(System.DefaultWorkingDirectory)
+                    Write-Host $(Pipeline.Workspace)
+                  displayName: "Check Remove Schema xml file exists"
+
+                - powershell: "Install-Module -Name PnP.PowerShell -RequiredVersion 1.12.0 -Scope CurrentUser -Force"
+                  displayName: "Install PnP.PowerShell Module"
+                  condition: or(eq(variables['FileExists'], True), eq(variables['RemoveFileExists'], True))
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Remove Schema "
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/RemoveSchemaFromXML.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['RemoveFileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Create / Modify Schema"
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/SchemaCreateModify.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/Template.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['FileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+  # **********************************************Release to Development END****************************************************************************
+
+  # **********************************************Release to Demo Start****************************************************************************
+  # The 'Release to Demo stage deploys The SPPKG to the Demo Environment
+  # It will only do so if the Build-stage has completed successfully.
+  - stage: "ReleaseToDemo"
+    displayName: "Release to Demo"
+    condition: succeeded('ReleaseToAcceptance')
+
+    # It will include all variables from the correct Variable Group
+    variables:
+      - group: "Global Deployment Setting"
+      - group: "Demo Deployment"
+
+    jobs:
+      - deployment: "ReleaseToDemo"
+        displayName: "Release to Demo"
+
+        # It will publish the releases to the environment that you can go to in the DevOps portal
+        environment: "Demo environment"
+
+        # We're using a standard, simple runOnce deployment strategy
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Download the certificate to the agent
+                - task: DownloadSecureFile@1
+                  name: caCertificate
+                  displayName: "Download secure file"
+                  inputs:
+                    secureFile: "Treta.pfx"
+
+                # Configure the Node.JS version we want to use
+                - task: NodeTool@0
+                  displayName: "Use Node 18.x"
+                  inputs:
+                    versionSpec: 18.x
+
+                # Install the CLI for Microsoft 365
+                - task: Npm@1
+                  displayName: "Install CLI for Microsoft 365"
+                  inputs:
+                    command: custom
+                    verbose: false
+                    customCommand: "install -g @pnp/office365-cli"
+
+                # Execute a CLI script to deploy the app to SharePoint
+                - powershell: |
+                    o365 login "$(SharePointBaseUrl)/$(SiteURL)" --authType certificate --certificateFile $(caCertificate.secureFilePath) --thumbprint "$(DevThumbprint)" --password "$(CertificatePassword)"
+                    o365 spo app add -p "$(Pipeline.Workspace)/drop/solution/$(PackageName)" -s sitecollection --appCatalogUrl "$(SharePointBaseUrl)/$(AppCatalogSiteURL)" --overwrite
+                    o365 spo app deploy --name "$(PackageName)" -s sitecollection --appCatalogUrl "$(SharePointBaseUrl)/$(AppCatalogSiteURL)" --skipFeatureDeployment
+                  displayName: "Add, deploy and upgrade app"
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/Template.xml"
+                    Write-Output "##vso[task.setvariable variable=FileExists]$fileExists"
+                    Write-Host variables['FileExists']
+                  displayName: "Check xml file exists"
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml"
+                    Write-Output "##vso[task.setvariable variable=RemoveFileExists]$fileExists"
+                    Write-Host variables['RemoveFileExists']
+                  displayName: "Check Remove Schema xml file exists"
+
+                - powershell: "Install-Module -Name PnP.PowerShell -RequiredVersion 1.12.0 -Scope CurrentUser -Force"
+                  displayName: "Install PnP.PowerShell Module"
+                  condition: or(eq(variables['FileExists'], True), eq(variables['RemoveFileExists'], True))
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Remove Schema "
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/RemoveSchemaFromXML.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['RemoveFileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Create / Modify Schema"
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/SchemaCreateModify.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/Template.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['FileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+  # **********************************************Release to Demo END****************************************************************************
+  # **********************************************Release to Prod Start****************************************************************************
+  # The 'Release to Demo stage deploys The SPPKG to the Demo Environment
+  # It will only do so if the Build-stage has completed successfully.
+  - stage: "ReleaseToProd"
+    displayName: "Release to Prod"
+    condition: succeeded('ReleaseToDemo')
+
+    # It will include all variables from the correct Variable Group
+    variables:
+      - group: "Global Deployment Setting Production"
+      - group: "Production Deployment"
+
+    jobs:
+      - deployment: "ReleaseToProd"
+        displayName: "Release to Production"
+
+        # It will publish the releases to the environment that you can go to in the DevOps portal
+        environment: "Production environment"
+
+        # We're using a standard, simple runOnce deployment strategy
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                # Download the certificate to the agent
+                - task: DownloadSecureFile@1
+                  name: caCertificate
+                  displayName: "Download secure file"
+                  inputs:
+                    secureFile: "Quayclean.pfx"
+
+                # Configure the Node.JS version we want to use
+                - task: NodeTool@0
+                  displayName: "Use Node 18.x"
+                  inputs:
+                    versionSpec: 18.x
+
+                # Install the CLI for Microsoft 365
+                - task: Npm@1
+                  displayName: "Install CLI for Microsoft 365"
+                  inputs:
+                    command: custom
+                    verbose: false
+                    customCommand: "install -g @pnp/office365-cli"
+
+                - powershell: "Install-Module -Name PnP.PowerShell -RequiredVersion 1.12.0 -Scope CurrentUser -Force"
+                  displayName: "Install PnP.PowerShell Module"
+
+                # Execute a CLI script to deploy the app to SharePoint
+                - powershell: |
+                    Connect-PnPOnline -Url "$(SharePointBaseUrl)/$(AppCatalogSiteURL)" -ClientId $(AppId) -Tenant "$(Tenant).onmicrosoft.com" -CertificatePath $(caCertificate.secureFilePath) -CertificatePassword $(ConvertTo-SecureString "$(CertificatePassword)" -AsPlainText -Force)
+                    Add-PnPApp -Path "$(Pipeline.Workspace)/drop/solution/$(PackageName)" -Publish -SkipFeatureDeployment -Overwrite -Scope Site
+                  displayName: "Add, deploy and upgrade app"
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/Template.xml"
+                    Write-Output "##vso[task.setvariable variable=FileExists]$fileExists"
+                    Write-Host variables['FileExists']
+                  displayName: "Check xml file exists"
+
+                - powershell: |
+                    $fileExists =  Test-Path -Path "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml"
+                    Write-Output "##vso[task.setvariable variable=RemoveFileExists]$fileExists"
+                    Write-Host variables['RemoveFileExists']
+                  displayName: "Check Remove Schema xml file exists"
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Remove Schema "
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/RemoveSchemaFromXML.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/RemoveTemplate.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['RemoveFileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+
+                - task: PowerShell@2
+                  displayName: "Run PowerShell Script to Create / Modify Schema"
+                  inputs:
+                    targetType: filePath
+                    filePath: "$(Pipeline.Workspace)/drop/script/SchemaCreateModify.ps1"
+                    arguments: '-certificateFile "$(caCertificate.secureFilePath)" -password "$(CertificatePassword)" -TemplateFilePath "$(Pipeline.Workspace)/drop/script/Template.xml" -SiteUrl $(SharePointBaseUrl)/$(SiteURL) -ClientId $(AppId) -TenantId $(TenantId) -thumbprint "$(DevThumbprint)"'
+                  continueOnError: true
+                  condition: eq(variables['FileExists'], True)
+                  env:
+                    OFFICE365CLI_AADAPPID: $(AppId)
+                    OFFICE365CLI_TENANT: $(TenantId)
+# **********************************************Release to Demo END****************************************************************************

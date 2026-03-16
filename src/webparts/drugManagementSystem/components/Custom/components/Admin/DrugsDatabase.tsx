@@ -1,0 +1,2 @@
+export * from './DrugsDatabase/DrugsDatabase';
+

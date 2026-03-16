@@ -1,0 +1,45 @@
+.empty-state-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+  margin: 16px 0;
+
+  .empty-state-content {
+    text-align: center;
+    max-width: 400px;
+  }
+
+  .empty-state-icon {
+    color: #adb5bd;
+    margin-bottom: 16px;
+    
+    svg {
+      opacity: 0.6;
+    }
+  }
+
+  .empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0 0 8px 0;
+  }
+
+  .empty-state-description {
+    font-size: 14px;
+    color: #6c757d;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+  }
+
+  .empty-state-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- Site Provisioning Template -->
+<SiteProvisioning>
+    <Templates ID="CONTAINER-TEMPLATE-f2b2d627-ea42-4403-bd9c-eb6172a8c95e">
+        <Remove>
+            <!-- <Lists>
+                <ListInstance Title="Committees" />
+                <ListInstance Title="Leadership" />
+                <ListInstance Title="Office Profile" />
+                <ListInstance Title="Technology Support" />
+            </Lists> 
+            <ListColumns>
+                <ListInstance Title="Delete List">
+                    <Fields>
+                        <Field Name="Code"/>
+                    </Fields>
+                </ListInstance>
+            </ListColumns>
+            <ContentTypes>
+                <ContentType Name="eLearning" Group="eLearning Content Type" />
+                <ContentType Name="Remove Content Type" Group="eLearning Content Type" />
+            </ContentTypes>
+            <SiteFields>
+                <Field Name="DeleteField1"/>
+                <Field Name="DeleteField2"/>
+            </SiteFields> -->
+            <Lists />
+            <ListColumns />
+            <ContentTypes />
+            <SiteFields />
+        </Remove>
+    </Templates>
+</SiteProvisioning>

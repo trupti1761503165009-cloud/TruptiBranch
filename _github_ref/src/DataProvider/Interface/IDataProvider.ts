@@ -1,0 +1,82 @@
+
+import { IFileWithBlob } from "./IFileWithBlob";
+import IPnPQueryOptions, { IAttachment, IPnPCAMLQueryOptions } from "./IPnPQueryOptions";
+
+export interface IDataProvider {
+    updateItem(data: any, listName: string, ID: any): unknown;
+    createItem(objItems: any, listName: string): Promise<any>;
+    createItemInBatch(objItems: any[], listName: string, Url?: string): Promise<any>;
+    createItemInBatchWithAttachment(objItems: any[], listName: string, Url?: string): Promise<any>;
+    createItemInBatchWithCopyAttachment(objItems: any[], listName: string, Url?: string): Promise<any>;
+    getItemsByQuery(queryOptions: IPnPQueryOptions): Promise<any[]>;
+    getAllItems(queryOptions: IPnPQueryOptions): Promise<any[]>;
+    getByItemByID(listName: string, id: number, queryOptions?: IPnPQueryOptions): Promise<any>;
+    updateListItemsInBatchPnP(listName: string, objItems: any[]): Promise<any>;
+    updateListItemsInBatchWithAttachment(listName: string, objItems: any[]): Promise<any>;
+    getCurrentUser(): Promise<any>;
+    choiceOption(listName: string, fieldName: string): Promise<any>;
+    getSiteUsers(): Promise<any>;
+    getPropertiesFor(usersArray: any): Promise<any>;
+    updateItemWithPnP(objItems: any, listName: string, itemId: number): Promise<any>;
+    deleteItem(listName: string, itemId: number, Url?: string): Promise<any>;
+    getVersionHistoryById(listName: string, itemId: number): Promise<any>;
+    getItemsByCAMLQuery(listName: string, xmlQuery: string, overrideParameters?: any, siteUrl?: string): Promise<any[]>;
+    publishDocumentByURL(fileRef: string, comment: string): Promise<any>;
+    getListId(listName: string): Promise<string>;
+    downloadFile(filePath: string, fileName: string): Promise<any>;
+    getByItemByIDQuery(queryOptions: IPnPQueryOptions): Promise<any>;
+    delteItemsBatch(listName: string, itemId: any[]): Promise<any>;
+    getDocumentByURL(document?: string): Promise<any>;
+    getTrainingMaterial(document?: string): Promise<any>;
+    _Document(UploadFolderName: string): Promise<any>;
+    addAttachment(listName: string, id: number, files: IAttachment): Promise<any>;
+    addMultipleAttachment(listName: string, id: number, files: IAttachment[]): Promise<any>;
+    additemsWithAttachment(listName: string, objItems: any, files: any): Promise<any>;
+    uploadFile(file: IFileWithBlob, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    uploadFileWithData(file: IFileWithBlob, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    uploadFileWithDataInDocLibrary(file: IFileWithBlob, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    createItemWithSiteUrl(objItems: any, listName: string, siteUrl: string): Promise<any>;
+    updateItemWithPnPSiteUrl(objItems: any, listName: string, itemId: number, siteUrl?: string): Promise<any>;
+    uploadFilewithSiteUrl2(file: IFileWithBlob, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    // uploadFilewithSiteUrl(file: IFileWithBlob, siteUrl?: string, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    uploadFilewithSiteUrl(file: IFileWithBlob, siteUrl: string, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    uploadFilewithSiteUrl(file: IFileWithBlob, siteUrl: string, metadataUpdate?: boolean, metadata?: any): Promise<any>;
+    getUserPropertiesFor(accountName: string): Promise<any>;
+    getUserIdByEmail(getUserIdByEmail: any): Promise<any>;
+    uploadAttachmentToList(listName: string, attachmentFileObj: any, itemId: number): Promise<any>;
+    getSiteGroups(groupName: string): Promise<any>;
+    updateTheThumbLine(listName: string, file: any, oldFileUrl: string): Promise<any>;
+    createTheThumbLine(listName: string, file: IFileWithBlob): Promise<any>;
+    getFileBlobByUrl(serverRelativeUrl: string): Promise<any>;
+    getDocumentByServerRelativePath(ServerRelativePath: string): Promise<void>;
+    isAvailbleDocumnetByServerRelativePath(ServerRelativePath: string): Promise<any>;
+    deleteAttachment(listName: string, itemId: number, attachmentName: string, siteUrl?: string,): Promise<any>;
+    uploadAttachmentToListSiteUrl(listName: string, attachmentFileObj: any, itemId: number, siteUrl?: string): Promise<any>;
+    FolderByServerSiteUrl(url: string): Promise<any>;
+    FileByServerSiteUrl(url: string): Promise<any>;
+    deleteFileFromFolder(folderUrl: string, fileName: string): Promise<void>;
+    deleteFolder(folderUrl: string): Promise<void>;
+    UpdateItemWithAttachment(ID: number, listName: string, file: any, objItems?: any, oldAttachmnetName?: any): Promise<any>;
+    createFolder(folderUrl: string, metadata?: any): Promise<any>;
+    _Documentlib(UploadFolderName: string, metadata?: any): Promise<any>;
+    GetFields(listName: string, fieldName: string): Promise<any[]>;
+    AddUserToGroup(groupName: string, userEmail: string): Promise<any[]>;
+    RemoveUserFromGroup(groupName: string, userId: number): Promise<any[]>;
+    getItemsInBatchByCAMLQuery(pnpQueryOptions: IPnPCAMLQueryOptions): Promise<any>;
+    RenameFile(RenameFile: string, Rename: string): Promise<any[]>;
+    // uploadAttachmentsToListMultiple(listName: string, attachmentFileObj: any[], itemId: number): Promise<any>;
+    uploadAttachmentsToListSequential(listName: string, attachmentFileObj: any[], itemId: number): Promise<any>;
+    copyAttachments(sourceListTitle: string, sourceItemId: number, targetListTitle: string, targetItemId: number): Promise<any>;
+    uploadListAttachmentToList(listName: string, attachmentFileObj: any, itemId: number): Promise<any>;
+    getlistSchema(listName: string): Promise<any>;
+    getSiteList(): Promise<any>;
+    getUserName(id: any): Promise<any>;
+    renameFolder(currentFolderUrl: string, newFolderName: string): Promise<any>;
+    uploadImageToImageColumn(file: any, listName: string, columnName: string, Id: number): Promise<any>;
+    getPropertiesFor(name: any): Promise<any>;
+    deleteAttachmentIfAvailable(listName: string, itemId: number, attachmentName: string, siteUrl?: string): Promise<void>
+    createItemInBatchHelpDesk(objItems: any[], listName: string, Url?: string): Promise<{ successResults: any[]; failedResults: any[] }>
+    readFileContent(fileServerRelativeUrl: any, type: any): Promise<any>;
+    getFileContentByFilter(libraryName: string, type: any, filter: any): Promise<any>;
+    getListItemAttachments(listName: string, itemId: number): Promise<any[]>
+}

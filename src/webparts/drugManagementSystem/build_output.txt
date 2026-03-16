@@ -1,0 +1,33 @@
+[21:02:02] Working directory changed to D:\SharePointProjects\Demo1
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Build target: SHIP
+[21:02:09] Using gulpfile D:\SharePointProjects\Demo1\gulpfile.js
+[21:02:09] Starting 'bundle'...
+[[90m21:02:09[39m] Starting gulp
+[[90m21:02:09[39m] Starting subtask '[36mpre-copy[39m'...
+[[90m21:02:10[39m] Finished subtask '[36mpre-copy[39m' after [35m57 ms[39m
+[[90m21:02:10[39m] Starting subtask '[36mcopy-static-assets[39m'...
+[[90m21:02:10[39m] Starting subtask '[36msass[39m'...
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\Breadcrumb\Breadcrumb.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\CustomeDropDown\CustomeDropDown3.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\EmptyState\EmptyState.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\FormActions\FormActions.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\StatusBadge\StatusBadge.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:10[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\SummaryCard\SummaryCard.scss: filename should end with module.sass or module.scss[39m
+[[90m21:02:12[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-Button' is not camelCase and will not be type-safe.[39m
+[[90m21:02:12[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-TextField' is not camelCase and will not be type-safe.[39m
+[[90m21:02:12[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-DetailsList' is not camelCase and will not be type-safe.[39m
+[[90m21:02:12[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-CommandBar' is not camelCase and will not be type-safe.[39m
+[[90m21:02:12[39m] Finished subtask '[36msass[39m' after [35m2.3 s[39m
+[[90m21:02:12[39m] Starting subtask '[36mlint[39m'...
+[[90m21:02:12[39m] [[36mlint[39m] eslint version: 8.57.0
+[[90m21:02:12[39m] Starting subtask '[36mtsc[39m'...
+[[90m21:02:12[39m] [[36mtsc[39m] typescript version: 4.7.4
+[[90m21:02:13[39m] Finished subtask '[36mcopy-static-assets[39m' after [35m2.97 s[39m
+[[90m21:02:58[39m] [31mError - [[36mtsc[31m] [31msrc/webparts/drugManagementSystem/components/Custom/components/Admin/ManageDocuments/EditDocument.tsx(52,13): error TS1345: An expression of type 'void' cannot be tested for truthiness.[31m[39m
+[[90m21:02:58[39m] [31mError - '[36mtsc[31m' [31msub task errored after[31m [35m46 s[31m [39m
+[31m exited with code 2[39m
+[21:02:58] 'bundle' errored after 48 s
+About to exit with code: 1
+Process terminated before summary could be written, possible error in async code not continuing!
+Trying to exit with exit code 1

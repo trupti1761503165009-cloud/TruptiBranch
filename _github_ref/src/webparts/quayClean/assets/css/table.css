@@ -1,0 +1,27 @@
+  .inlineEdit table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 0.5rem;
+      overflow: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .inlineEdit th,
+  .inlineEdit td {
+      padding: 0.75rem;
+      text-align: left;
+  }
+
+  .inlineEdit th {
+      background-color: #1300a6;
+      color: white;
+  }
+
+  .inlineEdit tr:nth-child(odd) {
+      background-color: #f9fafb;
+  }
+
+  .inlineEdit tr:nth-child(even) {
+      background-color: #ffffff;
+  }

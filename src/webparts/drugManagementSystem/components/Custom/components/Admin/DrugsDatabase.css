@@ -1,0 +1,385 @@
+.drugs-database {
+  padding: 0;
+}
+
+.drugs-list-container {
+  padding: 20px;
+}
+
+.list-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.list-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.list-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.drugs-scrollable-list {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
+
+.drugs-scrollable-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drugs-scrollable-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.drugs-scrollable-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.drugs-scrollable-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.drug-item {
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  transition: all 0.3s;
+}
+
+.drug-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.drug-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.drug-header:hover {
+  background: #f5f5f5;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-top: 2px;
+  transition: transform 0.2s;
+}
+
+.expand-btn:hover {
+  color: #1E88E5;
+  transform: scale(1.1);
+}
+
+.drug-icon {
+  font-size: 24px;
+  margin-top: 2px;
+}
+
+.drug-info {
+  flex: 1;
+}
+
+.drug-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.drug-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.drug-category {
+  font-size: 13px;
+  color: #666;
+  padding: 2px 8px;
+  background: #e3f2fd;
+  border-radius: 4px;
+}
+
+.drug-description {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.btn-delete-drug {
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  margin-top: 2px;
+}
+
+.btn-delete-drug:hover {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
+}
+
+.drug-modules {
+  padding: 0;
+}
+
+.ctd-module {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.ctd-module:hover {
+  background: #fafafa;
+}
+
+.ctd-module:last-child {
+  border-bottom: none;
+}
+
+.ctd-module.level-0 {
+  background: #f9f9f9;
+}
+
+.ctd-module.level-0 .module-header {
+  padding-left: 20px;
+}
+
+.ctd-module.level-1 .module-header {
+  padding-left: 60px;
+}
+
+.ctd-module.level-2 .module-header {
+  padding-left: 100px;
+}
+
+.ctd-module.level-3 .module-header {
+  padding-left: 140px;
+}
+
+.ctd-module.dragging {
+  opacity: 0.5;
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+}
+
+.module-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.no-expand-spacer {
+  width: 34px;
+  display: inline-block;
+}
+
+.folder-icon {
+  font-size: 16px;
+}
+
+.module-name {
+  font-size: 14px;
+  color: #212121;
+  font-weight: 500;
+}
+
+.module-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid #e0e0e0;
+  color: #666;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-icon:hover {
+  background: #1E88E5;
+  color: white;
+  border-color: #1E88E5;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.status-completed {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-in-progress {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.status-not-started {
+  background: #F5F5F5;
+  color: #757575;
+}
+
+.status-active {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.status-inactive {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.status-in-development {
+  background: #F3E5F5;
+  color: #7B1FA2;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-state p {
+  font-size: 15px;
+  margin: 0;
+}
+
+.drag-drop-zone {
+  border: 3px dashed #ccc;
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  background: #fafafa;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.drag-drop-zone:hover {
+  border-color: #1E88E5;
+  background: #e3f2fd;
+}
+
+.drag-drop-zone.dragging {
+  border-color: #1E88E5;
+  background: #e3f2fd;
+  box-shadow: 0 4px 16px rgba(30, 136, 229, 0.2);
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.drag-drop-icon {
+  font-size: 64px;
+  opacity: 0.5;
+}
+
+.drag-drop-zone h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #212121;
+}
+
+.drag-drop-zone p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.file-types {
+  margin-top: 12px;
+}
+
+.file-types small {
+  color: #999;
+  font-size: 12px;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #1E88E5;
+}
+
+/* Country Group Container */
+.country-group {
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Country Title */
+.country-title {
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0d47a1;
+  padding-left: 4px;
+}
+

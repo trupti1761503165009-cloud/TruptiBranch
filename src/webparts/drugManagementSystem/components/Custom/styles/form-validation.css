@@ -1,0 +1,334 @@
+/* Form Validation and Styling - Using SPFx ms-Grid for Layout */
+
+/* Field Wrapper */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+/* Labels */
+.form-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-label.required::after {
+  content: '*';
+  color: #D32F2F;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* Validation Styles */
+.field-error {
+  color: #D32F2F;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.field-error::before {
+  content: '⚠';
+  font-size: 14px;
+}
+
+.input-error {
+  border-color: #D32F2F !important;
+  border-width: 2px !important;
+}
+
+.input-error:focus {
+  border-color: #D32F2F !important;
+  box-shadow: 0 0 0 1px #D32F2F !important;
+}
+
+/* Success State */
+.field-success {
+  color: #43A047;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Form Section Headers */
+.form-section-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E88E5;
+  border-bottom: 2px solid #1E88E5;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+/* Cascading Dropdown Styles */
+.cascading-dropdown {
+  position: relative;
+}
+
+.cascading-dropdown.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.cascading-dropdown-hint {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Grid Text Fix */
+.grid-cell-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+
+.grid-cell-multiline {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+/* Folder vs File Icons */
+.item-icon-folder {
+  color: #FFA000;
+  font-size: 20px;
+}
+
+.item-icon-file {
+  font-size: 16px;
+}
+
+/* Action Button Groups */
+.action-buttons-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-button-icon {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Document View Panel */
+.document-view-panel {
+  padding: 24px;
+}
+
+.document-view-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.document-view-icon {
+  font-size: 32px;
+}
+
+.document-view-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.document-view-metadata {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metadata-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.metadata-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  font-size: 14px;
+}
+
+.breadcrumb-item {
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.breadcrumb-item:hover {
+  color: #1E88E5;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #999;
+  user-select: none;
+}
+
+.breadcrumb-current {
+  color: #333;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Filter Section Enhancement */
+.filter-section {
+  background: #F5F5F5;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.filter-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-section-title-icon {
+  color: #1E88E5;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.filtersGrid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Form Field Layouts */
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.formFieldLabel {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.formFieldLabel.required::after {
+  content: '*';
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.formFieldError {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cascadingDropdownHint {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+  display: block;
+}
+
+.formFieldRow {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.formFieldRow.twoColumn {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.formFieldRow.threeColumn {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.formFieldRow.oneColumn {
+  grid-template-columns: 1fr;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .formFieldRow.twoColumn {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .formFieldRow.threeColumn {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .document-view-metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .formFieldRow.twoColumn,
+  .formFieldRow.threeColumn {
+    grid-template-columns: 1fr;
+  }
+}

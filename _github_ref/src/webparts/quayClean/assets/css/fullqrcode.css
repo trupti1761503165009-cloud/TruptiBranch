@@ -1,0 +1,99 @@
+.colQR-lg-4 {
+    flex: 0 0 auto;
+    width: 33.33333333%;
+    margin-top: 15px !important;
+    margin-bottom: 10px !important;
+
+}
+
+.colQR-lg-9 {
+    flex: 0 0 auto;
+    width: 90%;
+}
+
+.colQR-lg-1 {
+    flex: "0 0 auto";
+    width: 10%;
+    display: grid;
+    place-items: center;
+    justify-content: space-evenly
+}
+
+.imgroate {
+    width: 135px;
+    transform: rotate(270deg);
+}
+
+.breakpage {
+    flex: 0 0 auto;
+    width: 33.33333333%;
+    margin-top: 15px !important;
+    page-break-after: always;
+    margin-bottom: 10px !important;
+
+}
+
+.fontsizeTitle {
+    font-size: small;
+    padding-right: 10px;
+
+}
+
+.fontsizeDate {
+    font-size: small;
+    margin-top: 5px;
+    padding-right: 10px;
+}
+
+.fontsizesmall {
+    font-size: small;
+    padding-right: 10px;
+}
+
+.dflexQR {
+    display: flex !important;
+}
+
+.notes {
+    font-size: small;
+    padding-right: 10px;
+    margin-top: 5px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    max-height: 3.6em;
+}
+
+.rowQR {
+    display: -webkit-box !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -ms-flex-wrap: wrap !important;
+    flex-wrap: wrap !important;
+    margin-right: -15px !important;
+    margin-left: -15px !important;
+}
+
+.colQR-lg-3 {
+    width: 25% !important;
+    margin-top: 15px;
+}
+
+.breakpageLandscap {
+    width: 25% !important;
+    page-break-after: always !important;
+    margin-top: 15px;
+
+}
+
+.title {
+    font-size: small !important;
+    padding-right: 10px !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    -webkit-line-clamp: 1 !important;
+    max-height: 3.6em !important;
+
+}

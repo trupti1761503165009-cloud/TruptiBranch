@@ -1,0 +1,25 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "quay-clean-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/quayClean/QuayCleanWebPart.js",
+          "manifest": "./src/webparts/quayClean/QuayCleanWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {
+    "gilroy": "./src/webparts/quayclean/assets/css/fonts",
+    "jquery": {
+      "path": "./node_modules/jquery/dist/jquery.min.js",
+      "globalName": "jQuery"
+    }
+  },
+  "localizedResources": {
+    "QuayCleanWebPartStrings": "lib/webparts/quayClean/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
+  }
+}

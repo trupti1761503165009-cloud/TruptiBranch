@@ -1,0 +1,46 @@
+.view-switch {
+    cursor: pointer;
+    display: inline-flex;
+    gap: 10px;
+    margin-right: 10px;
+    padding: 0px 0;
+    position: relative;
+    right: 5px;
+    text-align: left;    
+    justify-content: end;
+}
+
+.view-option {
+    gap: 10px;
+    background: #eff3f4;
+    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px #00000042;
+    border: 1px solid #ddd;
+}
+
+.view-icon {
+    color: var(--body-color);
+    font-size: 22px;
+}
+
+.view-option.active {
+    background: var(--secondry);
+    color: #fff;
+}
+#detailBlock .absolute-search{
+    position: absolute;
+  top: -45px;
+  z-index: 3;
+}
+
+@media (max-width:991px) {
+    .view-switch {
+        position: relative;
+        right: 5px;
+    }
+}

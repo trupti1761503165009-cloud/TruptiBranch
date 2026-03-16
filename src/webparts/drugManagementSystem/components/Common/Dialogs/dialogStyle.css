@@ -1,0 +1,27 @@
+.ms-Dialog-subText {
+    font-family: inherit !important;
+    color: #010101 !important;
+}
+
+.ms-Dialog-main {
+    min-width: 350px !important;
+    color: #010101 !important;
+}
+
+.ms-Dialog-main ul li {
+    list-style-type: disc !important;
+    list-style: disc !important;
+    padding: 2px 0 !important;
+}
+
+.ms-Dialog-main ul {
+    padding-left: 15px !important;
+}
+
+.ms-Dialog-lgHeader {
+    border-top: 4px solid #122034 !important;
+}
+
+.ms-Dialog-title {
+    color: #122034 !important;
+}

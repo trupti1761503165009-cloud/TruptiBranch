@@ -1,0 +1,27 @@
+/* @font-face {
+  font-family: 'Gilroy';
+  src: url('./fonts/Gilroy-Light.woff') format('woff');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('./fonts/GilroyBold.woff') format('woff');
+  font-weight: bold;
+} */
+
+@font-face {
+  font-family: "NotoSans";
+  src: url('./fonts/NotoSans.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: "NotoSansItalic";
+  src: url('./fonts/NotoSans-Italic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: "NotoSansBold";
+  src: url('./fonts/NotoSans-Bold.ttf') format('truetype');
+}

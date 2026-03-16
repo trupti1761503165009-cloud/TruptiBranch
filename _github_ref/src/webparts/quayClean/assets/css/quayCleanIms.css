@@ -1,0 +1,250 @@
+/* Add WHS CSS Start */
+.viewWHS .container {
+    width: 90%;
+    max-width: 900px;
+    background: white;
+    padding: 20px;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.viewWHS .header {
+    background: var(--primry);
+    color: white;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.viewWHS .sub-header {
+    background: #f0f0f0;
+    color: black;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.viewWHS table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.viewWHS th,
+.viewWHS td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.viewWHS th {
+    color: var(--primry);
+    background-color: white;
+}
+
+
+.whscardBody {
+    padding: 10px 5px;
+    background-color: white;
+    border-radius: 20px;
+}
+
+.justify-content-right {
+    justify-content: right;
+}
+
+.errorPoint {
+    padding: 0;
+    list-style-type: disc;
+
+    font-size: 14px !important;
+}
+
+.fbold {
+    font-weight: bold !important;
+}
+
+.w60 {
+    width: 60%;
+}
+
+
+
+.whsdeleteicon {
+    justify-content: end;
+    display: flex;
+    padding: 10px 10px 0px 0px;
+    margin-bottom: -10px;
+}
+
+@media (max-width: 768px) {
+
+    .viewWHS th,
+    .viewWHS td {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .viewWHS .header {
+        font-size: 22px;
+    }
+
+    .viewWHS .sub-header {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .viewWHS th,
+    .viewWHS td {
+        display: block;
+        width: 100%;
+    }
+
+    .viewWHS th {
+        text-align: center;
+    }
+}
+
+
+.whsDetailContainer {
+    width: 100%;
+    border: 1px solid #ddd;
+    /* border-radius: 6px; */
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 0px 0px 6px 6px;
+}
+
+.detailsContainer2 {
+    width: 100%;
+    /* border: 1px solid #ddd; */
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 0px !important;
+}
+
+.detailsRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+}
+
+.detailsRow:last-child {
+    border-bottom: none;
+}
+
+.detailsLabel {
+    font-weight: bold;
+    width: 40%;
+
+    padding: 10px;
+}
+
+.detailsValue {
+    width: 60%;
+    padding: 10px;
+    text-align: right;
+}
+
+.au-t-text-right {
+    text-align: right;
+}
+
+
+.fontsize-14 {
+    font-size: 14px !important;
+}
+
+.yes-Badge {
+    background-color: #4caf50;
+    color: #fff;
+    padding: 5px 10px 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    margin: 5px;
+    font-size: 12px;
+}
+
+.no-Badge {
+    background-color: #f44336;
+    color: #fff;
+    padding: 5px 10px 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+    margin: 5px;
+    font-size: 12px;
+}
+
+.whsvalue {
+    background: #f2f2f2;
+    border-radius: 6px;
+    color: #333;
+    font-size: 16px;
+    padding: 8px 15px;
+}
+
+
+.ms-Toggle.is-checked.whsMeetingToggle>.ms-Toggle-innerContainer .ms-Toggle-background {
+    background-color: #f2f2f2 !important;
+    border: #f2f2f2 !important;
+}
+
+.ms-Toggle.is-checked.whsMeetingToggle>.ms-Toggle-innerContainer>.ms-Toggle-background>.ms-Toggle-thumb {
+    background-color: #605e5c !important;
+}
+
+
+.ms-Toggle.is-enabled.whsMeetingToggle>.ms-Toggle-innerContainer>.ms-Label.ms-Toggle-stateText,
+.ms-Toggle.is-checked.whsMeetingToggle>.ms-Toggle-innerContainer>.ms-Label.ms-Toggle-stateText {
+    color: white;
+    margin-top: 5px !important;
+}
+
+
+.richTextrenderUlLi ul {
+    padding: revert !important;
+    margin: initial !important;
+    list-style: disc !important;
+}
+
+.richTextrenderUlLi ul li {
+    padding: initial !important;
+    margin: initial !important;
+    list-style: disc !important;
+}
+
+/* 
+.richTextrenderUlLi ul {
+    padding: revert !important;
+    margin: initial !important;
+    list-style: none !important;
+}
+
+.richTextrenderUlLi ul li {
+    padding: initial !important;
+    margin: initial !important;
+    list-style: none !important;
+}
+
+.richTextrenderUlLi ul {
+    list-style-type: none;
+    
+}
+
+.richTextrenderUlLi ul li::before {
+    content: "*";
+    margin-right: 10px;
+    color: rgb(31, 30, 28);
+} */
+
+/* Add WHS CSS End */

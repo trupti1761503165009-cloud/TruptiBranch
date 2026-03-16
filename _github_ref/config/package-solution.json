@@ -1,0 +1,38 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+    "solution": {
+        "name": "Quayclean Solution",
+        "id": "d210716d-87db-4d76-ad45-949a682f94bf",
+        "version": "1.0.0.62",
+        "includeClientSideAssets": true,
+        "skipFeatureDeployment": true,
+        "isDomainIsolated": false,
+        "developer": {
+            "name": "",
+            "websiteUrl": "",
+            "privacyUrl": "",
+            "termsOfUseUrl": "",
+            "mpnId": "Undefined-1.18.0"
+        },
+        "metadata": {
+            "shortDescription": {
+                "default": "QuayClean description"
+            },
+            "longDescription": {
+                "default": "QuayClean description"
+            },
+            "screenshotPaths": [],
+            "videoUrl": "",
+            "categories": []
+        },
+        "features": [{
+            "title": "quay-clean Feature",
+            "description": "The feature that activates elements of the quay-clean solution.",
+            "id": "5c19e3e4-892c-4292-be0a-408965280950",
+            "version": "1.0.0.0"
+        }]
+    },
+    "paths": {
+        "zippedPackage": "solution/Quayclean.sppkg"
+    }
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="UserRolesPermissions" Direction="$Resources:Direction;" Url="Lists/UserRolesPermissions" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{A1B2C3D4-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="SharePointGroup" DisplayName="SharePoint Group">
+        <CHOICES>
+          <CHOICE>Admin</CHOICE>
+          <CHOICE>HR</CHOICE>
+          <CHOICE>Author</CHOICE>
+          <CHOICE>Approver</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{B1B2C3D4-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="MultiChoice" Name="Permissions" DisplayName="Permissions">
+        <CHOICES>
+          <CHOICE>View All Tabs</CHOICE>
+          <CHOICE>Manage Users</CHOICE>
+          <CHOICE>Create Documents</CHOICE>
+          <CHOICE>Approve Documents</CHOICE>
+          <CHOICE>View Document Created Tab</CHOICE>
+          <CHOICE>View Approver Tab</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{C1B2C3D4-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Note" Name="Description" DisplayName="Description" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllItems;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/generic.png" Url="AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkTitle"></FieldRef>
+          <FieldRef Name="SharePointGroup"></FieldRef>
+          <FieldRef Name="Permissions"></FieldRef>
+          <FieldRef Name="Description"></FieldRef>
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="ID" />
+          </OrderBy>
+        </Query>
+        <ViewData>
+          <FieldRef Name="LinkTitle" Type="Text" />
+          <FieldRef Name="SharePointGroup" Type="Choice" />
+          <FieldRef Name="Permissions" Type="MultiChoice" />
+          <FieldRef Name="Description" Type="Note" />
+        </ViewData>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+  <!-- Dummy data for visualization -->
+  <!-- Admin: View All Tabs, Manage Users, Create Documents, Approve Documents, View Document Created Tab, View Approver Tab -->
+  <!-- HR: Manage Users -->
+  <!-- Author: Create Documents, View Document Created Tab -->
+  <!-- Approver: Approve Documents, View Approver Tab -->
+</List>

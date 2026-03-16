@@ -1,0 +1,31 @@
+:root {
+  --primary-color: #0078d4;
+  --secondary-color: #2b88d8;
+  --neutral-light: #f3f2f1;
+  --neutral-dark: #323130;
+  --neutral-secondary: #605e5c;
+  --neutral-primary: #323130;
+  --error-color: #a4262c;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--neutral-light);
+  margin: 0;
+  padding: 0;
+  color: var(--neutral-primary);
+}
+
+.ms-Button {
+  border-radius: 2px;
+}
+
+.ms-TextField {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .ms-DetailsList {
+    font-size: 12px;
+  }
+}

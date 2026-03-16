@@ -1,0 +1,1390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+  <!-- Categories (UI: Manage Categories) -->
+  <ListInstance Title="Categories"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="Categories.xml"
+                Url="Lists/Categories"
+                Description="Categories used by the DMS UI">
+    <Data>
+      <Rows>
+        <Row>
+          <Field Name="Title">Clinical Study Reports</Field>
+          <Field Name="Description">CSR documentation</Field>
+          <Field Name="Documents">45</Field>
+          <Field Name="Status">Active</Field>
+          <Field Name="DocumentCategory">Governance and Procedures</Field>
+          <Field Name="Group">Governance Document</Field>
+          <Field Name="SubGroup">Directive</Field>
+          <Field Name="ArtifactName">Quality Control</Field>
+          <Field Name="TemplateName">Specification</Field>
+          <Field Name="ArtifactDescription">Clinical documentation</Field>
+          <Field Name="CTDModule"></Field>
+          <Field Name="eCTDSection"></Field>
+          <Field Name="eCTDSubsection"></Field>
+          <Field Name="eCTDCode"></Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Regulatory Submissions</Field>
+          <Field Name="Description">FDA submissions</Field>
+          <Field Name="Documents">30</Field>
+          <Field Name="Status">Active</Field>
+          <Field Name="DocumentCategory">Manufacturing and Product Quality</Field>
+          <Field Name="Group">Master Manufacturing Record - Product</Field>
+          <Field Name="SubGroup">Guideline</Field>
+          <Field Name="ArtifactName">Safety</Field>
+          <Field Name="TemplateName">Procedure</Field>
+          <Field Name="ArtifactDescription">Regulatory submissions</Field>
+          <Field Name="CTDModule">M2</Field>
+          <Field Name="eCTDSection">2.7</Field>
+          <Field Name="eCTDSubsection">2.7.4</Field>
+          <Field Name="eCTDCode">M2.7.4</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Quality Documents</Field>
+          <Field Name="Description">QC/QA documentation</Field>
+          <Field Name="Documents">25</Field>
+          <Field Name="Status">Active</Field>
+          <Field Name="DocumentCategory">Validation</Field>
+          <Field Name="Group">Quality</Field>
+          <Field Name="SubGroup">Policy</Field>
+          <Field Name="ArtifactName">Validation</Field>
+          <Field Name="TemplateName">Specification</Field>
+          <Field Name="ArtifactDescription">Quality assurance docs</Field>
+          <Field Name="CTDModule"></Field>
+          <Field Name="eCTDSection"></Field>
+          <Field Name="eCTDSubsection"></Field>
+          <Field Name="eCTDCode"></Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Safety Reports</Field>
+          <Field Name="Description">Safety monitoring</Field>
+          <Field Name="Documents">20</Field>
+          <Field Name="Status">Active</Field>
+          <Field Name="DocumentCategory">Governance and Procedures</Field>
+          <Field Name="Group">Specification</Field>
+          <Field Name="SubGroup">Guideline</Field>
+          <Field Name="ArtifactName">Safety</Field>
+          <Field Name="TemplateName">Procedure</Field>
+          <Field Name="ArtifactDescription">Safety reports</Field>
+          <Field Name="CTDModule">M5</Field>
+          <Field Name="eCTDSection">5.3</Field>
+          <Field Name="eCTDSubsection">5.3.4</Field>
+          <Field Name="eCTDCode">M5.3.4</Field>
+        </Row>
+      </Rows>
+    </Data>
+  </ListInstance>
+
+  <!-- Templates (UI: Manage Templates) -->
+  <ListInstance Title="Templates"
+                OnQuickLaunch="TRUE"
+                TemplateType="101"
+                FeatureId="00bfea71-e717-4e80-aa17-d0c71b360101"
+                CustomSchema="Templates.xml"
+                Url="Templates"
+                Description="Template documents used by the DMS UI" />
+
+  <!-- Documents (UI: Documents workspace) -->
+  <ListInstance Title="DMS Documents"
+                OnQuickLaunch="TRUE"
+                TemplateType="101"
+                FeatureId="00bfea71-e717-4e80-aa17-d0c71b360101"
+                CustomSchema="Documents.xml"
+                Url="DMSDocuments"
+                Description="Document library used by the DMS UI" />
+
+  <!-- Signed Documents (UI: Final signed repository) -->
+  <ListInstance Title="Signed Documents"
+                OnQuickLaunch="TRUE"
+                TemplateType="101"
+                FeatureId="00bfea71-e717-4e80-aa17-d0c71b360101"
+                CustomSchema="SignedDocuments.xml"
+                Url="SignedDocuments"
+                Description="Final signed documents repository" />
+
+  <!-- CTD Folders (UI: CTD folder sidebar) -->
+  <ListInstance Title="CTD Folders"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="CTDFolders.xml"
+                Url="Lists/CTDFolders"
+                Description="CTD folder hierarchy used by the DMS UI">
+    <Data>
+      <Rows>
+        <Row>
+          <Field Name="Title">Module 1 - Administrative</Field>
+          <Field Name="FolderId">module-1</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1 Table of Contents (Module 1)</Field>
+          <Field Name="FolderId">1.1</Field>
+          <Field Name="ParentFolderId">module-1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">110</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.1 Application Form</Field>
+          <Field Name="FolderId">1.1.1</Field>
+          <Field Name="ParentFolderId">1.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">111</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.2 Product Information</Field>
+          <Field Name="FolderId">1.1.2</Field>
+          <Field Name="ParentFolderId">1.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">112</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.2.1 Summary of Product Characteristics (SmPC)</Field>
+          <Field Name="FolderId">1.1.2.1</Field>
+          <Field Name="ParentFolderId">1.1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1121</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.2.2 PIL / Package Insert</Field>
+          <Field Name="FolderId">1.1.2.2</Field>
+          <Field Name="ParentFolderId">1.1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1122</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.2.3 Label (Mock-up)</Field>
+          <Field Name="FolderId">1.1.2.3</Field>
+          <Field Name="ParentFolderId">1.1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1123</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.3 Information about Experts</Field>
+          <Field Name="FolderId">1.1.3</Field>
+          <Field Name="ParentFolderId">1.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">113</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4 Specific Regional Requirements (India/EU)</Field>
+          <Field Name="FolderId">1.1.4</Field>
+          <Field Name="ParentFolderId">1.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">114</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.1 Export NOC</Field>
+          <Field Name="FolderId">1.1.4.1</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1141</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.2 Manufacturing License</Field>
+          <Field Name="FolderId">1.1.4.2</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1142</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.3 GMP Certificate</Field>
+          <Field Name="FolderId">1.1.4.3</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1143</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.4 EU Import License Reference</Field>
+          <Field Name="FolderId">1.1.4.4</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1144</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.5 Free Sale Certificate</Field>
+          <Field Name="FolderId">1.1.4.5</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1145</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.6 CPP</Field>
+          <Field Name="FolderId">1.1.4.6</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1146</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.4.7 EU Compliance Declaration</Field>
+          <Field Name="FolderId">1.1.4.7</Field>
+          <Field Name="ParentFolderId">1.1.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1147</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.5 Additional Documents</Field>
+          <Field Name="FolderId">1.1.5</Field>
+          <Field Name="ParentFolderId">1.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">115</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.5.1 PSMF summary</Field>
+          <Field Name="FolderId">1.1.5.1</Field>
+          <Field Name="ParentFolderId">1.1.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1151</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.5.2 Risk Management Plan</Field>
+          <Field Name="FolderId">1.1.5.2</Field>
+          <Field Name="ParentFolderId">1.1.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1152</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.5.3 Environmental Risk Assessment</Field>
+          <Field Name="FolderId">1.1.5.3</Field>
+          <Field Name="ParentFolderId">1.1.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1153</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.1.5.4 Fee Payment Receipts</Field>
+          <Field Name="FolderId">1.1.5.4</Field>
+          <Field Name="ParentFolderId">1.1.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1154</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2 Documents Specific to Each Region</Field>
+          <Field Name="FolderId">1.2</Field>
+          <Field Name="ParentFolderId">module-1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">120</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.1 Table of Contents</Field>
+          <Field Name="FolderId">1.2.1</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">121</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.2 Application Form</Field>
+          <Field Name="FolderId">1.2.2</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">122</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.2.1 India Application Form</Field>
+          <Field Name="FolderId">1.2.2.1</Field>
+          <Field Name="ParentFolderId">1.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1221</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.2.2 EU Application Form</Field>
+          <Field Name="FolderId">1.2.2.2</Field>
+          <Field Name="ParentFolderId">1.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">1222</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.3 Product Information</Field>
+          <Field Name="FolderId">1.2.3</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">123</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.4 Information about Experts</Field>
+          <Field Name="FolderId">1.2.4</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">124</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.5 Specific Regional Requirements (India/EU)</Field>
+          <Field Name="FolderId">1.2.5</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">125</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">1.2.6 Additional Documents</Field>
+          <Field Name="FolderId">1.2.6</Field>
+          <Field Name="ParentFolderId">1.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">126</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 2 - CTD Summaries</Field>
+          <Field Name="FolderId">module-2</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.3 Quality Overall Summary</Field>
+          <Field Name="FolderId">2.3</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">23</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4 Nonclinical Overview</Field>
+          <Field Name="FolderId">2.4</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">24</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5 Clinical Overview</Field>
+          <Field Name="FolderId">2.5</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">25</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6 Nonclinical Written and Tabulated Summaries</Field>
+          <Field Name="FolderId">2.6</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">26</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7 Clinical Summary</Field>
+          <Field Name="FolderId">2.7</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">27</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1 CTD Table of Contents (Modules 2-5)</Field>
+          <Field Name="FolderId">2.1</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">21</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.1 CTD Introduction</Field>
+          <Field Name="FolderId">2.1.1</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">211</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.2 Quality Overall Summary</Field>
+          <Field Name="FolderId">2.1.2</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">212</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.3 Nonclinical Overview</Field>
+          <Field Name="FolderId">2.1.3</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">213</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.4 Clinical Overview</Field>
+          <Field Name="FolderId">2.1.4</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">214</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.5 Nonclinical Written and Tabulated Summaries</Field>
+          <Field Name="FolderId">2.1.5</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">215</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.1.6 Clinical Summary</Field>
+          <Field Name="FolderId">2.1.6</Field>
+          <Field Name="ParentFolderId">2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">216</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.2 CTD Introduction</Field>
+          <Field Name="FolderId">2.2</Field>
+          <Field Name="ParentFolderId">module-2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">22</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.2 Pharmacology</Field>
+          <Field Name="FolderId">2.4.2</Field>
+          <Field Name="ParentFolderId">2.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">242</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.2.1 Primary Pharmacodynamics</Field>
+          <Field Name="FolderId">2.4.2.1</Field>
+          <Field Name="ParentFolderId">2.4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2421</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.2.2 Secondary Pharmacodynamics</Field>
+          <Field Name="FolderId">2.4.2.2</Field>
+          <Field Name="ParentFolderId">2.4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2422</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.2.3 Safety Pharmacology</Field>
+          <Field Name="FolderId">2.4.2.3</Field>
+          <Field Name="ParentFolderId">2.4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2423</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3 Pharmacokinetics</Field>
+          <Field Name="FolderId">2.4.3</Field>
+          <Field Name="ParentFolderId">2.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">243</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3.1 Absorption</Field>
+          <Field Name="FolderId">2.4.3.1</Field>
+          <Field Name="ParentFolderId">2.4.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2431</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3.2 Distribution</Field>
+          <Field Name="FolderId">2.4.3.2</Field>
+          <Field Name="ParentFolderId">2.4.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2432</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3.3 Metabolism</Field>
+          <Field Name="FolderId">2.4.3.3</Field>
+          <Field Name="ParentFolderId">2.4.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2433</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3.4 Excretion</Field>
+          <Field Name="FolderId">2.4.3.4</Field>
+          <Field Name="ParentFolderId">2.4.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2434</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.3.5 Pharmacokinetic Drug Interactions</Field>
+          <Field Name="FolderId">2.4.3.5</Field>
+          <Field Name="ParentFolderId">2.4.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2435</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4 Toxicology</Field>
+          <Field Name="FolderId">2.4.4</Field>
+          <Field Name="ParentFolderId">2.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">244</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.1 Single-Dose Toxicity</Field>
+          <Field Name="FolderId">2.4.4.1</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2441</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.2 Repeat-Dose Toxicity</Field>
+          <Field Name="FolderId">2.4.4.2</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2442</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.3 Genotoxicity</Field>
+          <Field Name="FolderId">2.4.4.3</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2443</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.4 Carcinogenicity</Field>
+          <Field Name="FolderId">2.4.4.4</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2444</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.5 Reproductive and Developmental Toxicity</Field>
+          <Field Name="FolderId">2.4.4.5</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2445</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.6 Local Tolerance</Field>
+          <Field Name="FolderId">2.4.4.6</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2446</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.4.7 Other Toxicity Studies</Field>
+          <Field Name="FolderId">2.4.4.7</Field>
+          <Field Name="ParentFolderId">2.4.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">2447</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.5 Integrated Overview and Conclusions</Field>
+          <Field Name="FolderId">2.4.5</Field>
+          <Field Name="ParentFolderId">2.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">245</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.4.6 List of Literature References</Field>
+          <Field Name="FolderId">2.4.6</Field>
+          <Field Name="ParentFolderId">2.4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">246</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.1 Product Development Rationale</Field>
+          <Field Name="FolderId">2.5.1</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">251</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.2 Overview of Biopharmaceutics</Field>
+          <Field Name="FolderId">2.5.2</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">252</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.3 Overview of Clinical Pharmacology</Field>
+          <Field Name="FolderId">2.5.3</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">253</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.4 Overview of Efficacy</Field>
+          <Field Name="FolderId">2.5.4</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">254</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.5 Overview of Safety</Field>
+          <Field Name="FolderId">2.5.5</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">255</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.6 Benefits and Risks Conclusions</Field>
+          <Field Name="FolderId">2.5.6</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">256</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.5.7 Literature References</Field>
+          <Field Name="FolderId">2.5.7</Field>
+          <Field Name="ParentFolderId">2.5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">257</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.1 Pharmacology Written Summary</Field>
+          <Field Name="FolderId">2.6.1</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">261</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.2 Pharmacology Tabulated Summary</Field>
+          <Field Name="FolderId">2.6.2</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">262</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.3 Pharmacokinetics Written Summary</Field>
+          <Field Name="FolderId">2.6.3</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">263</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.4 Pharmacokinetics Tabulated Summary</Field>
+          <Field Name="FolderId">2.6.4</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">264</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.5 Toxicology Written Summary</Field>
+          <Field Name="FolderId">2.6.5</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">265</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.6.6 Toxicology Tabulated Summary</Field>
+          <Field Name="FolderId">2.6.6</Field>
+          <Field Name="ParentFolderId">2.6</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">266</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.1 Summary of Biopharmaceutic Studies</Field>
+          <Field Name="FolderId">2.7.1</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">271</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.2 Summary of Clinical Pharmacology Studies</Field>
+          <Field Name="FolderId">2.7.2</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">272</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.3 Summary of Clinical Efficacy</Field>
+          <Field Name="FolderId">2.7.3</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">273</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.4 Summary of Clinical Safety</Field>
+          <Field Name="FolderId">2.7.4</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">274</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.5 Literature References</Field>
+          <Field Name="FolderId">2.7.5</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">275</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">2.7.6 Synopses of Individual Studies</Field>
+          <Field Name="FolderId">2.7.6</Field>
+          <Field Name="ParentFolderId">2.7</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">276</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 3 - Quality</Field>
+          <Field Name="FolderId">module-3</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.1 Table of Contents</Field>
+          <Field Name="FolderId">3.1</Field>
+          <Field Name="ParentFolderId">module-3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">31</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2 Body of Data</Field>
+          <Field Name="FolderId">3.2</Field>
+          <Field Name="ParentFolderId">module-3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">32</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S Drug Substance</Field>
+          <Field Name="FolderId">3.2.S</Field>
+          <Field Name="ParentFolderId">3.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">321</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.1 General Information</Field>
+          <Field Name="FolderId">3.2.S.1</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3211</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.2 Manufacture</Field>
+          <Field Name="FolderId">3.2.S.2</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3212</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.3 Characterisation</Field>
+          <Field Name="FolderId">3.2.S.3</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3213</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.4 Control of Drug Substance</Field>
+          <Field Name="FolderId">3.2.S.4</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3214</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.5 Reference Standards or Materials</Field>
+          <Field Name="FolderId">3.2.S.5</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3215</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.6 Container Closure System</Field>
+          <Field Name="FolderId">3.2.S.6</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3216</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.S.7 Stability</Field>
+          <Field Name="FolderId">3.2.S.7</Field>
+          <Field Name="ParentFolderId">3.2.S</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3217</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P Drug Product</Field>
+          <Field Name="FolderId">3.2.P</Field>
+          <Field Name="ParentFolderId">3.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">322</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.1 Description and Composition</Field>
+          <Field Name="FolderId">3.2.P.1</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3221</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.2 Pharmaceutical Development</Field>
+          <Field Name="FolderId">3.2.P.2</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3222</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.3 Manufacture</Field>
+          <Field Name="FolderId">3.2.P.3</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3223</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.4 Control of Excipients</Field>
+          <Field Name="FolderId">3.2.P.4</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3224</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.5 Control of Drug Product</Field>
+          <Field Name="FolderId">3.2.P.5</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3225</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.6 Reference Standards or Materials</Field>
+          <Field Name="FolderId">3.2.P.6</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3226</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.7 Container Closure System</Field>
+          <Field Name="FolderId">3.2.P.7</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3227</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.P.8 Stability</Field>
+          <Field Name="FolderId">3.2.P.8</Field>
+          <Field Name="ParentFolderId">3.2.P</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3228</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.A Appendices</Field>
+          <Field Name="FolderId">3.2.A</Field>
+          <Field Name="ParentFolderId">3.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">323</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.A.1 Facilities and Equipment</Field>
+          <Field Name="FolderId">3.2.A.1</Field>
+          <Field Name="ParentFolderId">3.2.A</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3231</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.A.2 Adventitious Agents Safety Evaluation</Field>
+          <Field Name="FolderId">3.2.A.2</Field>
+          <Field Name="ParentFolderId">3.2.A</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3232</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.A.3 Excipients</Field>
+          <Field Name="FolderId">3.2.A.3</Field>
+          <Field Name="ParentFolderId">3.2.A</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">3233</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.2.R Regional Information</Field>
+          <Field Name="FolderId">3.2.R</Field>
+          <Field Name="ParentFolderId">3.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">324</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">3.3 Literature References</Field>
+          <Field Name="FolderId">3.3</Field>
+          <Field Name="ParentFolderId">module-3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">33</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 4 - Nonclinical Reports</Field>
+          <Field Name="FolderId">module-4</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.1 Table of Contents</Field>
+          <Field Name="FolderId">4.1</Field>
+          <Field Name="ParentFolderId">module-4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">41</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2 Study Reports</Field>
+          <Field Name="FolderId">4.2</Field>
+          <Field Name="ParentFolderId">module-4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">42</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.1 Pharmacology</Field>
+          <Field Name="FolderId">4.2.1</Field>
+          <Field Name="ParentFolderId">4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">421</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.1.1 Primary Pharmacodynamics</Field>
+          <Field Name="FolderId">4.2.1.1</Field>
+          <Field Name="ParentFolderId">4.2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4211</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.1.2 Secondary Pharmacodynamics</Field>
+          <Field Name="FolderId">4.2.1.2</Field>
+          <Field Name="ParentFolderId">4.2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4212</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.1.3 Safety Pharmacology</Field>
+          <Field Name="FolderId">4.2.1.3</Field>
+          <Field Name="ParentFolderId">4.2.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4213</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2 Pharmacokinetics</Field>
+          <Field Name="FolderId">4.2.2</Field>
+          <Field Name="ParentFolderId">4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">422</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2.1 Absorption</Field>
+          <Field Name="FolderId">4.2.2.1</Field>
+          <Field Name="ParentFolderId">4.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4221</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2.2 Distribution</Field>
+          <Field Name="FolderId">4.2.2.2</Field>
+          <Field Name="ParentFolderId">4.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4222</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2.3 Metabolism</Field>
+          <Field Name="FolderId">4.2.2.3</Field>
+          <Field Name="ParentFolderId">4.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4223</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2.4 Excretion</Field>
+          <Field Name="FolderId">4.2.2.4</Field>
+          <Field Name="ParentFolderId">4.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4224</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.2.5 Pharmacokinetic Drug Interactions</Field>
+          <Field Name="FolderId">4.2.2.5</Field>
+          <Field Name="ParentFolderId">4.2.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4225</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3 Toxicology</Field>
+          <Field Name="FolderId">4.2.3</Field>
+          <Field Name="ParentFolderId">4.2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">423</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.1 Single-Dose Toxicity</Field>
+          <Field Name="FolderId">4.2.3.1</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4231</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.2 Repeat-Dose Toxicity</Field>
+          <Field Name="FolderId">4.2.3.2</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4232</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.3 Genotoxicity</Field>
+          <Field Name="FolderId">4.2.3.3</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4233</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.4 Carcinogenicity</Field>
+          <Field Name="FolderId">4.2.3.4</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4234</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.5 Reproductive and Developmental Toxicity</Field>
+          <Field Name="FolderId">4.2.3.5</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4235</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.6 Local Tolerance</Field>
+          <Field Name="FolderId">4.2.3.6</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4236</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.2.3.7 Other Toxicity Studies</Field>
+          <Field Name="FolderId">4.2.3.7</Field>
+          <Field Name="ParentFolderId">4.2.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">4237</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.3 Integrated Overview and Conclusions</Field>
+          <Field Name="FolderId">4.3</Field>
+          <Field Name="ParentFolderId">module-4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">43</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">4.4 Literature References</Field>
+          <Field Name="FolderId">4.4</Field>
+          <Field Name="ParentFolderId">module-4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">44</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 5 - Clinical Study Reports</Field>
+          <Field Name="FolderId">module-5</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">5</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.1 Table of Contents (Module 5)</Field>
+          <Field Name="FolderId">5.1</Field>
+          <Field Name="ParentFolderId">module-5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">510</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.2 Tabular Listing of All Clinical Studies</Field>
+          <Field Name="FolderId">5.2</Field>
+          <Field Name="ParentFolderId">module-5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">520</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3 Clinical Study Reports</Field>
+          <Field Name="FolderId">5.3</Field>
+          <Field Name="ParentFolderId">module-5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">530</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.1 Reports of Biopharmaceutic Studies</Field>
+          <Field Name="FolderId">5.3.1</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">531</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.1.1 Bioavailability (BA) studies</Field>
+          <Field Name="FolderId">5.3.1.1</Field>
+          <Field Name="ParentFolderId">5.3.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">5311</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.1.2 Bioequivalence (BE) studies</Field>
+          <Field Name="FolderId">5.3.1.2</Field>
+          <Field Name="ParentFolderId">5.3.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">5312</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.1.3 IVIVC studies</Field>
+          <Field Name="FolderId">5.3.1.3</Field>
+          <Field Name="ParentFolderId">5.3.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">5313</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.1.4 Bioanalytical and analytical methods</Field>
+          <Field Name="FolderId">5.3.1.4</Field>
+          <Field Name="ParentFolderId">5.3.1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">5314</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.2 PK studies using human biomaterials</Field>
+          <Field Name="FolderId">5.3.2</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">532</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.3 Reports of Human PK Studies</Field>
+          <Field Name="FolderId">5.3.3</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">533</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.4 Reports of Human PD Studies</Field>
+          <Field Name="FolderId">5.3.4</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">534</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.5 Reports of Efficacy and Safety Studies</Field>
+          <Field Name="FolderId">5.3.5</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">535</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.6 Reports of Post-Marketing Experience</Field>
+          <Field Name="FolderId">5.3.6</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">536</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.3.7 Case Report Forms and Individual Patient Listings</Field>
+          <Field Name="FolderId">5.3.7</Field>
+          <Field Name="ParentFolderId">5.3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">537</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">5.4 Literature References</Field>
+          <Field Name="FolderId">5.4</Field>
+          <Field Name="ParentFolderId">module-5</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">540</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Annexures and Supporting Documents</Field>
+          <Field Name="FolderId">annexures</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">6</Field>
+        </Row>
+      </Rows>
+    </Data>
+  </ListInstance>
+
+  <!-- Drugs / Reference Data -->
+  <ListInstance Title="Countries"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="Countries.xml"
+                Url="Lists/Countries"
+                Description="Country master list used in Create Document and Drugs Database UI">
+    <Data>
+      <Rows>
+        <Row>
+          <Field Name="Title">United States</Field>
+          <Field Name="CountryCode">US</Field>
+          <Field Name="Region">North America</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Canada</Field>
+          <Field Name="CountryCode">CA</Field>
+          <Field Name="Region">North America</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">United Kingdom</Field>
+          <Field Name="CountryCode">GB</Field>
+          <Field Name="Region">Europe</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Australia</Field>
+          <Field Name="CountryCode">AU</Field>
+          <Field Name="Region">Oceania</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Germany</Field>
+          <Field Name="CountryCode">DE</Field>
+          <Field Name="Region">Europe</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">France</Field>
+          <Field Name="CountryCode">FR</Field>
+          <Field Name="Region">Europe</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">India</Field>
+          <Field Name="CountryCode">IN</Field>
+          <Field Name="Region">Asia</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Japan</Field>
+          <Field Name="CountryCode">JP</Field>
+          <Field Name="Region">Asia</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Brazil</Field>
+          <Field Name="CountryCode">BR</Field>
+          <Field Name="Region">South America</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">South Africa</Field>
+          <Field Name="CountryCode">ZA</Field>
+          <Field Name="Region">Africa</Field>
+          <Field Name="IsActive">1</Field>
+        </Row>
+      </Rows>
+    </Data>
+  </ListInstance>
+
+  <ListInstance Title="Drugs Database"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="DrugsDatabase.xml"
+                Url="Lists/DrugsDatabase"
+                Description="Drugs master data used by the DMS UI" />
+
+  <ListInstance Title="eCTD Sections"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="eCTDSections.xml"
+                Url="Lists/eCTDSections"
+                Description="eCTD section master list">
+    <Data>
+      <Rows>
+        <Row>
+          <Field Name="Title">Module 1</Field>
+          <Field Name="SectionCode">1</Field>
+          <Field Name="SectionName">Administrative Information and Prescribing Information</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 2</Field>
+          <Field Name="SectionCode">2</Field>
+          <Field Name="SectionName">Common Technical Document Summaries</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 3</Field>
+          <Field Name="SectionCode">3</Field>
+          <Field Name="SectionName">Quality</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 4</Field>
+          <Field Name="SectionCode">4</Field>
+          <Field Name="SectionName">Nonclinical Study Reports</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Module 5</Field>
+          <Field Name="SectionCode">5</Field>
+          <Field Name="SectionName">Clinical Study Reports</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Annexures</Field>
+          <Field Name="SectionCode">A</Field>
+          <Field Name="SectionName">Annexures and Supporting Documents</Field>
+        </Row>
+
+        <!-- Common folder codes used by UI defaults -->
+        <Row>
+          <Field Name="Title">Application Form</Field>
+          <Field Name="SectionCode">1.1.1</Field>
+          <Field Name="SectionName">Application Form</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Quality Overall Summary</Field>
+          <Field Name="SectionCode">2.3</Field>
+          <Field Name="SectionName">Quality Overall Summary</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Clinical Study Reports</Field>
+          <Field Name="SectionCode">5.3</Field>
+          <Field Name="SectionName">Clinical Study Reports</Field>
+        </Row>
+
+        <!-- Additional sections from CTD dossier.pdf -->
+        <Row><Field Name="Title">Module 1 TOC</Field><Field Name="SectionCode">1.1</Field><Field Name="SectionName">Table of Contents (Module 1)</Field></Row>
+        <Row><Field Name="Title">Product Information</Field><Field Name="SectionCode">1.1.2</Field><Field Name="SectionName">Product Information</Field></Row>
+        <Row><Field Name="Title">Regional Docs</Field><Field Name="SectionCode">1.2</Field><Field Name="SectionName">Documents Specific to Each Region</Field></Row>
+
+        <Row><Field Name="Title">CTD TOC</Field><Field Name="SectionCode">2.1</Field><Field Name="SectionName">CTD Table of Contents (Modules 2-5)</Field></Row>
+        <Row><Field Name="Title">CTD Introduction</Field><Field Name="SectionCode">2.2</Field><Field Name="SectionName">CTD Introduction</Field></Row>
+        <Row><Field Name="Title">Nonclinical Overview</Field><Field Name="SectionCode">2.4</Field><Field Name="SectionName">Nonclinical Overview</Field></Row>
+        <Row><Field Name="Title">Clinical Overview</Field><Field Name="SectionCode">2.5</Field><Field Name="SectionName">Clinical Overview</Field></Row>
+        <Row><Field Name="Title">Nonclinical Summaries</Field><Field Name="SectionCode">2.6</Field><Field Name="SectionName">Nonclinical Written and Tabulated Summaries</Field></Row>
+        <Row><Field Name="Title">Clinical Summary</Field><Field Name="SectionCode">2.7</Field><Field Name="SectionName">Clinical Summary</Field></Row>
+
+        <Row><Field Name="Title">Quality Body of Data</Field><Field Name="SectionCode">3.2</Field><Field Name="SectionName">Body of Data</Field></Row>
+        <Row><Field Name="Title">Drug Substance</Field><Field Name="SectionCode">3.2.S</Field><Field Name="SectionName">Drug Substance</Field></Row>
+        <Row><Field Name="Title">Drug Product</Field><Field Name="SectionCode">3.2.P</Field><Field Name="SectionName">Drug Product</Field></Row>
+
+        <Row><Field Name="Title">Study Reports</Field><Field Name="SectionCode">4.2</Field><Field Name="SectionName">Study Reports</Field></Row>
+        <Row><Field Name="Title">Pharmacology</Field><Field Name="SectionCode">4.2.1</Field><Field Name="SectionName">Pharmacology</Field></Row>
+        <Row><Field Name="Title">Pharmacokinetics</Field><Field Name="SectionCode">4.2.2</Field><Field Name="SectionName">Pharmacokinetics</Field></Row>
+        <Row><Field Name="Title">Toxicology</Field><Field Name="SectionCode">4.2.3</Field><Field Name="SectionName">Toxicology</Field></Row>
+
+        <Row><Field Name="Title">Biopharmaceutic Studies</Field><Field Name="SectionCode">5.3.1</Field><Field Name="SectionName">Reports of Biopharmaceutic Studies</Field></Row>
+        <Row><Field Name="Title">PK Biomaterials</Field><Field Name="SectionCode">5.3.2</Field><Field Name="SectionName">PK Studies Using Human Biomaterials</Field></Row>
+        <Row><Field Name="Title">Human PK</Field><Field Name="SectionCode">5.3.3</Field><Field Name="SectionName">Human Pharmacokinetic (PK) Studies</Field></Row>
+        <Row><Field Name="Title">Human PD</Field><Field Name="SectionCode">5.3.4</Field><Field Name="SectionName">Human Pharmacodynamic (PD) Studies</Field></Row>
+        <Row><Field Name="Title">Efficacy &amp; Safety</Field><Field Name="SectionCode">5.3.5</Field><Field Name="SectionName">Efficacy and Safety Studies</Field></Row>
+      </Rows>
+    </Data>
+  </ListInstance>
+
+  <ListInstance Title="GMP Models"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="GMPModels.xml"
+                Url="Lists/GMPModels"
+                Description="GMP model master list" />
+
+  <ListInstance Title="Mappings"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="Mappings.xml"
+                Url="Lists/Mappings"
+                Description="Mappings between GMP models and eCTD sections" />
+
+  <!-- Security / Users -->
+  <ListInstance Title="Departments"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="Departments.xml"
+                Url="Lists/Departments"
+                Description="Departments master list" />
+
+  <ListInstance Title="Employees"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="Employees.xml"
+                Url="Lists/Employees"
+                Description="Employees/users list used for lookups" />
+
+  <ListInstance Title="User Roles Permissions"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="UserRolesPermissions.xml"
+                Url="Lists/UserRolesPermissions"
+                Description="Role/permission mapping for users" />
+
+  <!-- Workflow / Auditing -->
+  <ListInstance Title="Workflows Approvals"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="WorkflowsApprovals.xml"
+                Url="Lists/WorkflowsApprovals"
+                Description="Workflow approvals for documents" />
+
+  <ListInstance Title="Audit Logs"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="AuditLogs.xml"
+                Url="Lists/AuditLogs"
+                Description="Audit trail for document actions" />
+</Elements>

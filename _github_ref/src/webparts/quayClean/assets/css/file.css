@@ -1,0 +1,101 @@
+#form-file-upload {
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+    position: relative;
+    min-height: 16rem;
+    border-width: 2px;
+    /* border-style: dashed; */
+}
+
+#input-file-upload {
+    display: none;
+}
+
+#label-file-upload {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-style: dashed;
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+    min-height: 16rem;
+}
+
+#label-file-upload.drag-active {
+    background-color: #5aabee;
+}
+
+.upload-button {
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1rem;
+    border: none;
+    font-family: "Gilroy" !important;
+    background-color: blue;
+}
+
+.upload-button:hover {
+    text-decoration-line: underline;
+}
+
+#drag-file-element {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+}
+
+.ms-DocumentCard {
+    max-width: 150px !important;
+    min-height: 200px !important;
+    position: relative;
+}
+
+.ms-DocumentCard .ms-DocumentCardTitle {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    height: auto;
+}
+
+.ms-DocumentCardPreview>div:first-child {
+    height: 85px;
+}
+
+.ms-DocumentCardPreview .ms-Image {
+    width: 50px !important;
+    height: 50px !important;
+    margin-left: 72px;
+    margin-top: 33px;
+}
+
+.filesContainerGrid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 15px;
+}
+
+.ms-DocumentCard .checkbox {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.grid-Box {
+    display: flex;
+    flex-flow: column nowrap;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.d-none {
+    display: none;
+}

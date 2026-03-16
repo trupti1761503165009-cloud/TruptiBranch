@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="Signed Documents" Direction="$Resources:Direction;" Url="SignedDocuments" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x0101">
+        <Folder />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0101009148F5A04DDD49CBA7127AADA5FB7926" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Category" DisplayName="Category" List="Lists/Categories" ShowField="Title" />
+      <Field ID="{A4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Drug" DisplayName="Drug" List="Lists/DrugsDatabase" ShowField="Title" />
+      <Field ID="{413f49fe-0f3d-444b-a59a-9dfd621fd6d3}" Type="Lookup" Name="Country" DisplayName="Country" List="Lists/Countries" ShowField="Title" />
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status">
+        <CHOICES>
+          <CHOICE>Signed</CHOICE>
+          <CHOICE>Final</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Reviewer" DisplayName="Reviewer" />
+      <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Approver" DisplayName="Approver" />
+      <Field ID="{30c98cd2-fad2-419a-8ba1-212bd06ae7a9}" Type="Note" Name="Comments" DisplayName="Comments" />
+      <Field ID="{4f02f50a-b4e2-4d99-80b9-bfdb193782d6}" Type="Text" Name="CTDFolder" DisplayName="CTD Folder" />
+      <Field ID="{40bcd9d0-ab12-4499-9315-c4a73c04a2b5}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
+      <Field ID="{e66dd8b1-47fc-4f1a-96de-567e085f4c1e}" Type="Text" Name="Submodule" DisplayName="Submodule" />
+      <Field ID="{5f5ccd4e-7991-4f4f-ab8c-2b98f9b86838}" Type="Lookup" Name="Template" DisplayName="Template" List="Templates" ShowField="Title" />
+      <Field ID="{135337a1-639a-4455-ac52-420357b4c7e4}" Type="Number" Name="Version" DisplayName="Version" Decimals="0" />
+      <Field ID="{7d247a92-70ad-4590-9874-442fbecdf54d}" Type="User" Name="SentBy" DisplayName="Sent By" />
+      <Field ID="{ee5c264a-7331-4668-aa95-8185379486a2}" Type="URL" Name="SharePointURL" DisplayName="SharePoint URL" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkFilename"></FieldRef>
+          <FieldRef Name="Category"></FieldRef>
+          <FieldRef Name="Drug"></FieldRef>
+          <FieldRef Name="Country"></FieldRef>
+          <FieldRef Name="Status"></FieldRef>
+          <FieldRef Name="Reviewer"></FieldRef>
+          <FieldRef Name="Approver"></FieldRef>
+          <FieldRef Name="Comments"></FieldRef>
+          <FieldRef Name="CTDFolder"></FieldRef>
+          <FieldRef Name="CTDModule"></FieldRef>
+          <FieldRef Name="Submodule"></FieldRef>
+          <FieldRef Name="Template"></FieldRef>
+          <FieldRef Name="Version"></FieldRef>
+          <FieldRef Name="SentBy"></FieldRef>
+          <FieldRef Name="Modified"></FieldRef>
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="Modified" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="Forms/DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="Forms/EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="Forms/Upload.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>

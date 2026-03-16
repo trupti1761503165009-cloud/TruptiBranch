@@ -1,0 +1,20 @@
+1.Document Creation Initiation
+Initiated a new document using the approved template repository, selecting the appropriate category and form from the integrated database.
+
+2.Collaborative Authoring & Drafting
+Drafted the document in SharePoint, leveraging real-time collaboration features to capture necessary inputs.
+
+3.Submission for Review
+Submitted the document for review, triggering workflow notifications to designated reviewers.
+
+4.Reviewer Feedback and Comments
+Demonstrated how reviewers provide structured feedback and comments directly within SharePoint, ensuring a traceable review process.
+
+5.Finalization & Approval Process
+Showed how the author incorporates reviewer comments, resubmits for approval, and how approvers review the finalized draft.
+
+6.Approval with Adobe E-Signature Integration
+Illustrated the seamless integration with Adobe, including e-signature workflow and document authentication.
+
+7.Archival and Template Repository Management
+All document need to merge in template

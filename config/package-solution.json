@@ -1,0 +1,62 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "drug-management-system-client-side-solution",
+    "id": "e533b614-03fc-4a4d-9bc8-ebe37af68453",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": false,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "DrugManagementSystem description"
+      },
+      "longDescription": {
+        "default": "DrugManagementSystem description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "drug-management-system Feature",
+        "description": "The feature that activates elements of the drug-management-system solution.",
+        "id": "1015631f-5c41-4e6b-ad9c-3bca82b82951",
+        "version": "1.0.0.0",
+        "assets": {
+          "elementManifests": [
+            "elements.xml"
+          ],
+          "elementFiles": [
+            "AuditLogs.xml",
+            "Categories.xml",
+            "CTDFolders.xml",
+            "Countries.xml",
+            "Departments.xml",
+            "Documents.xml",
+            "DrugsDatabase.xml",
+            "eCTDSections.xml",
+            "Employees.xml",
+            "GMPModels.xml",
+            "Mappings.xml",
+            "SignedDocuments.xml",
+            "Templates.xml",
+            "UserRolesPermissions.xml",
+            "WorkflowsApprovals.xml"
+          ]
+        }
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/drug-management-system.sppkg"
+  }
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="Categories" Direction="$Resources:Direction;" Url="Lists/Categories" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Note" Name="Description" DisplayName="Description" NumLines="6" />
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Number" Name="Documents" DisplayName="Documents" />
+      <Field ID="{C4B3C9A1-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status">
+        <CHOICES>
+          <CHOICE>Active</CHOICE>
+          <CHOICE>Inactive</CHOICE>
+        </CHOICES>
+      </Field>
+
+      <!-- Extra fields used by ManageCategories.tsx -->
+      <Field ID="{D4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="DocumentCategory" DisplayName="Document Category">
+        <CHOICES>
+          <CHOICE>Governance and Procedures</CHOICE>
+          <CHOICE>Manufacturing and Product Quality</CHOICE>
+          <CHOICE>Validation</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Group" DisplayName="Group">
+        <CHOICES>
+          <CHOICE>Governance Document</CHOICE>
+          <CHOICE>Master Manufacturing Record - Product</CHOICE>
+          <CHOICE>Quality</CHOICE>
+          <CHOICE>Specification</CHOICE>
+          <CHOICE>Equipment Validation</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="SubGroup" DisplayName="Sub Group">
+        <CHOICES>
+          <CHOICE>Directive</CHOICE>
+          <CHOICE>Guideline</CHOICE>
+          <CHOICE>Policy</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{0b0f9f59-145d-4795-8e5b-2f8e332c529e}" Type="Choice" Name="ArtifactName" DisplayName="Artifact Name">
+        <CHOICES>
+          <CHOICE>Facility</CHOICE>
+          <CHOICE>Information Technology</CHOICE>
+          <CHOICE>Purchasing</CHOICE>
+          <CHOICE>Quality Control</CHOICE>
+          <CHOICE>Safety</CHOICE>
+          <CHOICE>Validation</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{a18ca0eb-8347-438f-b747-4a3c994538e6}" Type="Text" Name="TemplateName" DisplayName="Template Name" />
+      <Field ID="{946c5b17-db66-4c47-a5e0-315b2538915b}" Type="Note" Name="ArtifactDescription" DisplayName="Artifact Description" NumLines="6" />
+
+      <!-- Excel-driven CTD/eCTD mapping fields (DIA_GMP_vs_eCTD.xlsx) -->
+      <Field ID="{7c60a97d-8cd0-4f0f-8d36-8ce1a4b4e2d2}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
+      <Field ID="{0cc0b33e-61a2-45c4-b4ff-9a8a2e0ef4f7}" Type="Text" Name="eCTDSection" DisplayName="eCTD Section" />
+      <Field ID="{db4a1f42-2e44-47a4-9f6e-88e7c3a2a8ea}" Type="Text" Name="eCTDSubsection" DisplayName="eCTD Subsection" />
+      <Field ID="{b8d6c0d8-7b7f-4a02-a4fb-9b1b57b1a3d0}" Type="Text" Name="eCTDCode" DisplayName="eCTD Code" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllItems;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/generic.png" Url="AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkTitle"></FieldRef>
+          <FieldRef Name="Description"></FieldRef>
+          <FieldRef Name="Documents"></FieldRef>
+          <FieldRef Name="Status"></FieldRef>
+          <FieldRef Name="DocumentCategory"></FieldRef>
+          <FieldRef Name="Group"></FieldRef>
+          <FieldRef Name="SubGroup"></FieldRef>
+          <FieldRef Name="ArtifactName"></FieldRef>
+          <FieldRef Name="TemplateName"></FieldRef>
+          <FieldRef Name="ArtifactDescription"></FieldRef>
+          <FieldRef Name="CTDModule"></FieldRef>
+          <FieldRef Name="eCTDSection"></FieldRef>
+          <FieldRef Name="eCTDSubsection"></FieldRef>
+          <FieldRef Name="eCTDCode"></FieldRef>
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="ID" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>

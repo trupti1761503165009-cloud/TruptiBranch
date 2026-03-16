@@ -1,0 +1,41 @@
+export interface ILoginUserRoleDetails {
+    isAdmin: boolean;
+    isSiteManager: boolean;
+    isStateManager: boolean;
+    isSiteSupervisor: boolean;
+    isUser: boolean;
+    title: string;
+    emailId: string;
+    Id: number;
+    siteManagerItem: any[];
+    siteManagerItemOrg?: any[];
+    userItems: any[];
+    stateManagerStateItem: any[];
+    stateManagerStateItemOrg?: any[];
+    stateManagerSitesItemIds: any[];
+    stateManagerSitesItems?: any[];
+    stateMasterItems: any[];
+    userRoles: string[];
+    currentUserSitesData?: any[];
+    siteSupervisorItem?: any[];
+    siteSupervisorItemOrg?: any[];
+    currentUserAllCombineSites?: any[];
+    currentUserAllCombineStateId?: any[];
+    PermissionArray?: any[];
+    isWHSChairperson: boolean;
+    isShowOnlyChairPerson: boolean;
+    whsChairpersonDetails: any[];
+    whsChairpersonTitle: string[];
+    whsChairpersonsStateId: number[];
+    isCurrentUserZoneSiteAvailable: boolean;
+    isStateManagerOrg?: boolean;
+    isSiteManagerOrg?: boolean;
+    isSiteSupervisorOrg?: boolean;
+    isUserOrg?: boolean;
+    isWHSChairpersonOrg?: boolean;
+    isAdminOrg?: boolean;
+    whsChairpersonDetailsOrg?: any[];
+    whsChairpersonTitleOrg?: string[];
+    whsChairpersonsStateOrgId?: number[];
+
+}

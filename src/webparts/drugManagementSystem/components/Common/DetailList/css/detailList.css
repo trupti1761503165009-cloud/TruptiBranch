@@ -1,0 +1,71 @@
+/* .card .ms-List-cell:nth-child(even) .ms-DetailsRow {
+    background: #f2f2f2 !important;
+    font-family: Helvetica !important;
+}
+
+.card .ms-List .ms-List-cell:nth-child(even) .ms-DetailsRow {
+    background: #f2f2f2 !important;
+    font-family: Helvetica !important;
+}
+
+.ms-DetailsHeader {
+    padding-top: 0px;
+}
+
+.ms-DetailsRow-fields {
+    font-family: inherit;
+    font-size: 23px !important;
+    align-items: center;
+    font-family: Helvetica !important;
+}
+
+.ms-DetailsRow:hover {
+    background: #f7f7f7;
+}
+
+.ms-DetailsRow-cell {
+    font-size: 14px !important;
+    white-space: normal !important;
+}
+
+.ms-DetailsRow-cell.ms-DetailsRow-cellCheck {
+    display: flex;
+    align-items: center;
+}
+
+.ms-TextField-fieldGroup,
+.ms-BasePicker-text,
+.ms-BasePicker-text input {
+    height: 32px !important;
+    line-height: 32px !important;
+}
+
+.ms-FocusZone.ms-DetailsRow,
+.ms-DetailsRow {
+    min-height: 40px !important;
+}
+
+.fileIconImg {
+    width: 16px !important;
+    height: 16px !important;
+}
+/* Add this CSS to your global stylesheet or module.css file */
+/* .jquery-data-table .ms-DetailsRow {
+  border-bottom: 1px solid #e0e0e0;
+  background-color: white;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.jquery-data-table .ms-DetailsRow:hover {
+  background-color: #f1f1f1;
+}
+
+.jquery-data-table .ms-DetailsRow:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.jquery-data-table .ms-DetailsHeader {
+  background-color: #e8e8e8 !important;
+  border-bottom: 2px solid #d0d0d0;
+  font-weight: 600;
+}  */

@@ -1,0 +1,122 @@
+
+> drug-management-system@0.0.1 build
+> gulp bundle
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+Build target: DEBUG
+[[90m00:17:44[39m] Using gulpfile D:\SharePointProjects\Demo1\gulpfile.js
+[[90m00:17:44[39m] Starting 'bundle'...
+[[90m00:17:44[39m] Starting gulp
+[[90m00:17:44[39m] Starting subtask '[36mpre-copy[39m'...
+[[90m00:17:44[39m] Finished subtask '[36mpre-copy[39m' after [35m37 ms[39m
+[[90m00:17:44[39m] Starting subtask '[36mcopy-static-assets[39m'...
+[[90m00:17:44[39m] Starting subtask '[36msass[39m'...
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\Breadcrumb\Breadcrumb.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\CustomeDropDown\CustomeDropDown3.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\EmptyState\EmptyState.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\FormActions\FormActions.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\StatusBadge\StatusBadge.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:44[39m] [33mWarning - [[36msass[33m] src\webparts\drugManagementSystem\components\Common\SummaryCard\SummaryCard.scss: filename should end with module.sass or module.scss[39m
+[[90m00:17:45[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-Button' is not camelCase and will not be type-safe.[39m
+[[90m00:17:45[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-TextField' is not camelCase and will not be type-safe.[39m
+[[90m00:17:45[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-DetailsList' is not camelCase and will not be type-safe.[39m
+[[90m00:17:45[39m] [33mWarning - [[36msass[33m] The local CSS class 'ms-CommandBar' is not camelCase and will not be type-safe.[39m
+[[90m00:17:45[39m] Finished subtask '[36msass[39m' after [35m1.14 s[39m
+[[90m00:17:45[39m] Starting subtask '[36mlint[39m'...
+[[90m00:17:45[39m] [[36mlint[39m] eslint version: 8.57.0
+[[90m00:17:45[39m] Starting subtask '[36mtsc[39m'...
+[[90m00:17:45[39m] [[36mtsc[39m] typescript version: 4.7.4
+[[90m00:17:46[39m] Finished subtask '[36mcopy-static-assets[39m' after [35m1.62 s[39m
+[[90m00:18:14[39m] [31mError - [[36mtsc[31m] [31m#[39m
+[31m# Fatal error in , line 0[39m
+[31m# Fatal process out of memory: Zone[39m
+[31m#[39m
+[31m#[39m
+[31m#[39m
+[31m#FailureMessage Object: 0000002C5D5F5B20[31m[39m
+[[90m00:18:14[39m] [31mError - [[36mlint[31m] [31mUnexpected STDERR output from ESLint: [39m
+[31m#[39m
+[31m# Fatal error in , line 0[39m
+[31m# Fatal process out of memory: Zone[39m
+[31m#[39m
+[31m#[39m
+[31m#[39m
+[31m#FailureMessage Object: 000000C4211F61D0[39m
+[31m 1: 00007FF7988C831F [39m
+[31m 2: 00007FF7987DB61F [39m
+[31m 3: 00007FF799696BB2 [39m
+[31m 4: 00007FF7992E3B43 [39m
+[31m 5: 00007FF798E0F990 [39m
+[31m 6: 00007FF7997BC38B [39m
+[31m 7: 00007FF79974651E [39m
+[31m 8: 00007FF799742808 [39m
+[31m 9: 00007FF79973DEEA [39m
+[31m10: 00007FF7992658F1 [39m
+[31m11: 00007FF799239574 [39m
+[31m12: 00007FF799239E1F [39m
+[31m13: 00007FF7987DDFFD [39m
+[31m14: 00007FF7989149DD [39m
+[31m15: 00007FF799927E60 [39m
+[31m16: 00007FFA4996259D BaseThreadInitThunk+29[39m
+[31m17: 00007FFA4A94AF78 RtlUserThreadStart+40[39m
+[31m[31m[39m
+[[90m00:18:14[39m] [31mError - [[36mtsc[31m] [31m#[39m
+[31m# Fatal error in , line 0[39m
+[31m# Fatal process out of memory: Zone[39m
+[31m#[39m
+[31m#[39m
+[31m#[39m
+[31m#FailureMessage Object: 0000002C5DDF5EF0[39m
+[31m#[39m
+[31m# Fatal error in , line 0[39m
+[31m# Fatal process out of memory: Zone[39m
+[31m#[39m
+[31m#[39m
+[31m#[39m
+[31m#FailureMessage Object: 0000002C5E5F5920[39m
+[31m 1: 00007FF7988C831F [39m
+[31m 1: 00007FF7988C831F [39m
+[31m 2: 00007FF7987DB61F [39m
+[31m 3: 00007FF799696BB2 [39m
+[31m 4: 00007FF7992E3B43 [39m
+[31m 2: 00007FF7987DB61F [39m
+[31m 3: 00007FF799696BB2 [39m
+[31m 4: 00007FF7992E3B43 [39m
+[31m 5: 00007FF798E0F990 [39m
+[31m 6: 00007FF798C0481A [39m
+[31m 7: 00007FF7997BB072 [39m
+[31m 8: 00007FF7997AD890 [39m
+[31m 9: 00007FF79973C661 [39m
+[31m10: 00007FF799749006 [39m
+[31m11: 00007FF799743158 [39m
+[31m12: 00007FF79973DEEA [39m
+[31m13: 00007FF7992658F1 [39m
+[31m14: 00007FF799239574 [39m
+[31m 5: 00007FF798E0F990 [39m
+[31m15: 00007FF799239E1F [39m
+[31m16: 00007FF7987DDFFD [39m
+[31m17: 00007FF7989149DD [39m
+[31m18: 00007FF799927E60 [39m
+[31m19: 00007FFA4996259D [39m
+[31m20: 00007FFA4A94AF78 [39m
+[31m 6: 00007FF7997BC38B [39m
+[31m 7: 00007FF79974626E [39m
+[31m 8: 00007FF799742FF7 [39m
+[31m 9: 00007FF79973DEEA [39m
+[31m10: 00007FF7992658F1 [39m
+[31m11: 00007FF799239574 [39m
+[31m12: 00007FF799239E1F [39m
+[31m13: 00007FF7987DDFFD [39m
+[31m14: 00007FF7989149DD [39m
+[31m15: 00007FF799927E60 [39m
+[31m16: 00007FFA4996259D [39m
+[31m17: 00007FFA4A94AF78[31m[39m
+[[90m00:18:14[39m] [31mError - [[36mlint[31m] [31m[31m[39m
+[[90m00:18:14[39m] Finished subtask '[36mlint[39m' after [35m29 s[39m
+[[90m00:18:14[39m] [31mError - '[36mtsc[31m' [31msub task errored after[31m [35m29 s[31m [39m
+[31m exited with code 2147483651[39m
+[00:18:14] 'bundle' errored after 30 s
+[00:18:14] 
+About to exit with code: 1
+Process terminated before summary could be written, possible error in async code not continuing!
+Trying to exit with exit code 1

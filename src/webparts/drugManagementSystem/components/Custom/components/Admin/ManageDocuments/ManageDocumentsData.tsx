@@ -1,0 +1,1145 @@
+import * as React from 'react';
+import * as CamlBuilder from 'camljs';
+import * as JSZip from 'jszip';
+import { useAtom, useAtomValue } from 'jotai';
+import type { Category, Comment, CTDFolder, Document, VersionHistory } from '../../../types';
+import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
+import { roleMappingAtom, siteAdminAtom } from '../../../../../jotai/adminAtoms';
+import { ListNames } from '../../../../../../Shared/Enum/ListNames';
+import { showToast } from '../../../../Common/Toast/toastBus';
+
+export type DateFilter =
+  | 'all'
+  | 'today'
+  | 'yesterday'
+  | 'last7days'
+  | 'last30days'
+  | 'thismonth'
+  | 'lastmonth'
+  | 'yeartodate'
+  | 'daterange';
+
+export interface ManageDocumentsFilters {
+  category: string;
+  status: string;
+  dateFilter: DateFilter;
+  dateFrom: string;
+  dateTo: string;
+}
+
+export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; filterByPending?: boolean }) {
+  const filterByCurrentUser = !!options?.filterByCurrentUser;
+  const filterByPending = !!options?.filterByPending;
+  const [appGlobalState, setAppGlobalState] = useAtom(appGlobalStateAtom);
+  const roleMapping = useAtomValue(roleMappingAtom);
+  const siteAdmin = useAtomValue(siteAdminAtom);
+  const { provider, context, currentUser } = appGlobalState;
+
+  const defaultTab = filterByPending ? 'assignedToMe' : filterByCurrentUser ? 'myDocuments' : 'all';
+  const [activeTab, setActiveTab] = React.useState<'all' | 'myDocuments' | 'assignedToMe' | 'workspace'>(defaultTab);
+  const [subTab, setSubTab] = React.useState<'folder' | 'list'>('folder');
+
+  const [documents, setDocuments] = React.useState<Document[]>([]);
+  // Filter based on activeTab
+  const docsByTab = React.useMemo(() => {
+    let list = documents;
+    const currentUserId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || 0) || 0;
+    const userEmail = String(currentUser?.email || '').toLowerCase();
+    
+    if (activeTab === 'myDocuments') {
+      list = list.filter(d => 
+        (d.authorId && d.authorId === currentUserId) || 
+        String(d.author || '').toLowerCase().includes(userEmail)
+      );
+    } else if (activeTab === 'assignedToMe') {
+      list = list.filter(d => 
+        (d.approverId && d.approverId === currentUserId) || 
+        String(d.approver || '').toLowerCase().includes(userEmail)
+      );
+    }
+    return list;
+  }, [documents, activeTab, currentUser]);
+
+  const [filteredDocuments, setFilteredDocuments] = React.useState<Document[]>([]);
+  const [drugs, setDrugs] = React.useState<Array<{ id: number; name: string; category?: string; status?: string; ctdStructure?: 'ectd' | 'dossier' }>>([]);
+  const [selectedDrugId, setSelectedDrugId] = React.useState<number | null>(null);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [ctdFolders, setCtdFolders] = React.useState<CTDFolder[]>([]);
+  const [tmfFolders, setTmfFolders] = React.useState<CTDFolder[]>([]);
+  const [gmpFolders, setGmpFolders] = React.useState<CTDFolder[]>([]);
+  const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(new Set());
+  const [selectedFolder, setSelectedFolder] = React.useState<string>('All');
+  const [selectedSubfolder, setSelectedSubfolder] = React.useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [isDocPanelOpen, setIsDocPanelOpen] = React.useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = React.useState(false);
+  const [viewingDocument, setViewingDocument] = React.useState<Document | null>(null);
+  const [editingDocument, setEditingDocument] = React.useState<Document | null>(null);
+  const [versionHistory, setVersionHistory] = React.useState<VersionHistory[]>([]);
+  const [versionHistoryRaw, setVersionHistoryRaw] = React.useState<any[]>([]);
+  const [compareVersion, setCompareVersion] = React.useState<any | null>(null);
+  const [editForm, setEditForm] = React.useState({
+    name: '',
+    categoryId: 0,
+    status: 'Draft',
+    ctdModule: '',
+    submodule: '',
+    approverId: 0
+  });
+  const [signature, setSignature] = React.useState('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const [ctdStructure, setCtdStructure] = React.useState<'ectd' | 'dossier'>('ectd');
+  const isStructureDisabled = selectedDrugId !== null;
+  const [filters, setFilters] = React.useState<ManageDocumentsFilters>({
+    category: '',
+    status: 'All',
+    dateFilter: 'all',
+    dateFrom: '',
+    dateTo: ''
+  });
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [successMessage, setSuccessMessage] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [reviewerComments, setReviewerComments] = React.useState<Comment[]>([]);
+  const [reviewerCommentError, setReviewerCommentError] = React.useState('');
+  const [showDeleted, setShowDeleted] = React.useState(false);
+  const [rejectReason, setRejectReason] = React.useState('');
+  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
+  const isAdmin = !!(siteAdmin || roleMapping?.isAdmin);
+
+  React.useEffect(() => {
+    setAppGlobalState((prev: any) => ({ ...prev, isSidebarHidden: isAddModalOpen || isEditModalOpen }));
+  }, [isAddModalOpen, isEditModalOpen, setAppGlobalState]);
+
+  const itemsPerPage = 10;
+  const canApprove = !!(siteAdmin || roleMapping?.isApprover || roleMapping?.isAdmin);
+  const canEdit = !!(siteAdmin || roleMapping?.isAdmin);
+  const canDelete = !!(siteAdmin || roleMapping?.isAdmin);
+  const canCreate = !!(siteAdmin || roleMapping?.isAuthor || roleMapping?.isAdmin);
+
+  const handleStructureChange = (value: 'ectd' | 'dossier') => {
+    setCtdStructure(value);
+  };
+
+  const parseComments = (value?: string) => {
+    if (!value) return [];
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const parseLookupText = (value: any): string => {
+    if (!value) return '';
+    if (Array.isArray(value) && value.length > 0) {
+      return value[0]?.lookupValue ?? value[0]?.Title ?? value[0]?.title ?? value[0]?.Name ?? '';
+    }
+    if (typeof value === 'string') {
+      return value.split(';#').filter(Boolean)[0] ?? value;
+    }
+    if (typeof value === 'object') {
+      return value.lookupValue ?? value.Title ?? value.title ?? value.Name ?? '';
+    }
+    return String(value);
+  };
+
+  const parseLookupId = (value: any): number | undefined => {
+    if (!value) return undefined;
+    if (Array.isArray(value) && value.length > 0) {
+      const id = value[0]?.lookupId ?? value[0]?.Id ?? value[0]?.id;
+      const parsed = Number(id);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parts = value.split(';#').filter(Boolean);
+      const parsed = Number(parts[0]);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }
+    if (typeof value === 'object') {
+      const id = value.lookupId ?? value.Id ?? value.id;
+      const parsed = Number(id);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    }
+    return undefined;
+  };
+
+  const parseUrlValue = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      return value.split(',')[0] ?? value;
+    }
+    if (typeof value === 'object') {
+      return value.Url ?? value.url ?? '';
+    }
+    return '';
+  };
+
+  const parseWordComments = async (buffer: ArrayBuffer): Promise<Comment[]> => {
+    const comments: Comment[] = [];
+    const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    try {
+      const zip = await JSZip.loadAsync(buffer);
+      const commentFile = zip.file('word/comments.xml');
+      if (!commentFile) return comments;
+      const xml = await commentFile.async('string');
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      const nodes = Array.from(doc.getElementsByTagNameNS(ns, 'comment'));
+      nodes.forEach((node, index) => {
+        const author = node.getAttribute('w:author') || node.getAttribute('author') || 'Reviewer';
+        const timestamp = node.getAttribute('w:date') || node.getAttribute('date') || new Date().toISOString();
+        const text = Array.from(node.getElementsByTagNameNS(ns, 't'))
+          .map(el => el.textContent || '')
+          .join('')
+          .trim();
+        if (text) {
+          comments.push({
+            id: Number(node.getAttribute('w:id') || node.getAttribute('id') || index + 1),
+            author,
+            text,
+            timestamp
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Failed to parse Word comments:', error);
+    }
+    return comments;
+  };
+
+  const sanitizeFolderName = (value: string): string =>
+    value.replace(/[\\/:*?"<>|]/g, '-').trim();
+
+  const ensureFolderPath = async (basePath: string, segments: string[]): Promise<string> => {
+    let currentPath = basePath;
+    for (const segment of segments) {
+      if (!segment) continue;
+      currentPath = `${currentPath}/${sanitizeFolderName(segment)}`;
+      try {
+        await provider?.createFolder(currentPath);
+      } catch (error) {
+        // ignore if folder already exists
+      }
+    }
+    return currentPath;
+  };
+
+  const mapDocumentItem = (item: any): Document => ({
+    id: item.ID,
+    name: item.FileLeafRef || item.Title || 'Untitled',
+    fileName: item.FileLeafRef || '',
+    fileRef: item.FileRef || '',
+    category: parseLookupText(item.Category),
+    categoryId: parseLookupId(item.CategoryId ?? item.Category),
+    drugName: parseLookupText(item.Drug),
+    drugId: parseLookupId(item.DrugId ?? item.Drug),
+    status: item.Status || 'Draft',
+    lastModified: item.Modified ? new Date(item.Modified).toISOString().split('T')[0] : '',
+    author: parseLookupText(item.Author),
+    authorId: parseLookupId(item.AuthorId ?? item.Author),
+    reviewer: parseLookupText(item.Reviewer),
+    reviewerId: parseLookupId(item.ReviewerId ?? item.Reviewer),
+    approver: parseLookupText(item.Approver),
+    approverId: parseLookupId(item.ApproverId ?? item.Approver),
+    comments: parseComments(item.Comments),
+    ctdFolder: item.CTDFolder || '',
+    ctdModule: item.CTDModule || '',
+    submodule: item.Submodule || '',
+    template: parseLookupText(item.Template),
+    templateId: parseLookupId(item.TemplateId ?? item.Template),
+    content: item.Content || '',
+    version: Number(item.Version || item.OData__UIVersionString || 1),
+    createdDate: item.Created ? new Date(item.Created).toISOString().split('T')[0] : '',
+    sentBy: parseLookupText(item.SentBy),
+    sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
+    isDeleted: !!item.IsDeleted
+  });
+
+  const buildCTDFolderTree = (items: any[]): CTDFolder[] => {
+    const nodes: CTDFolder[] = items.map((item: any) => ({
+      id: item.ID || 0,
+      folderId: item.FolderId || String(item.ID),
+      name: item.Title,
+      parentFolderId: item.ParentFolderId,
+      sortOrder: item.SortOrder || 0,
+      isFolder: true,
+      code: item.Code,
+      description: item.Description,
+      parentId: item.ParentFolderId || undefined,
+      children: [] as CTDFolder[],
+      icon: '📁',
+      documentCount: 0
+    }));
+    const lookup = new Map(nodes.map(node => [node.folderId, node]));
+    nodes.forEach(node => {
+      if (node.parentId && lookup.has(node.parentId)) {
+        lookup.get(node.parentId)!.children!.push(node);
+      }
+    });
+    return nodes.filter(node => !node.parentId);
+  };
+
+  const loadData = async () => {
+    if (!provider) {
+      // No provider available - return empty data
+      setDocuments([]);
+      setCtdFolders([]);
+      setCategories([]);
+      setDrugs([]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const docsQuery = new CamlBuilder()
+        .View([
+          'ID',
+          'Title',
+          'FileLeafRef',
+          'FileRef',
+          'Modified',
+          'Created',
+          'Status',
+          'Version',
+          'Comments',
+          'CTDFolder',
+          'CTDModule',
+          'Submodule',
+          'Content',
+          'SharePointURL',
+          'Author',
+          'AuthorId',
+          'Reviewer',
+          'ReviewerId',
+          'Approver',
+          'ApproverId',
+          'SentBy',
+          'SentById',
+          'Category',
+          'CategoryId',
+          'Drug',
+          'DrugId',
+          'Template',
+          'TemplateId',
+          'IsDeleted'
+        ])
+        .RowLimit(5000, true)
+        .Query();
+      docsQuery.OrderByDesc('Modified');
+      const tmfQuery = new CamlBuilder()
+        .View(['ID', 'Title', 'FolderId', 'ParentFolderId', 'SortOrder'])
+        .RowLimit(5000, true)
+        .Query();
+      tmfQuery.OrderBy('SortOrder');
+
+      const gmpQuery = new CamlBuilder()
+        .View(['ID', 'Title', 'FolderId', 'ParentFolderId', 'SortOrder'])
+        .RowLimit(5000, true)
+        .Query();
+      gmpQuery.OrderBy('SortOrder');
+ 
+      const foldersQuery = new CamlBuilder()
+        .View(['ID', 'Title', 'FolderId', 'ParentFolderId', 'SortOrder', 'Description', 'Code'])
+        .RowLimit(5000, true)
+        .Query();
+      foldersQuery.OrderBy('SortOrder');
+
+      const categoriesQuery = new CamlBuilder()
+        .View(['ID', 'Title', 'Description', 'Documents', 'Status', 'Level'])
+        .RowLimit(5000, true)
+        .Query();
+
+      const drugsQuery = new CamlBuilder()
+        .View(['ID', 'Title', 'Category', 'Status'])
+        .RowLimit(1000, true)
+        .Query();
+      drugsQuery.OrderBy('Title');
+
+      const [docs, folders, cats, gmp] = await Promise.all([
+        provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString()),
+        provider.getItemsByCAMLQuery(ListNames.CTDFolders, foldersQuery.ToString()),
+        provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()),
+        provider.getItemsByCAMLQuery(ListNames.GmpModels, gmpQuery.ToString())
+      ]);
+
+      let tmf: any[] = [];
+      try {
+        tmf = await provider.getItemsByCAMLQuery(ListNames.TMFFolders, tmfQuery.ToString());
+      } catch (error) {
+        console.warn(`List "${ListNames.TMFFolders}" not found or inaccessible:`, error);
+        tmf = [];
+      }
+      const drugsItems = await provider.getItemsByCAMLQuery(ListNames.DrugsDatabase, drugsQuery.ToString());
+      const mappedDocs = (docs || []).map(mapDocumentItem);
+      setDocuments(mappedDocs);
+      setCtdFolders(buildCTDFolderTree(folders || []));
+      setTmfFolders(buildCTDFolderTree(tmf || []));
+      setGmpFolders(buildCTDFolderTree(gmp || []));
+      setCategories(
+        (cats || []).map((item: any) => ({
+          id: item.ID,
+          name: item.Title,
+          description: item.Description,
+          documents: Number(item.Documents || 0),
+          status: (item.Status as 'Active' | 'Inactive') || 'Active',
+          level: item.Level || 1
+        }))
+      );
+      setDrugs(
+        (drugsItems || []).map((item: any) => ({
+          id: item.ID,
+          name: item.Title,
+          category: item.Category,
+          status: item.Status,
+          ctdStructure: 'ectd'
+        }))
+      );
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Failed to load documents:', error);
+      setErrorMessage('Unable to load documents. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openDocumentInReviewMode = (doc: Document) => {
+    const baseUrl =
+      doc.sharePointUrl ||
+      (doc.fileRef && context?.pageContext?.web?.absoluteUrl ? `${context.pageContext.web.absoluteUrl}${doc.fileRef}` : '');
+    if (!baseUrl) return;
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    // `web=1` opens Office files in the browser (best-effort "review" experience).
+    window.open(`${baseUrl}${separator}web=1`, '_blank', 'noopener,noreferrer');
+  };
+
+  const getDateRange = (filterType: DateFilter, customFrom?: string, customTo?: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    switch (filterType) {
+      case 'today':
+        return { from: today, to: new Date() };
+      case 'yesterday': {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return { from: yesterday, to: today };
+      }
+      case 'last7days': {
+        const last7 = new Date(today);
+        last7.setDate(last7.getDate() - 7);
+        return { from: last7, to: new Date() };
+      }
+      case 'last30days': {
+        const last30 = new Date(today);
+        last30.setDate(last30.getDate() - 30);
+        return { from: last30, to: new Date() };
+      }
+      case 'thismonth': {
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        return { from: monthStart, to: new Date() };
+      }
+      case 'lastmonth': {
+        const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        return { from: lastMonthStart, to: lastMonthEnd };
+      }
+      case 'yeartodate': {
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        return { from: yearStart, to: new Date() };
+      }
+      case 'daterange':
+        if (customFrom && customTo) {
+          return { from: new Date(customFrom as string), to: new Date(customTo as string) };
+        }
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...docsByTab];
+
+    // Global view filters (Search, Folder, Drug, etc.)
+    // We already filtered by Tab in docsByTab memo.
+
+    // Soft-delete filter
+    if (!showDeleted) {
+      filtered = filtered.filter(d => !(d as any).isDeleted);
+    }
+
+    if (selectedDrugId !== null) {
+      filtered = filtered.filter(d => d.drugId === selectedDrugId);
+    }
+
+    if (selectedFolder !== 'All') {
+      if (selectedSubfolder) filtered = filtered.filter(d => d.submodule === selectedSubfolder);
+      else filtered = filtered.filter(d => d.ctdModule === selectedFolder || d.ctdFolder === selectedFolder);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+
+    if (filters.category) {
+      filtered = filtered.filter(d => d.category === filters.category);
+    }
+
+    if (filters.status !== 'All') {
+      filtered = filtered.filter(d => d.status === filters.status);
+    }
+
+    const dateRange = getDateRange(filters.dateFilter, filters.dateFrom, filters.dateTo);
+    if (dateRange) {
+      filtered = filtered.filter(d => {
+        if (!d.lastModified) return false;
+        const docDate = new Date(d.lastModified);
+        return docDate >= dateRange.from && docDate <= dateRange.to;
+      });
+    }
+
+    setFilteredDocuments(filtered);
+    setCurrentPage(1);
+  };
+
+  React.useEffect(() => {
+    void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider]);
+
+  React.useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, selectedFolder, selectedSubfolder, docsByTab, searchTerm, selectedDrugId, activeTab, currentUser, showDeleted]);
+
+  const selectDrug = (drugId: number | null) => {
+    setSelectedDrugId(drugId);
+    setSelectedFolder('All');
+    setSelectedSubfolder(null);
+    setCurrentPage(1);
+    setSearchTerm('');
+    const selected = drugId ? drugs.find(d => d.id === drugId) : undefined;
+    if (selected?.ctdStructure) setCtdStructure(selected.ctdStructure);
+  };
+
+  const handleViewDocument = async (doc: Document) => {
+    setViewingDocument(doc);
+    setReviewerComments([]);
+    setReviewerCommentError('');
+    if (provider) {
+      setIsLoading(true);
+      try {
+        const history = await provider.getVersionHistoryById(ListNames.DMSDocuments, doc.id);
+        setVersionHistoryRaw(history || []);
+        setVersionHistory(
+          (history || []).map((version: any) => ({
+            id: version.ID || version.VersionId,
+            version: Number(version.VersionLabel || version.VersionId || 1),
+            modifiedBy: version.Editor?.Title || version.CreatedBy?.Title || 'Unknown',
+            modifiedDate: version.Created ? new Date(version.Created).toISOString().split('T')[0] : '',
+            changes: version.CheckInComment || 'Metadata updated'
+          }))
+        );
+
+        const fileRef = doc.fileRef || doc.sharePointUrl;
+        const fileName = doc.fileName || fileRef?.split('/').pop() || '';
+        if (fileRef && fileName.toLowerCase().endsWith('.docx')) {
+          const serverRelative = fileRef.startsWith('http') ? new URL(fileRef).pathname : fileRef;
+          const buffer = await provider.getFileContents(serverRelative);
+          const comments = await parseWordComments(buffer);
+          setReviewerComments(comments);
+        }
+      } catch (error) {
+        console.error('Failed to load document history/comments:', error);
+        setReviewerCommentError('Unable to load reviewer comments.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setIsDocPanelOpen(true);
+  };
+
+  const getNextStatus = (currentStatus: string): string => {
+    const flow = ['Draft', 'Pending Approval', 'Approved', 'Pending for Signature', 'Signed', 'Final'];
+    const currentIndex = flow.indexOf(currentStatus);
+    if (currentIndex < 0 || currentIndex === flow.length - 1) return currentStatus;
+    return flow[currentIndex + 1];
+  };
+
+  const handleApprove = async () => {
+    if (!viewingDocument) return;
+    
+    // Status Flow: Draft -> Pending Approval -> Approved -> Pending for Signature -> Signed -> Final
+    let newStatus = '';
+    if (viewingDocument.status === 'Pending Approval' || viewingDocument.status === 'In Review') {
+      newStatus = 'Approved';
+    } else if (viewingDocument.status === 'Approved') {
+      newStatus = 'Pending for Signature';
+    } else {
+      newStatus = getNextStatus(viewingDocument.status);
+    }
+
+    if (newStatus === 'Pending for Signature') {
+      // Logic for Adobe Sign initiation is separate, but we move status here if desired
+      // Or just return and let user click "Initiate Adobe Sign" button in panel
+      return; 
+    }
+
+    if (newStatus === 'Signed') {
+      setIsSignatureModalOpen(true);
+      return;
+    }
+
+    if (provider) {
+      setIsLoading(true);
+      try {
+        const auditLog = {
+          id: (viewingDocument.comments?.length || 0) + 1,
+          author: 'System',
+          text: `Status approved and changed from ${viewingDocument.status} to ${newStatus} by ${currentUser?.displayName || 'Unknown'}`,
+          timestamp: new Date().toISOString()
+        };
+        const nextComments = [...(viewingDocument.comments || []), auditLog];
+
+        await provider.updateItem(
+          {
+            Status: newStatus,
+            IsEmailSend: true,
+            Comments: JSON.stringify(nextComments)
+          },
+          ListNames.DMSDocuments,
+          viewingDocument.id
+        );
+        await loadData();
+        // Keep panel open if Approved so they can Initiate Sign
+        if (newStatus !== 'Approved') {
+          setIsDocPanelOpen(false);
+        }
+        setSuccessMessage(`Document moved to ${newStatus}.`);
+      } catch (error) {
+        console.error('Failed to update document status:', error);
+        setErrorMessage('Unable to update document status.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const updateSignatureStatus = async (doc: Document, status: string, signatureNote: string) => {
+    if (!provider) return;
+    const auditLog = {
+      id: (doc.comments?.length || 0) + 1,
+      author: 'System',
+      text: `Document ${status} by ${signatureNote}`,
+      timestamp: new Date().toISOString()
+    };
+    const nextComments = [...(doc.comments || []), auditLog];
+    await provider.updateItem(
+      {
+        Status: status,
+        Comments: JSON.stringify(nextComments)
+      },
+      ListNames.DMSDocuments,
+      doc.id
+    );
+  };
+
+  const createSignedCopies = async (doc: Document, signatureNote: string) => {
+    if (!provider || !context) return;
+    const fileRef = doc.fileRef || doc.sharePointUrl;
+    if (!fileRef) return;
+    const serverRelative = fileRef.startsWith('http')
+      ? new URL(fileRef).pathname
+      : fileRef;
+    const baseName = doc.fileName || serverRelative.split('/').pop() || doc.name;
+    const dotIndex = baseName.lastIndexOf('.');
+    const base = dotIndex > -1 ? baseName.substring(0, dotIndex) : baseName;
+    const ext = dotIndex > -1 ? baseName.substring(dotIndex) : '';
+
+    const buffer = await provider.getFileContents(serverRelative);
+    const commentedName = `${base}-Commented${ext}`;
+    const finalName = `${base}-Final-Signed${ext}`;
+
+    const serverRelativeUrl = String(context.pageContext.web.serverRelativeUrl || '');
+    const libraryRoot = `${serverRelativeUrl.replace(/\/$/, '')}/${ListNames.SignedDocuments}`;
+    const moduleSegment = doc.ctdModule || doc.ctdFolder || 'Uncategorized';
+    const submoduleSegment = doc.submodule || '';
+    const targetFolder = await ensureFolderPath(libraryRoot, [moduleSegment, submoduleSegment]);
+
+    await provider.uploadFiles(`${targetFolder}/${commentedName}`, buffer, 'application/octet-stream');
+    await provider.uploadFiles(`${targetFolder}/${finalName}`, buffer, 'application/octet-stream');
+
+    const updateMetadata = async (fileName: string, status: string) => {
+      const camlQuery = new CamlBuilder()
+        .View(['ID', 'FileLeafRef', 'FileRef', 'SharePointURL'])
+        .RowLimit(1, true)
+        .Query()
+        .Where()
+        .TextField('FileLeafRef')
+        .EqualTo(fileName);
+      const items = await provider.getItemsByCAMLQuery(ListNames.SignedDocuments, camlQuery.ToString());
+      if (items && items[0]) {
+        const fileUrl = `${context.pageContext.web.absoluteUrl}${items[0].FileRef || ''}`;
+        await provider.updateItem(
+          {
+            Title: doc.name,
+            CategoryId: doc.categoryId,
+            TemplateId: doc.templateId,
+            CTDFolder: doc.ctdFolder,
+            CTDModule: doc.ctdModule,
+            Submodule: doc.submodule,
+            Status: status,
+            ApproverId: doc.approverId,
+            Comments: JSON.stringify(doc.comments || []),
+            SharePointURL: { Url: fileUrl, Description: fileName }
+          },
+          ListNames.SignedDocuments,
+          items[0].ID
+        );
+      }
+    };
+
+    await updateMetadata(commentedName, 'Signed');
+    await updateMetadata(finalName, 'Final');
+  };
+
+  const handleSubmitForReview = async () => {
+    if (!viewingDocument || !provider) return;
+    setIsLoading(true);
+    try {
+      const auditLog = {
+        id: (viewingDocument.comments?.length || 0) + 1,
+        author: 'System',
+        text: `Document submitted for review by ${currentUser?.displayName || 'Unknown'}`,
+        timestamp: new Date().toISOString()
+      };
+      const nextComments = [...(viewingDocument.comments || []), auditLog];
+      await provider.updateItem(
+        {
+          Status: 'Pending Approval',
+          IsEmailSend: true,
+          Comments: JSON.stringify(nextComments)
+        },
+        ListNames.DMSDocuments,
+        viewingDocument.id
+      );
+      await loadData();
+      setIsDocPanelOpen(false);
+      setSuccessMessage('Document submitted for approval.');
+    } catch (error) {
+      console.error('Failed to submit document:', error);
+      setErrorMessage('Unable to submit document for review.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFinalApprove = async () => {
+    if (!viewingDocument || !signature) return;
+    setIsLoading(true);
+    try {
+      await updateSignatureStatus(viewingDocument, 'Signed', signature);
+      await createSignedCopies(viewingDocument, signature);
+      await updateSignatureStatus(viewingDocument, 'Final', signature);
+      await loadData();
+      setIsSignatureModalOpen(false);
+      setSignature('');
+      setIsDocPanelOpen(false);
+      setSuccessMessage('Document signed and finalized successfully.');
+    } catch (error) {
+      console.error('Failed to finalize signature:', error);
+      setErrorMessage('Unable to finalize document signature.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReject = () => {
+    if (!viewingDocument) return;
+    setRejectReason('');
+    setIsRejectModalOpen(true);
+  };
+
+  const confirmReject = async () => {
+    if (!viewingDocument || !provider) return;
+    if (!rejectReason.trim()) {
+      setErrorMessage('Please provide a reason for rejection.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const auditLog = {
+        id: (viewingDocument.comments?.length || 0) + 1,
+        author: currentUser?.displayName || 'Approver',
+        text: `REJECTED: ${rejectReason}`,
+        timestamp: new Date().toISOString()
+      };
+      const nextComments = [...(viewingDocument.comments || []), auditLog];
+      await provider.updateItem(
+        {
+          Status: 'Rejected',
+          IsEmailSend: true,
+          Comments: JSON.stringify(nextComments)
+        },
+        ListNames.DMSDocuments,
+        viewingDocument.id
+      );
+      await loadData();
+      setIsRejectModalOpen(false);
+      setIsDocPanelOpen(false);
+      setSuccessMessage('Document has been rejected.');
+    } catch (error) {
+      console.error('Failed to reject document:', error);
+      setErrorMessage('Unable to reject document.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openEditModal = (doc: Document) => {
+    setEditingDocument(doc);
+    setEditForm({
+      name: doc.name,
+      categoryId: doc.categoryId || 0,
+      status: doc.status,
+      ctdModule: doc.ctdModule || '',
+      submodule: doc.submodule || '',
+      approverId: doc.approverId || 0
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!provider || !editingDocument) return;
+
+    if (!editForm.name?.trim()) {
+      setErrorMessage('Document name is required.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await provider.updateItem(
+        {
+          Title: editForm.name,
+          CategoryId: editForm.categoryId || null,
+          Status: editForm.status,
+          CTDModule: editForm.ctdModule,
+          Submodule: editForm.submodule,
+          ApproverId: editForm.approverId || null
+        },
+        ListNames.DMSDocuments,
+        editingDocument.id
+      );
+      await loadData();
+      setIsEditModalOpen(false);
+      setEditingDocument(null);
+      setSuccessMessage('Document updated successfully.');
+    } catch (error) {
+      console.error('Failed to update document:', error);
+      setErrorMessage('Unable to update document.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompareVersion = (versionId: number) => {
+    const match = versionHistoryRaw.find((version: any) => (version.ID || version.VersionId) === versionId);
+    setCompareVersion(match || null);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!provider) return;
+    setIsLoading(true);
+    try {
+      // Perform soft-delete
+      await Promise.all(selectedIds.map(id => 
+        provider.updateItem({ IsDeleted: true }, ListNames.DMSDocuments, id)
+      ));
+      await loadData();
+      setSelectedIds([]);
+      setIsDeleteDialogOpen(false);
+      setSuccessMessage('Selected documents moved to recycle bin.');
+    } catch (error) {
+      console.error('Failed to delete documents:', error);
+      setErrorMessage('Unable to delete selected documents.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const initiateAdobeSign = async (doc: Document) => {
+    if (!provider || !doc) return;
+    setIsLoading(true);
+    try {
+      const payload = {
+        Title: doc.name,
+        FilePath: doc.fileRef || doc.sharePointUrl,
+        FileName: doc.fileName || (doc.fileRef || doc.sharePointUrl || '').split('/').pop() || doc.name,
+        SignerEmail: doc.reviewer || '', 
+        ApproverEmail: doc.approver || '', 
+        SignatureStatus: 'Draft' // Power Automate Flow A will pick this up and change to 'Sent'
+      };
+
+      await provider.createItem(payload, ListNames.eSignature);
+      
+      // Update original document status to reflect e-signature initiation
+      const auditLog = {
+        id: (doc.comments?.length || 0) + 1,
+        author: 'System',
+        text: `Adobe Sign process initiated by ${currentUser?.displayName || 'Unknown'}`,
+        timestamp: new Date().toISOString()
+      };
+      const nextComments = [...(doc.comments || []), auditLog];
+
+      await provider.updateItem(
+        { 
+          Status: 'Pending for Signature',
+          IsEmailSend: true,
+          Comments: JSON.stringify(nextComments)
+        },
+        ListNames.DMSDocuments,
+        doc.id
+      );
+
+      await loadData();
+      setIsDocPanelOpen(false);
+      setSuccessMessage('Adobe Sign process initiated successfully.');
+    } catch (error) {
+      console.error('Failed to initiate Adobe Sign:', error);
+      setErrorMessage('Unable to initiate Adobe Sign process.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReinitializeSignature = async (doc: Document) => {
+    if (!provider || !doc) return;
+    // eslint-disable-next-line no-alert
+    if (confirm(`Are you sure you want to re-initialize signature for "${doc.name}"? This will move it back to Approved status.`)) {
+      setIsLoading(true);
+      try {
+        const auditLog = {
+          id: (doc.comments?.length || 0) + 1,
+          author: 'System',
+          text: `Document re-initialized for signature by ${currentUser?.displayName || 'Unknown'}`,
+          timestamp: new Date().toISOString()
+        };
+        const nextComments = [...(doc.comments || []), auditLog];
+        await provider.updateItem(
+          { 
+            Status: 'Approved',
+            Comments: JSON.stringify(nextComments)
+          },
+          ListNames.DMSDocuments,
+          doc.id
+        );
+        await loadData();
+        setSuccessMessage('Document re-initialized for signature.');
+      } catch (error) {
+        console.error('Failed to re-initialize signature:', error);
+        setErrorMessage('Unable to re-initialize document.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleExport = (format: 'pdf' | 'excel') => {
+    showToast({
+      type: 'info',
+      title: 'Export',
+      message: `Exporting ${selectedIds.length} document(s) to ${format.toUpperCase()} (demo).`
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      category: '',
+      status: 'All',
+      dateFilter: 'all',
+      dateFrom: '',
+      dateTo: ''
+    });
+    setSearchTerm('');
+  };
+
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  };
+
+  const handleFolderClick = (folderId: string) => {
+    setSelectedFolder(folderId);
+    setSelectedSubfolder(null);
+  };
+
+  const handleSubfolderClick = (subfolderId: string, parentId: string) => {
+    setSelectedFolder(parentId);
+    setSelectedSubfolder(subfolderId);
+  };
+
+  const getWorkflowSteps = (currentStatus: string) => {
+    if (currentStatus === 'Rejected') {
+      return [
+        { label: 'Draft', active: false, completed: true },
+        { label: 'Rejected', active: true, completed: false }
+      ];
+    }
+
+    const steps = ['Draft', 'Pending Approval', 'Approved', 'Pending for Signature', 'Final'];
+    const currentIndex = steps.indexOf(currentStatus);
+
+    return steps.map((step, index) => ({
+      label: step,
+      active: index === currentIndex,
+      completed: index < currentIndex
+    }));
+  };
+
+  const getBreadcrumbs = () => {
+    const crumbs = [{ label: 'Home', id: 'All' }];
+    if (selectedDrugId !== null) {
+      const drug = drugs.find(d => d.id === selectedDrugId);
+      if (drug) crumbs.push({ label: drug.name, id: `drug-${drug.id}` });
+    }
+
+    if (selectedFolder !== 'All') {
+      const folder = ctdFolders.find(f => f.id === selectedFolder);
+      if (folder) {
+        crumbs.push({ label: folder.name, id: folder.id });
+
+        if (selectedSubfolder && folder.children) {
+          const subfolder = folder.children.find(sf => sf.id === selectedSubfolder);
+          if (subfolder) crumbs.push({ label: subfolder.name, id: subfolder.id });
+        }
+      }
+    }
+
+    return crumbs;
+  };
+
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredDocuments.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const currentPageData = getCurrentPageData();
+
+  return {
+    // data
+    documents,
+    filteredDocuments,
+    activeTab,
+    subTab,
+    drugs,
+    selectedDrugId,
+    categories,
+    ctdFolders,
+    expandedFolders,
+    selectedFolder,
+    selectedSubfolder,
+    selectedIds,
+    currentPage,
+    searchTerm,
+    isDocPanelOpen,
+    isAddModalOpen,
+    isEditModalOpen,
+    isDeleteDialogOpen,
+    isSignatureModalOpen,
+    viewingDocument,
+    editingDocument,
+    versionHistory,
+    versionHistoryRaw,
+    compareVersion,
+    editForm,
+    signature,
+    canApprove,
+    canEdit,
+    canDelete,
+    canCreate,
+    currentUser,
+    isSidebarCollapsed,
+    ctdStructure,
+    isStructureDisabled,
+    filters,
+    itemsPerPage,
+    totalPages,
+    currentPageData,
+    errorMessage,
+    successMessage,
+    isLoading,
+    reviewerComments,
+    reviewerCommentError,
+    rejectReason,
+    isRejectModalOpen,
+
+    // setters
+    setSelectedIds,
+    setCurrentPage,
+    setSearchTerm,
+    setIsDocPanelOpen,
+    setIsAddModalOpen,
+    setIsEditModalOpen,
+    setIsDeleteDialogOpen,
+    setIsSignatureModalOpen,
+    setCompareVersion,
+    setEditForm,
+    setSignature,
+    setEditingDocument,
+    setIsSidebarCollapsed,
+    setFilters,
+    setReviewerComments,
+    setReviewerCommentError,
+    setRejectReason,
+    setIsRejectModalOpen,
+    setSelectedDrugId: selectDrug,
+    setActiveTab,
+    setSubTab,
+    isAdmin,
+    tmfFolders,
+    gmpFolders,
+    showDeleted,
+    setShowDeleted,
+
+    // handlers
+    loadData,
+    handleStructureChange,
+    handleViewDocument,
+    openDocumentInReviewMode,
+    handleApprove,
+    handleFinalApprove,
+    handleReject,
+    confirmReject,
+    handleSubmitForReview,
+    openEditModal,
+    handleSaveEdit,
+    handleCompareVersion,
+    handleBulkDelete,
+    handleExport,
+    resetFilters,
+    toggleFolder,
+    handleFolderClick,
+    handleSubfolderClick,
+    getWorkflowSteps,
+    getBreadcrumbs,
+    initiateAdobeSign,
+    handleReinitializeSignature
+  };
+}
+

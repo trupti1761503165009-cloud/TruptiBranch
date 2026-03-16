@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<List xmlns:ows="Microsoft SharePoint" Title="Workflows Approvals" Direction="$Resources:Direction;" Url="Lists/WorkflowsApprovals" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0120" />
+    </ContentTypes>
+    <Fields>
+      <!-- Tracks each review cycle and captures decisions -->
+      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Document" DisplayName="Document" List="DMSDocuments" ShowField="FileLeafRef" />
+      <Field ID="{F1F7D4C6-6B4B-4C7C-AE7E-8E0C2B6E5A10}" Type="User" Name="RequestedBy" DisplayName="Requested By" />
+      <Field ID="{F2F7D4C6-6B4B-4C7C-AE7E-8E0C2B6E5A10}" Type="User" Name="Approver" DisplayName="Approver" />
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Decision" DisplayName="Decision">
+        <CHOICES>
+          <CHOICE>Pending</CHOICE>
+          <CHOICE>Approved</CHOICE>
+          <CHOICE>Rejected</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Note" Name="DecisionComment" DisplayName="Decision Comment" NumLines="6" />
+      <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="DateTime" Name="RequestedOn" DisplayName="Requested On" />
+      <Field ID="{B3A0A6D5-1D63-4D1F-A6A8-2BCE8A2E1D11}" Type="DateTime" Name="DecidedOn" DisplayName="Decided On" />
+      <Field ID="{B7B2B2E9-2C7C-4F6E-8D13-3A0CE3D8C9A2}" Type="Number" Name="Cycle" DisplayName="Cycle" Decimals="0" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllItems;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/generic.png" Url="AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkTitle"></FieldRef>
+          <FieldRef Name="Document"></FieldRef>
+          <FieldRef Name="RequestedBy"></FieldRef>
+          <FieldRef Name="Approver"></FieldRef>
+          <FieldRef Name="Decision"></FieldRef>
+          <FieldRef Name="DecisionComment"></FieldRef>
+          <FieldRef Name="RequestedOn"></FieldRef>
+          <FieldRef Name="DecidedOn"></FieldRef>
+          <FieldRef Name="Cycle"></FieldRef>
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="ID" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>

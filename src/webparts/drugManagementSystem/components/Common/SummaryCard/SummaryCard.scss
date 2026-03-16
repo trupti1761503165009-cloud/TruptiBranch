@@ -1,0 +1,94 @@
+.summary-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  height: 120px;
+  display: flex;
+  align-items: center;
+
+  &--clickable {
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+  }
+
+  &__border {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+
+    &--blue { background-color: #2196F3; }
+    &--green { background-color: #4CAF50; }
+    &--orange { background-color: #FF9800; }
+    &--red { background-color: #F44336; }
+    &--purple { background-color: #9C27B0; }
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    margin-left: 8px;
+  }
+
+  &__icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &--blue { background-color: rgba(33, 150, 243, 0.1); }
+    &--green { background-color: rgba(76, 175, 80, 0.1); }
+    &--orange { background-color: rgba(255, 152, 0, 0.1); }
+    &--red { background-color: rgba(244, 67, 54, 0.1); }
+    &--purple { background-color: rgba(156, 39, 176, 0.1); }
+  }
+
+  &__icon {
+    font-size: 24px;
+
+    .summary-card__icon-wrapper--blue & { color: #2196F3; }
+    .summary-card__icon-wrapper--green & { color: #4CAF50; }
+    .summary-card__icon-wrapper--orange & { color: #FF9800; }
+    .summary-card__icon-wrapper--red & { color: #F44336; }
+    .summary-card__icon-wrapper--purple & { color: #9C27B0; }
+  }
+
+  &__info {
+    flex: 1;
+  }
+
+  &__count {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+  }
+
+  &__title {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: #999;
+    margin: 4px 0 0 0;
+  }
+}
