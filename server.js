@@ -183,15 +183,16 @@ const { useState, useEffect, useCallback, useMemo, useRef } = React;
    MOCK DATA
 =================================================== */
 const DOCS = [
-  { id:1, name:'Aspirin_Module2_Clinical_Study.docx', ext:'docx', category:'Clinical', status:'Approved', date:'2026-03-10', author:'John Smith', drug:'Aspirin', ver:'2.1' },
-  { id:2, name:'Paracetamol_Nonclinical_Safety.docx',  ext:'docx', category:'Nonclinical', status:'Pending Approval', date:'2026-03-08', author:'Sarah Johnson', drug:'Paracetamol', ver:'1.0' },
-  { id:3, name:'Ibuprofen_Quality_Summary.docx',        ext:'docx', category:'Quality', status:'Draft', date:'2026-03-07', author:'Mike Davis', drug:'Ibuprofen', ver:'1.2' },
-  { id:4, name:'Metformin_CTD_Module3.docx',            ext:'docx', category:'Quality', status:'Pending Approval', date:'2026-03-05', author:'Emily Wilson', drug:'Metformin', ver:'3.0' },
-  { id:5, name:'Amoxicillin_Module1_Admin.docx',        ext:'docx', category:'Administrative', status:'Approved', date:'2026-03-04', author:'Tom Brown', drug:'Amoxicillin', ver:'1.5' },
-  { id:6, name:'Lisinopril_Efficacy_Report.docx',       ext:'docx', category:'Clinical', status:'Draft', date:'2026-03-02', author:'Anna Lee', drug:'Lisinopril', ver:'1.0' },
-  { id:7, name:'Omeprazole_Safety_Review.docx',         ext:'docx', category:'Nonclinical', status:'Under Review', date:'2026-02-28', author:'Chris Martin', drug:'Omeprazole', ver:'2.0' },
-  { id:8, name:'Atorvastatin_Label_Insert.pdf',         ext:'pdf',  category:'Administrative', status:'Signed', date:'2026-02-25', author:'Lisa Chen', drug:'Atorvastatin', ver:'4.1' },
+  { id:1, name:'Aspirin_Module2_Clinical_Study.docx', ext:'docx', category:'Clinical', status:'Approved', date:'2026-03-10', author:'John Smith', drug:'Aspirin', ver:'2.1', approver:'Emily Wilson' },
+  { id:2, name:'Paracetamol_Nonclinical_Safety.docx',  ext:'docx', category:'Nonclinical', status:'Pending Approval', date:'2026-03-08', author:'Sarah Johnson', drug:'Paracetamol', ver:'1.0', approver:'Emily Wilson' },
+  { id:3, name:'Ibuprofen_Quality_Summary.docx',        ext:'docx', category:'Quality', status:'Draft', date:'2026-03-07', author:'John Smith', drug:'Ibuprofen', ver:'1.2', approver:'Mike Davis' },
+  { id:4, name:'Metformin_CTD_Module3.docx',            ext:'docx', category:'Quality', status:'Pending Approval', date:'2026-03-05', author:'Sarah Johnson', drug:'Metformin', ver:'3.0', approver:'Emily Wilson' },
+  { id:5, name:'Amoxicillin_Module1_Admin.docx',        ext:'docx', category:'Administrative', status:'Approved', date:'2026-03-04', author:'Tom Brown', drug:'Amoxicillin', ver:'1.5', approver:'Emily Wilson' },
+  { id:6, name:'Lisinopril_Efficacy_Report.docx',       ext:'docx', category:'Clinical', status:'Draft', date:'2026-03-02', author:'John Smith', drug:'Lisinopril', ver:'1.0', approver:'Mike Davis' },
+  { id:7, name:'Omeprazole_Safety_Review.docx',         ext:'docx', category:'Nonclinical', status:'Pending Approval', date:'2026-02-28', author:'Sarah Johnson', drug:'Omeprazole', ver:'2.0', approver:'Emily Wilson' },
+  { id:8, name:'Atorvastatin_Label_Insert.pdf',         ext:'pdf',  category:'Administrative', status:'Signed', date:'2026-02-25', author:'John Smith', drug:'Atorvastatin', ver:'4.1', approver:'Emily Wilson' },
 ];
+const ROLE_USER = { Admin:'John Smith', Author:'Sarah Johnson', Reviewer:'Mike Davis', Approver:'Emily Wilson', HR:'Tom Brown' };
 const TEMPLATES = [
   { id:1, name:'Clinical Study Report Template.docx',  ext:'docx', mappingType:'eCTD', ctdFolder:'Module 5', section:'5.3 Clinical Study Reports', country:'Global', ver:'2.0', status:'Active', date:'2026-01-15' },
   { id:2, name:'Nonclinical Overview Template.docx',   ext:'docx', mappingType:'eCTD', ctdFolder:'Module 4', section:'4.2 Study Reports',             country:'Global', ver:'1.5', status:'Active', date:'2026-01-10' },
@@ -412,6 +413,7 @@ function AdminDashboard() {
   const [form, setForm] = useState({ name:'', category:'Clinical', drug:'', status:'Draft' });
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(1);
 
   const resetFilters = () => { setStatusFilter('All'); setCategoryFilter('All'); setSearch(''); setPage(1); };
@@ -428,40 +430,47 @@ function AdminDashboard() {
     users: USERS.filter(u=>u.status==='Active').length, categories: CATEGORIES.length
   };
 
+  const toggleSelect = id => setSelected(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
+
   return React.createElement('div', null,
-    React.createElement('div', { className: 'page-header' },
-      React.createElement('h1', { className: 'page-title' }, 'Admin Dashboard'),
-      React.createElement('p',  { className: 'page-subtitle' }, 'Overview of all documents, users, and system activity')
+    React.createElement('h1', {className:'mainTitle', style:{marginTop:0,marginBottom:16}}, 'Admin Dashboard'),
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div', {className:'summary-cards-container', style:{marginBottom:0}},
+        React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Documents',  value:stats.total,      subtitle:'All documents',       color:'blue'}),
+        React.createElement(SummaryCard, {icon:'fas fa-check-circle',title:'Approved',         value:stats.approved,   subtitle:'Fully approved',      color:'green'}),
+        React.createElement(SummaryCard, {icon:'fas fa-clock',       title:'Pending Review',   value:stats.pending,    subtitle:'Awaiting action',     color:'orange'}),
+        React.createElement(SummaryCard, {icon:'fas fa-pen',         title:'Drafts',           value:stats.drafts,     subtitle:'In progress',         color:'purple'}),
+        React.createElement(SummaryCard, {icon:'fas fa-users',       title:'Active Users',     value:stats.users,      subtitle:'System users',        color:'blue'}),
+        React.createElement(SummaryCard, {icon:'fas fa-folder',      title:'Categories',       value:stats.categories, subtitle:'Document categories',  color:'orange'}),
+      )
     ),
-    React.createElement('div', { className: 'summary-cards-container' },
-      React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Documents',  value:stats.total,      subtitle:'All documents',       color:'blue'}),
-      React.createElement(SummaryCard, {icon:'fas fa-check-circle',title:'Approved',         value:stats.approved,   subtitle:'Fully approved',      color:'green'}),
-      React.createElement(SummaryCard, {icon:'fas fa-clock',       title:'Pending Review',   value:stats.pending,    subtitle:'Awaiting action',     color:'orange'}),
-      React.createElement(SummaryCard, {icon:'fas fa-pen',         title:'Drafts',           value:stats.drafts,     subtitle:'In progress',         color:'purple'}),
-      React.createElement(SummaryCard, {icon:'fas fa-users',       title:'Active Users',     value:stats.users,      subtitle:'System users',        color:'blue'}),
-      React.createElement(SummaryCard, {icon:'fas fa-folder',      title:'Categories',       value:stats.categories, subtitle:'Document categories',  color:'orange'}),
-    ),
-    React.createElement('div',{className:'filter-row-4'},
-      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Draft','Under Review','Pending Approval','Approved','Rejected','Signed'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:categoryFilter,onChange:e=>{setCategoryFilter(e.target.value);setPage(1);}},
-        ['All Categories','Administrative','Clinical','Nonclinical','Quality'].map(v=>React.createElement('option',{key:v,value:v==='All Categories'?'All':v},v))
-      ),
-      React.createElement('div'),
-      React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div',{className:'filter-row-4'},
+        React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Draft','Under Review','Pending Approval','Approved','Rejected','Signed'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('select',{className:'filter-select',value:categoryFilter,onChange:e=>{setCategoryFilter(e.target.value);setPage(1);}},
+          ['All Categories','Administrative','Clinical','Nonclinical','Quality'].map(v=>React.createElement('option',{key:v,value:v==='All Categories'?'All':v},v))
+        ),
+        React.createElement('div'),
+        React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'Admin Dashboard',active:true}]}),
-    React.createElement('div', { className: 'boxCard-demo' },
+    React.createElement('div', { className: 'boxCard-demo', style:{margin:0} },
       React.createElement(GridToolbar, {
         search, onSearch: v=>{setSearch(v);setPage(1);},
         onAdd: () => setAddOpen(true),
         onRefresh: resetFilters,
-        editBtns: null
+        editBtns: selected.length > 0 ? React.createElement('div',{className:'dfs',style:{marginLeft:8}},
+          selected.length===1 && React.createElement('button',{className:'act-btn edit',title:'Edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button',{className:'act-btn del',title:'Delete',onClick:()=>setDocs(docs.filter(d=>!selected.includes(d.id)))},React.createElement('i',{className:'fas fa-trash-can'}))
+        ) : null
       }),
       React.createElement('table', { className: 'dms-table' },
         React.createElement('thead', null,
           React.createElement('tr', null,
+            React.createElement('th',{style:{width:36}},''),
             ['Document Name','Category','Author','Status','Last Modified','Actions'].map(h =>
               React.createElement('th', {key:h}, h)
             )
@@ -471,6 +480,7 @@ function AdminDashboard() {
           paged.map(d => {
             const fi = fileIcon(d.ext);
             return React.createElement('tr', { key: d.id },
+              React.createElement('td', null, React.createElement('input',{type:'checkbox',checked:selected.includes(d.id),onChange:()=>toggleSelect(d.id)})),
               React.createElement('td', null,
                 React.createElement('div', {className:'dfs'},
                   React.createElement('div', {className:'file-icon '+fi.cls}, React.createElement('i',{className:fi.icon})),
@@ -482,13 +492,7 @@ function AdminDashboard() {
               React.createElement('td', null, React.createElement(StatusBadge, {status:d.status})),
               React.createElement('td', null, d.date),
               React.createElement('td', null,
-                React.createElement('div', {className:'dfs'},
-                  React.createElement('button', {className:'act-btn view', title:'View', onClick:()=>setViewDoc(d)}, React.createElement('i',{className:'fas fa-eye'})),
-                  React.createElement('button', {className:'act-btn edit', title:'Edit'}, React.createElement('i',{className:'fas fa-pen-to-square'})),
-                  React.createElement('button', {className:'act-btn del', title:'Delete', onClick:()=>{ setDocs(docs.filter(x=>x.id!==d.id)); showToast('Document deleted','error'); }},
-                    React.createElement('i',{className:'fas fa-trash-can'})
-                  )
-                )
+                React.createElement('button', {className:'act-btn view', title:'View', onClick:()=>setViewDoc(d)}, React.createElement('i',{className:'fas fa-eye'}))
               )
             );
           })
@@ -527,6 +531,7 @@ function AdminDashboard() {
       footer: [
         React.createElement('button',{key:'d',className:'btn btn-primary'}, React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}), 'Download'),
         React.createElement('button',{key:'e',className:'btn btn-secondary'}, React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}), 'Edit'),
+        React.createElement('button',{key:'del',className:'btn btn-danger',onClick:()=>setViewDoc(null)}, React.createElement('i',{className:'fas fa-trash-can',style:{marginRight:6}}), 'Delete'),
         React.createElement('button',{key:'c',className:'btn btn-secondary', onClick:()=>setViewDoc(null)}, 'Close'),
       ]
     },
@@ -925,29 +930,31 @@ function ManageCategories() {
   const resetFilters = () => { setStatusFilter('All'); setDocCatFilter('All'); setGroupFilter('All'); setSearch(''); setPage(1); };
 
   return React.createElement('div', null,
-    React.createElement('div',{className:'page-header'},
-      React.createElement('h1',{className:'page-title'},'Manage Categories')
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'Manage Categories'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-folder',       title:'Total Categories', value:counts.total,    subtitle:'All categories',    color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-open',  title:'Active',           value:counts.active,   subtitle:'Active categories', color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',         value:counts.inactive, subtitle:'Inactive categories',color:'orange'}),
+        React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Groups',     value:new Set(cats.map(c=>c.group)).size, subtitle:'Unique groups', color:'purple'}),
+      )
     ),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-folder',       title:'Total Categories', value:counts.total,    subtitle:'All categories',    color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-open',  title:'Active',           value:counts.active,   subtitle:'Active categories', color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',         value:counts.inactive, subtitle:'Inactive categories',color:'orange'}),
-      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Groups',     value:new Set(cats.map(c=>c.group)).size, subtitle:'Unique groups', color:'purple'}),
-    ),
-    React.createElement('div',{className:'filter-row-4'},
-      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:docCatFilter,onChange:e=>{setDocCatFilter(e.target.value);setGroupFilter('All');setPage(1);}},
-        docCatOptions.map(v=>React.createElement('option',{key:v,value:v==='All Doc Categories'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:groupFilter,onChange:e=>{setGroupFilter(e.target.value);setPage(1);}},
-        groupOptions.map(v=>React.createElement('option',{key:v,value:v==='All Groups'?'All':v},v))
-      ),
-      React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'filter-row-4'},
+        React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('select',{className:'filter-select',value:docCatFilter,onChange:e=>{setDocCatFilter(e.target.value);setGroupFilter('All');setPage(1);}},
+          docCatOptions.map(v=>React.createElement('option',{key:v,value:v==='All Doc Categories'?'All':v},v))
+        ),
+        React.createElement('select',{className:'filter-select',value:groupFilter,onChange:e=>{setGroupFilter(e.target.value);setPage(1);}},
+          groupOptions.map(v=>React.createElement('option',{key:v,value:v==='All Groups'?'All':v},v))
+        ),
+        React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'Manage Categories',active:true}]}),
-    React.createElement('div',{className:'boxCard-demo'},
+    React.createElement('div',{className:'boxCard-demo',style:{margin:0}},
       React.createElement(GridToolbar,{
         search, onSearch:v=>{setSearch(v);setPage(1);},
         onAdd:()=>showToast('Add Category'),
@@ -996,7 +1003,11 @@ function ManageCategories() {
     }),
     viewCat&&React.createElement(Panel,{
       title:viewCat.name,onClose:()=>setViewCat(null),
-      footer:[React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewCat(null)},'Close')]
+      footer:[
+        React.createElement('button',{key:'e',className:'btn btn-secondary'},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'del',className:'btn btn-danger',onClick:()=>setViewCat(null)},React.createElement('i',{className:'fas fa-trash-can',style:{marginRight:6}}),'Delete'),
+        React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewCat(null)},'Close'),
+      ]
     },
       React.createElement('div',{className:'detail-grid'},
         [['Category Name',viewCat.name],['Group / Module',viewCat.group],['Level','Level '+viewCat.level],['Documents',viewCat.docs],['Status',viewCat.status]].map(([k,v])=>
@@ -1034,25 +1045,29 @@ function DrugsDatabase() {
   const toggleSelect = id=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
 
   return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Drugs Database')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-capsules',    title:'Total Drugs',   value:counts.total,    subtitle:'All drugs',        color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-check-circle',title:'Active Drugs',  value:counts.active,   subtitle:'Active entries',   color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-store',        title:'Marketed',     value:counts.marketed, subtitle:'On the market',    color:'orange'}),
-      React.createElement(SummaryCard,{icon:'fas fa-flask',        title:'In Trials',    value:counts.phaseIII, subtitle:'Phase III',        color:'purple'}),
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'Drugs Database'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-capsules',    title:'Total Drugs',   value:counts.total,    subtitle:'All drugs',        color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-check-circle',title:'Active Drugs',  value:counts.active,   subtitle:'Active entries',   color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-store',        title:'Marketed',     value:counts.marketed, subtitle:'On the market',    color:'orange'}),
+        React.createElement(SummaryCard,{icon:'fas fa-flask',        title:'In Trials',    value:counts.phaseIII, subtitle:'Phase III',        color:'purple'}),
+      )
     ),
-    React.createElement('div',{className:'filter-row-4'},
-      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:phaseFilter,onChange:e=>{setPhaseFilter(e.target.value);setPage(1);}},
-        ['All Phases','Marketed','Phase III','Phase II','Phase I'].map(v=>React.createElement('option',{key:v,value:v==='All Phases'?'All':v},v))
-      ),
-      React.createElement('div'),
-      React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'filter-row-4'},
+        React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('select',{className:'filter-select',value:phaseFilter,onChange:e=>{setPhaseFilter(e.target.value);setPage(1);}},
+          ['All Phases','Marketed','Phase III','Phase II','Phase I'].map(v=>React.createElement('option',{key:v,value:v==='All Phases'?'All':v},v))
+        ),
+        React.createElement('div'),
+        React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'Drugs Database',active:true}]}),
-    React.createElement('div',{className:'boxCard-demo'},
+    React.createElement('div',{className:'boxCard-demo',style:{margin:0}},
       React.createElement(GridToolbar,{
         search,onSearch:v=>{setSearch(v);setPage(1);},
         onAdd:()=>showToast('Add Drug'),
@@ -1091,7 +1106,12 @@ function DrugsDatabase() {
       onCancel:()=>setDeleteTarget(null)
     }),
     viewDrug&&React.createElement(Panel,{title:viewDrug.name,onClose:()=>setViewDrug(null),
-      footer:[React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDrug(null)},'Close')]
+      footer:[
+        React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),
+        React.createElement('button',{key:'e',className:'btn btn-secondary'},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'del',className:'btn btn-danger',onClick:()=>setViewDrug(null)},React.createElement('i',{className:'fas fa-trash-can',style:{marginRight:6}}),'Delete'),
+        React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDrug(null)},'Close'),
+      ]
     },
       React.createElement('div',{className:'detail-grid'},
         [['Drug Name',viewDrug.name],['Generic Name',viewDrug.generic],['Indication',viewDrug.indication],['Phase',viewDrug.phase],['Status',viewDrug.status]].map(([k,v])=>
@@ -1106,126 +1126,120 @@ function DrugsDatabase() {
 }
 
 /* ===================================================
-   SCREEN: DOCUMENTS (2 tabs: Documents list + Folder)
+   SCREEN: ALL DOCUMENTS / MY DOCUMENTS / ASSIGNED TO ME
 =================================================== */
-function DocListTab() {
+function AllDocuments({ filterUser, filterPending, role }) {
+  const currentUser = ROLE_USER[role] || 'John Smith';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [docs, setDocs] = useState(DOCS);
+  const [selected, setSelected] = useState([]);
   const [viewDoc, setViewDoc] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [page, setPage] = useState(1);
 
   const resetFilters = () => { setStatusFilter('All'); setCategoryFilter('All'); setSearch(''); setPage(1); };
-  const filtered = docs.filter(d=>
-    d.name.toLowerCase().includes(search.toLowerCase()) &&
-    (statusFilter==='All'||d.status===statusFilter) &&
-    (categoryFilter==='All'||d.category===categoryFilter)
-  );
-  const paged = filtered.slice((page-1)*6,page*6);
+  const toggleSelect = id => setSelected(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
 
-  return React.createElement('div',null,
-    React.createElement('div',{className:'filter-row-4'},
-      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Draft','Under Review','Pending Approval','Approved','Rejected','Signed'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:categoryFilter,onChange:e=>{setCategoryFilter(e.target.value);setPage(1);}},
-        ['All Categories','Administrative','Clinical','Nonclinical','Quality'].map(v=>React.createElement('option',{key:v,value:v==='All Categories'?'All':v},v))
-      ),
-      React.createElement('div'),
-      React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+  let baseDocs = DOCS;
+  if (filterUser) baseDocs = DOCS.filter(d => d.author === currentUser);
+  if (filterPending) baseDocs = DOCS.filter(d => d.approver === currentUser || d.status === 'Pending Approval');
+
+  const filtered = baseDocs.filter(d =>
+    d.name.toLowerCase().includes(search.toLowerCase()) &&
+    (statusFilter === 'All' || d.status === statusFilter) &&
+    (categoryFilter === 'All' || d.category === categoryFilter)
+  );
+  const paged = filtered.slice((page-1)*6, page*6);
+  const title = filterUser ? 'My Documents' : filterPending ? 'Assigned to Me' : 'All Documents';
+  const counts = {
+    total: baseDocs.length,
+    approved: baseDocs.filter(d=>d.status==='Approved').length,
+    pending: baseDocs.filter(d=>d.status==='Pending Approval').length,
+    draft: baseDocs.filter(d=>d.status==='Draft').length,
+  };
+
+  return React.createElement('div', null,
+    React.createElement('h1', {className:'mainTitle', style:{marginTop:0,marginBottom:16}}, title),
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div', {className:'summary-cards-container', style:{marginBottom:0}},
+        React.createElement(SummaryCard, {icon:'fas fa-file-alt',    title:'Total Documents', value:counts.total,    subtitle:'Documents',      color:'blue'}),
+        React.createElement(SummaryCard, {icon:'fas fa-check-circle',title:'Approved',         value:counts.approved, subtitle:'Approved',       color:'green'}),
+        React.createElement(SummaryCard, {icon:'fas fa-clock',       title:'Pending Review',   value:counts.pending,  subtitle:'Pending review', color:'orange'}),
+        React.createElement(SummaryCard, {icon:'fas fa-pen',         title:'Drafts',           value:counts.draft,    subtitle:'In progress',    color:'purple'}),
+      )
     ),
-    React.createElement('div',{className:'boxCard-demo'},
-      React.createElement(GridToolbar,{search,onSearch:v=>{setSearch(v);setPage(1);},onRefresh:()=>{resetFilters();showToast('Refreshed');},editBtns:null,addLabel:'Add Document',onAdd:()=>showToast('Add Document')}),
-      React.createElement('table',{className:'dms-table'},
-        React.createElement('thead',null,
-          React.createElement('tr',null,
+    React.createElement('div', {className:'white-card-section'},
+      React.createElement('div', {className:'filter-row-4'},
+        React.createElement('select', {className:'filter-select', value:statusFilter, onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Draft','Under Review','Pending Approval','Approved','Rejected','Signed'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('select', {className:'filter-select', value:categoryFilter, onChange:e=>{setCategoryFilter(e.target.value);setPage(1);}},
+          ['All Categories','Administrative','Clinical','Nonclinical','Quality'].map(v=>React.createElement('option',{key:v,value:v==='All Categories'?'All':v},v))
+        ),
+        React.createElement('div'),
+        React.createElement('button', {className:'btn btn-primary btn-sm', onClick:resetFilters},
+          React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}), 'Reset Filters'
+        )
+      )
+    ),
+    React.createElement(Breadcrumb, {items:[{label:title, active:true}]}),
+    React.createElement('div', {className:'boxCard-demo', style:{margin:0}},
+      React.createElement(GridToolbar, {
+        search, onSearch:v=>{setSearch(v);setPage(1);},
+        addLabel:'Add Document', onAdd:()=>showToast('Add Document'),
+        onRefresh:()=>{resetFilters();showToast('Refreshed');},
+        editBtns: selected.length > 0 ? React.createElement('div', {className:'dfs', style:{marginLeft:8}},
+          selected.length===1 && React.createElement('button', {className:'act-btn edit', title:'Edit'}, React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button', {className:'act-btn del', title:'Delete', onClick:()=>setDeleteTarget(selected)}, React.createElement('i',{className:'fas fa-trash-can'}))
+        ) : null
+      }),
+      React.createElement('table', {className:'dms-table'},
+        React.createElement('thead', null,
+          React.createElement('tr', null,
+            React.createElement('th', {style:{width:36}}, ''),
             ['Document Name','Category','Drug','Author','Status','Date','Action'].map(h=>React.createElement('th',{key:h},h))
           )
         ),
-        React.createElement('tbody',null,
-          paged.map(d=>{
-            const fi=fileIcon(d.ext);
-            return React.createElement('tr',{key:d.id},
-              React.createElement('td',null,React.createElement('div',{className:'dfs'},React.createElement('div',{className:'file-icon '+fi.cls},React.createElement('i',{className:fi.icon})),React.createElement('span',{style:{marginLeft:8}},d.name))),
-              React.createElement('td',null,d.category),
-              React.createElement('td',null,d.drug),
-              React.createElement('td',null,d.author),
-              React.createElement('td',null,React.createElement(StatusBadge,{status:d.status})),
-              React.createElement('td',null,d.date),
-              React.createElement('td',null,React.createElement('button',{className:'act-btn view',onClick:()=>setViewDoc(d)},React.createElement('i',{className:'fas fa-eye'})))
+        React.createElement('tbody', null,
+          paged.map(d => {
+            const fi = fileIcon(d.ext);
+            return React.createElement('tr', {key:d.id},
+              React.createElement('td', null, React.createElement('input',{type:'checkbox',checked:selected.includes(d.id),onChange:()=>toggleSelect(d.id)})),
+              React.createElement('td', null, React.createElement('div',{className:'dfs'},React.createElement('div',{className:'file-icon '+fi.cls},React.createElement('i',{className:fi.icon})),React.createElement('span',{style:{marginLeft:8}},d.name))),
+              React.createElement('td', null, d.category),
+              React.createElement('td', null, d.drug),
+              React.createElement('td', null, d.author),
+              React.createElement('td', null, React.createElement(StatusBadge, {status:d.status})),
+              React.createElement('td', null, d.date),
+              React.createElement('td', null, React.createElement('button',{className:'act-btn view',onClick:()=>setViewDoc(d)},React.createElement('i',{className:'fas fa-eye'})))
             );
           })
         )
       ),
-      React.createElement(Pagination,{total:filtered.length,page,perPage:6,onChange:setPage})
+      React.createElement(Pagination, {total:filtered.length, page, perPage:6, onChange:setPage})
     ),
-    viewDoc&&React.createElement(Panel,{title:viewDoc.name,onClose:()=>setViewDoc(null),
-      footer:[React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDoc(null)},'Close')]
+    deleteTarget && React.createElement(ConfirmModal, {
+      title:'Delete Document(s)', message:'This document will be permanently deleted. Are you sure?',
+      onConfirm:()=>{ setDeleteTarget(null); showToast('Deleted','error'); },
+      onCancel:()=>setDeleteTarget(null)
+    }),
+    viewDoc && React.createElement(Panel, {
+      title: viewDoc.name, onClose:()=>setViewDoc(null),
+      footer:[
+        React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),
+        React.createElement('button',{key:'e',className:'btn btn-secondary'},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'del',className:'btn btn-danger',onClick:()=>setViewDoc(null)},React.createElement('i',{className:'fas fa-trash-can',style:{marginRight:6}}),'Delete'),
+        React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDoc(null)},'Close'),
+      ]
     },
       React.createElement('div',{className:'detail-grid'},
-        [['Category',viewDoc.category],['Author',viewDoc.author],['Drug',viewDoc.drug],['Version',viewDoc.ver],['Date',viewDoc.date]].map(([k,v])=>
+        [['Category',viewDoc.category],['Author',viewDoc.author],['Drug',viewDoc.drug],['Version',viewDoc.ver],['Date',viewDoc.date],['Approver',viewDoc.approver||'-']].map(([k,v])=>
           React.createElement('div',{key:k,className:'detail-item'},React.createElement('div',{className:'dl'},k),React.createElement('div',{className:'dv'},v))
         ),
         React.createElement('div',{className:'detail-item'},React.createElement('div',{className:'dl'},'Status'),React.createElement(StatusBadge,{status:viewDoc.status}))
       )
     )
-  );
-}
-
-function FolderTab() {
-  return React.createElement('div',{className:'boxCard-demo'},
-    React.createElement('div',{className:'grid-toolbar'},
-      React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A'}},'Module Tree'),
-      React.createElement('button',{className:'btn btn-primary',onClick:()=>showToast('Add Folder')},React.createElement('i',{className:'fas fa-plus',style:{marginRight:6}}),'Add Folder')
-    ),
-    React.createElement('table',{className:'dms-table'},
-      React.createElement('thead',null,React.createElement('tr',null,['Module','Description','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h)))),
-      React.createElement('tbody',null,
-        CTD_TREE.map(n=>React.createElement('tr',{key:n.id},
-          React.createElement('td',null,
-            React.createElement('div',{className:'dfs',style:{paddingLeft:n.isModule?0:20}},
-              React.createElement('i',{className:n.isModule?'fas fa-layer-group':'fas fa-folder',style:{color:n.isModule?'#1B2A4A':'#FF9800',marginRight:8}}),
-              React.createElement('span',{style:{fontWeight:n.isModule?600:400}},n.label)
-            )
-          ),
-          React.createElement('td',null,n.isModule?'CTD Module':'Sub-section'),
-          React.createElement('td',null,n.docs+' docs'),
-          React.createElement('td',null,React.createElement(StatusBadge,{status:'Active'})),
-          React.createElement('td',null,
-            React.createElement('div',{className:'dfs'},
-              React.createElement('button',{className:'act-btn view'},React.createElement('i',{className:'fas fa-eye'})),
-              React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'}))
-            )
-          )
-        ))
-      )
-    )
-  );
-}
-
-function DocumentsScreen() {
-  const [tab, setTab] = useState('documents');
-  const totalDocs = DOCS.length;
-  const totalFolders = CTD_TREE.filter(n=>n.isModule).length;
-  return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Documents')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-file-alt',    title:'Total Documents', value:totalDocs,      subtitle:'All documents',   color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-check-circle',title:'Approved',         value:DOCS.filter(d=>d.status==='Approved').length, subtitle:'Approved docs', color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-clock',       title:'Pending Review',   value:DOCS.filter(d=>d.status==='Pending Approval').length, subtitle:'Awaiting action', color:'orange'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-tree', title:'CTD Folders',      value:totalFolders,   subtitle:'Module folders',  color:'purple'}),
-    ),
-    React.createElement(Breadcrumb,{items:[{label:'Documents',active:true}]}),
-    React.createElement('div',{className:'dms-tab-bar'},
-      React.createElement('button',{className:'dms-tab-btn'+(tab==='documents'?' active':''),onClick:()=>setTab('documents')},
-        React.createElement('i',{className:'fas fa-file-alt',style:{marginRight:6}}),'Documents'
-      ),
-      React.createElement('button',{className:'dms-tab-btn'+(tab==='folder'?' active':''),onClick:()=>setTab('folder')},
-        React.createElement('i',{className:'fas fa-folder-tree',style:{marginRight:6}}),'Folder'
-      )
-    ),
-    tab==='documents' ? React.createElement(DocListTab) : React.createElement(FolderTab)
   );
 }
 
@@ -1240,12 +1254,14 @@ function CTDView() {
   const filtered = nodeDocs.filter(d=>d.name.toLowerCase().includes(search.toLowerCase()));
 
   return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'CTD View')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5,            subtitle:'CTD modules',     color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5,            subtitle:'Top-level',       color:'purple'}),
-      React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5,            subtitle:'Active modules',  color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0,            subtitle:'Inactive',        color:'orange'}),
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'CTD View'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5,            subtitle:'CTD modules',     color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5,            subtitle:'Top-level',       color:'purple'}),
+        React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5,            subtitle:'Active modules',  color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0,            subtitle:'Inactive',        color:'orange'}),
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'CTD View',active:true}]}),
     React.createElement('div',{className:'ctd-layout'},
@@ -1262,27 +1278,30 @@ function CTDView() {
           )
         )
       ),
-      React.createElement('div',{className:'boxCard-demo'},
-        React.createElement('div',{className:'grid-toolbar'},
-          React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A'}}, active ? active.label : ''),
-          React.createElement('div',{className:'grid-search',style:{width:240}},
-            React.createElement('i',{className:'fas fa-search',style:{color:'#999',fontSize:13}}),
-            React.createElement('input',{placeholder:'Search...',value:search,onChange:e=>setSearch(e.target.value)})
-          )
-        ),
+      React.createElement('div',{className:'boxCard-demo',style:{margin:0}},
+        React.createElement(GridToolbar,{
+          search, onSearch:v=>setSearch(v),
+          addLabel:'Add Document', onAdd:()=>showToast('Add Document'),
+          onRefresh:()=>{ setSearch(''); showToast('Refreshed'); },
+          editBtns:null
+        }),
         React.createElement('table',{className:'dms-table'},
-          React.createElement('thead',null,React.createElement('tr',null,['Document Name','Author','Status','Date','Action'].map(h=>React.createElement('th',{key:h},h)))),
+          React.createElement('thead',null,React.createElement('tr',null,
+            React.createElement('th',{style:{width:36}},''),
+            ['Document Name','Author','Status','Date','Action'].map(h=>React.createElement('th',{key:h},h))
+          )),
           React.createElement('tbody',null,
-            filtered.map(d=>{
+            filtered.length > 0 ? filtered.map(d=>{
               const fi=fileIcon(d.ext);
               return React.createElement('tr',{key:d.id},
+                React.createElement('td',null,React.createElement('input',{type:'checkbox',readOnly:true})),
                 React.createElement('td',null,React.createElement('div',{className:'dfs'},React.createElement('div',{className:'file-icon '+fi.cls},React.createElement('i',{className:fi.icon})),React.createElement('span',{style:{marginLeft:8}},d.name))),
                 React.createElement('td',null,d.author),
                 React.createElement('td',null,React.createElement(StatusBadge,{status:d.status})),
                 React.createElement('td',null,d.date),
                 React.createElement('td',null,React.createElement('button',{className:'act-btn view'},React.createElement('i',{className:'fas fa-eye'})))
               );
-            })
+            }) : React.createElement('tr',null,React.createElement('td',{colSpan:6,style:{textAlign:'center',color:'#999',padding:24}},'No documents found'))
           )
         )
       )
@@ -1312,25 +1331,29 @@ function ManageUsers() {
   const toggleSelect = id=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
 
   return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Manage Users')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-users',       title:'Total Users',  value:counts.total,   subtitle:'All users',    color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-user-check',  title:'Active Users', value:counts.active,  subtitle:'Active',       color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-user-shield', title:'Admins',       value:counts.admins,  subtitle:'Admin role',   color:'purple'}),
-      React.createElement(SummaryCard,{icon:'fas fa-user-pen',    title:'Authors',      value:counts.authors, subtitle:'Author role',  color:'orange'}),
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'Manage Users'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-users',       title:'Total Users',  value:counts.total,   subtitle:'All users',    color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-user-check',  title:'Active Users', value:counts.active,  subtitle:'Active',       color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-user-shield', title:'Admins',       value:counts.admins,  subtitle:'Admin role',   color:'purple'}),
+        React.createElement(SummaryCard,{icon:'fas fa-user-pen',    title:'Authors',      value:counts.authors, subtitle:'Author role',  color:'orange'}),
+      )
     ),
-    React.createElement('div',{className:'filter-row-4'},
-      React.createElement('select',{className:'filter-select',value:roleFilter,onChange:e=>{setRoleFilter(e.target.value);setPage(1);}},
-        ['All Roles','Admin','Author','Reviewer','Approver','HR'].map(v=>React.createElement('option',{key:v,value:v==='All Roles'?'All':v},v))
-      ),
-      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
-        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
-      ),
-      React.createElement('div'),
-      React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'filter-row-4'},
+        React.createElement('select',{className:'filter-select',value:roleFilter,onChange:e=>{setRoleFilter(e.target.value);setPage(1);}},
+          ['All Roles','Admin','Author','Reviewer','Approver','HR'].map(v=>React.createElement('option',{key:v,value:v==='All Roles'?'All':v},v))
+        ),
+        React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+          ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+        ),
+        React.createElement('div'),
+        React.createElement('button',{className:'btn btn-primary btn-sm',onClick:resetFilters},React.createElement('i',{className:'fas fa-rotate-left',style:{marginRight:6}}),'Reset Filters')
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'Manage Users',active:true}]}),
-    React.createElement('div',{className:'boxCard-demo'},
+    React.createElement('div',{className:'boxCard-demo',style:{margin:0}},
       React.createElement(GridToolbar,{
         search,onSearch:v=>{setSearch(v);setPage(1);},
         onAdd:()=>showToast('Add User'),
@@ -1377,24 +1400,37 @@ function ManageUsers() {
    SCREEN: CTD FOLDER STRUCTURE (CREATE CTD FOLDER)
 =================================================== */
 function CTDFolderStructure() {
+  const [selected, setSelected] = useState([]);
+  const toggleSelect = id => setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'CTD Folder Structure')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5, subtitle:'CTD modules',    color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5, subtitle:'Top-level',      color:'purple'}),
-      React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5, subtitle:'Active modules', color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0, subtitle:'Inactive',       color:'orange'}),
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'CTD Folder Structure'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5, subtitle:'CTD modules',    color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5, subtitle:'Top-level',      color:'purple'}),
+        React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5, subtitle:'Active modules', color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0, subtitle:'Inactive',       color:'orange'}),
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'CTD Folder Structure',active:true}]}),
-    React.createElement('div',{className:'boxCard-demo'},
-      React.createElement('div',{className:'grid-toolbar'},
-        React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A'}},'Module Tree'),
-        React.createElement('button',{className:'btn btn-primary',onClick:()=>showToast('Add Folder')},React.createElement('i',{className:'fas fa-plus',style:{marginRight:6}}),'Add Folder')
-      ),
+    React.createElement('div',{className:'boxCard-demo',style:{margin:0}},
+      React.createElement(GridToolbar,{
+        search:'', onSearch:()=>{},
+        addLabel:'Add Folder', onAdd:()=>showToast('Add Folder'),
+        onRefresh:()=>showToast('Refreshed'),
+        editBtns: selected.length>0 ? React.createElement('div',{className:'dfs',style:{marginLeft:8}},
+          selected.length===1&&React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button',{className:'act-btn del'},React.createElement('i',{className:'fas fa-trash-can'}))
+        ):null
+      }),
       React.createElement('table',{className:'dms-table'},
-        React.createElement('thead',null,React.createElement('tr',null,['Module','Description','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('thead',null,React.createElement('tr',null,
+          React.createElement('th',{style:{width:36}},''),
+          ['Module','Description','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h))
+        )),
         React.createElement('tbody',null,
           CTD_TREE.map(n=>React.createElement('tr',{key:n.id},
+            React.createElement('td',null,React.createElement('input',{type:'checkbox',checked:selected.includes(n.id),onChange:()=>toggleSelect(n.id)})),
             React.createElement('td',null,
               React.createElement('div',{className:'dfs',style:{paddingLeft:n.isModule?0:20}},
                 React.createElement('i',{className:n.isModule?'fas fa-layer-group':'fas fa-folder',style:{color:n.isModule?'#1B2A4A':'#FF9800',marginRight:8}}),
@@ -1422,12 +1458,14 @@ function CTDFolderStructure() {
 =================================================== */
 function Reports() {
   return React.createElement('div',null,
-    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Document Reports')),
-    React.createElement('div',{className:'summary-cards-container'},
-      React.createElement(SummaryCard,{icon:'fas fa-chart-pie',    title:'Total Reports', value:14,  subtitle:'All reports',      color:'blue'}),
-      React.createElement(SummaryCard,{icon:'fas fa-chart-line',   title:'Workflow',      value:6,   subtitle:'Workflow reports', color:'green'}),
-      React.createElement(SummaryCard,{icon:'fas fa-chart-bar',    title:'Usage',         value:5,   subtitle:'Usage reports',    color:'orange'}),
-      React.createElement(SummaryCard,{icon:'fas fa-file-export',  title:'Exports',       value:3,   subtitle:'Exported',         color:'purple'}),
+    React.createElement('h1',{className:'mainTitle',style:{marginTop:0,marginBottom:16}},'Document Reports'),
+    React.createElement('div',{className:'white-card-section'},
+      React.createElement('div',{className:'summary-cards-container',style:{marginBottom:0}},
+        React.createElement(SummaryCard,{icon:'fas fa-chart-pie',    title:'Total Reports', value:14,  subtitle:'All reports',      color:'blue'}),
+        React.createElement(SummaryCard,{icon:'fas fa-chart-line',   title:'Workflow',      value:6,   subtitle:'Workflow reports', color:'green'}),
+        React.createElement(SummaryCard,{icon:'fas fa-chart-bar',    title:'Usage',         value:5,   subtitle:'Usage reports',    color:'orange'}),
+        React.createElement(SummaryCard,{icon:'fas fa-file-export',  title:'Exports',       value:3,   subtitle:'Exported',         color:'purple'}),
+      )
     ),
     React.createElement(Breadcrumb,{items:[{label:'Document Reports',active:true}]}),
     React.createElement('div',{className:'boxCard-demo',style:{padding:24}},
@@ -1461,7 +1499,9 @@ const NAV_ITEMS = [
   { id:'createCTDFolder',    label:'CTD Folder Structure',icon:'fas fa-folder-tree' },
   { id:'drugsDatabase',      label:'Drugs',               icon:'fas fa-capsules' },
   { id:'__documents',        label:'DOCUMENTS',           isSection:true },
-  { id:'documents',          label:'Documents',           icon:'fas fa-file' },
+  { id:'allDocuments',       label:'All Documents',       icon:'fas fa-file' },
+  { id:'myDocuments',        label:'My Documents',        icon:'fas fa-file-user' },
+  { id:'assignedToMe',       label:'Assigned to Me',      icon:'fas fa-file-circle-check' },
   { id:'ctdView',            label:'CTD View',            icon:'fas fa-sitemap' },
   { id:'reports',            label:'Document Reports',    icon:'fas fa-chart-line' },
   { id:'workflowReports',    label:'Workflow Reports',    icon:'fas fa-chart-bar' },
@@ -1479,7 +1519,9 @@ function App() {
       case 'templates':       return React.createElement(ManageTemplates);
       case 'categories':      return React.createElement(ManageCategories);
       case 'drugsDatabase':   return React.createElement(DrugsDatabase);
-      case 'documents':       return React.createElement(DocumentsScreen);
+      case 'allDocuments':    return React.createElement(AllDocuments, {role});
+      case 'myDocuments':     return React.createElement(AllDocuments, {filterUser:true, role});
+      case 'assignedToMe':    return React.createElement(AllDocuments, {filterPending:true, role});
       case 'ctdView':         return React.createElement(CTDView);
       case 'createCTDFolder': return React.createElement(CTDFolderStructure);
       case 'reports':
