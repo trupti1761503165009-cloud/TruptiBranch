@@ -1,12 +1,11 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
 const PORT = 5000;
 const HOST = '0.0.0.0';
 
-const MIME_TYPES = {
+const MIME = {
   '.html': 'text/html',
   '.css': 'text/css',
   '.js': 'application/javascript',
@@ -19,18 +18,11 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf',
 };
 
-const appCss = fs.readFileSync(
-  path.join(__dirname, 'src/webparts/drugManagementSystem/components/Custom/styles/app.css'),
-  'utf8'
-);
-const uiCss = fs.readFileSync(
-  path.join(__dirname, 'src/webparts/drugManagementSystem/components/Custom/styles/ui-professional.css'),
-  'utf8'
-);
-const enhancedCss = fs.readFileSync(
-  path.join(__dirname, 'src/webparts/drugManagementSystem/components/Custom/styles/enhanced-styles.css'),
-  'utf8'
-);
+const readCss = (p) => { try { return fs.readFileSync(path.join(__dirname, p), 'utf8'); } catch(e) { return ''; } };
+const appCss      = readCss('src/webparts/drugManagementSystem/components/Custom/styles/app.css');
+const stylesCss   = readCss('src/webparts/drugManagementSystem/assets/css/styles.css');
+const uiCss       = readCss('src/webparts/drugManagementSystem/components/Custom/styles/ui-professional.css');
+const enhancedCss = readCss('src/webparts/drugManagementSystem/components/Custom/styles/enhanced-styles.css');
 
 const HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -39,866 +31,1165 @@ const HTML = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Drug Management System</title>
   <link rel="stylesheet" href="/app.css">
-  <link rel="stylesheet" href="/ui-professional.css">
-  <link rel="stylesheet" href="/enhanced-styles.css">
+  <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .loading-screen {
-      display: flex; align-items: center; justify-content: center;
-      height: 100vh; background: #f5f5f5; flex-direction: column; gap: 16px;
-    }
-    .spinner {
-      width: 40px; height: 40px; border: 4px solid #e0e0e0;
-      border-top-color: #1E88E5; border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .modal-box {
-      background: white; border-radius: 8px; padding: 28px 32px;
-      min-width: 420px; max-width: 600px; box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-      max-height: 80vh; overflow-y: auto;
-    }
-    .modal-box h2 { font-size: 18px; margin-bottom: 20px; color: #1B2A4A; }
-    .modal-box label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; margin-top: 14px; }
-    .modal-box input, .modal-box select, .modal-box textarea {
-      width: 100%; padding: 8px 12px; border: 1px solid #d0d0d0; border-radius: 4px;
-      font-size: 14px; box-sizing: border-box;
-    }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
-    .btn-primary {
-      background: #1E88E5; color: white; border: none; padding: 9px 20px;
-      border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;
-    }
-    .btn-primary:hover { background: #1565C0; }
-    .btn-secondary {
-      background: white; color: #444; border: 1px solid #ccc; padding: 9px 20px;
-      border-radius: 4px; cursor: pointer; font-size: 14px;
-    }
-    .btn-secondary:hover { background: #f5f5f5; }
-    .stat-card {
-      background: white; border-radius: 8px; padding: 20px 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 16px;
-    }
-    .stat-icon { font-size: 32px; width: 56px; height: 56px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; }
-    .stat-info h3 { font-size: 28px; font-weight: 700; margin: 0 0 4px; color: #1B2A4A; }
-    .stat-info p { font-size: 13px; color: #777; margin: 0; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th {
-      background: #f5f5f5; padding: 10px 14px; text-align: left;
-      font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase;
-      letter-spacing: 0.5px; border-bottom: 2px solid #e0e0e0;
-    }
-    .data-table td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-    .data-table tr:hover td { background: #fafafa; }
-    .data-table-wrap { background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
-    .table-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
-    .table-header h3 { font-size: 16px; font-weight: 600; color: #1B2A4A; margin: 0; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-    .badge-draft { background: #f0f0f0; color: #555; }
-    .badge-review { background: #fff3cd; color: #856404; }
-    .badge-approved { background: #d1e7dd; color: #0a3622; }
-    .badge-rejected { background: #f8d7da; color: #58151c; }
-    .badge-pending { background: #cce5ff; color: #004085; }
-    .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
-    .search-bar input { flex: 1; padding: 9px 14px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 14px; outline: none; }
-    .search-bar input:focus { border-color: #1E88E5; }
-    .action-btn { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; color: #666; font-size: 14px; }
-    .action-btn:hover { background: #f0f0f0; color: #1E88E5; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 6px; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 9px 12px; border: 1px solid #d0d0d0; border-radius: 6px;
-      font-size: 14px; box-sizing: border-box; outline: none;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: #1E88E5; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .toast-container { position: fixed; top: 70px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast { background: white; border-radius: 6px; padding: 12px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      display: flex; align-items: center; gap: 10px; min-width: 280px; font-size: 14px;
-      animation: slideIn 0.3s ease; border-left: 4px solid #1E88E5; }
-    .toast.success { border-left-color: #4CAF50; }
-    .toast.error { border-left-color: #F44336; }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .workflow-timeline { display: flex; align-items: center; gap: 0; margin: 16px 0; }
-    .workflow-step {
-      display: flex; flex-direction: column; align-items: center; flex: 1; position: relative;
-    }
-    .workflow-step::after {
-      content: ''; position: absolute; left: 50%; top: 20px;
-      width: 100%; height: 2px; background: #e0e0e0; z-index: 0;
-    }
-    .workflow-step:last-child::after { display: none; }
-    .step-circle {
-      width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0;
-      display: flex; align-items: center; justify-content: center; font-size: 16px;
-      z-index: 1; margin-bottom: 8px;
-    }
-    .step-circle.done { background: #4CAF50; color: white; }
-    .step-circle.active { background: #1E88E5; color: white; }
-    .step-label { font-size: 12px; color: #666; text-align: center; }
-    .card-section { background: white; border-radius: 8px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    .card-section h3 { font-size: 16px; font-weight: 600; color: #1B2A4A; margin: 0 0 16px; }
-    .role-badge {
-      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
-      border-radius: 20px; font-size: 13px; font-weight: 500;
-    }
-    .role-admin { background: #1B2A4A; color: white; }
-    .role-author { background: #2E7D32; color: white; }
-    .role-reviewer { background: #E65100; color: white; }
-    .role-approver { background: #4527A0; color: white; }
-    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
-    .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; }
-    .nav-role-selector { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; }
-    .nav-role-selector label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
-    .nav-role-selector select {
-      width: 100%; padding: 6px 10px; background: rgba(255,255,255,0.1); color: white;
-      border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-size: 13px; cursor: pointer;
-    }
-    .nav-role-selector select option { background: #1B2A4A; }
-    .report-chart { background: white; border-radius: 8px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    .chart-bars { display: flex; align-items: flex-end; gap: 12px; height: 150px; margin-top: 16px; }
-    .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 6px; }
-    .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s ease; min-width: 30px; }
-    .chart-bar-label { font-size: 11px; color: #888; }
-    .chart-bar-val { font-size: 12px; font-weight: 600; color: #444; }
+    /* ── TOAST ── */
+    .toast-host { position:fixed; top:70px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+    .toast-msg  { background:#fff; border-radius:6px; padding:12px 18px; box-shadow:0 4px 16px rgba(0,0,0,.18);
+                  display:flex; align-items:center; gap:10px; min-width:280px; font-size:14px;
+                  animation:slideIn .3s ease; border-left:4px solid #1E88E5; }
+    .toast-msg.success { border-left-color:#4CAF50; }
+    .toast-msg.error   { border-left-color:#F44336; }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+    /* ── MODAL ── */
+    .modal-backdrop { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center; }
+    .modal-box { background:#fff;border-radius:8px;padding:28px 32px;min-width:460px;max-width:620px;
+                 box-shadow:0 8px 40px rgba(0,0,0,.18);max-height:85vh;overflow-y:auto; }
+    .modal-box h2 { font-size:18px;margin-bottom:20px;color:#1B2A4A; }
+    .modal-form-label { font-size:13px;color:#555;display:block;margin-bottom:4px;margin-top:14px;font-weight:500; }
+    .modal-form-input, .modal-form-select, .modal-form-textarea {
+      width:100%;padding:9px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:14px;box-sizing:border-box;outline:none; }
+    .modal-form-input:focus, .modal-form-select:focus { border-color:#1E88E5; }
+    .modal-actions { display:flex;gap:10px;justify-content:flex-end;margin-top:22px; }
+    /* ── CONFIRM DIALOG ── */
+    .confirm-box { background:#fff;border-radius:8px;padding:28px 32px;min-width:380px;
+                   box-shadow:0 8px 40px rgba(0,0,0,.18); }
+    .confirm-box h3 { color:#1B2A4A;margin-bottom:10px; }
+    .confirm-box p  { color:#555;font-size:14px;margin-bottom:22px; }
+    /* ── FILTER ROW ── */
+    .filter-row { display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center; }
+    .filter-select { padding:8px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;min-width:160px;background:#fff; }
+    .filter-select:focus { border-color:#1E88E5; }
+    /* ── BREADCRUMB OVERRIDE ── */
+    .dms-breadcrumb { margin-bottom:16px; }
+    /* ── GRID TOOLBAR ── */
+    .grid-toolbar { display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fff; }
+    .grid-toolbar-left { display:flex;gap:8px;align-items:center; }
+    .grid-toolbar-right { display:flex;gap:8px;align-items:center; }
+    .grid-search { display:flex;align-items:center;gap:8px;border:1px solid #e0e0e0;border-radius:6px;padding:7px 12px;background:#fff;width:260px; }
+    .grid-search input { border:none;outline:none;font-size:13px;flex:1; }
+    /* ── ACTION ICON BUTTONS ── */
+    .act-btn { background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:4px;font-size:15px;transition:all .15s; }
+    .act-btn.view   { color:#1E88E5; } .act-btn.view:hover   { background:#E3F2FD; }
+    .act-btn.edit   { color:#2E7D32; } .act-btn.edit:hover   { background:#E8F5E9; }
+    .act-btn.del    { color:#D32F2F; } .act-btn.del:hover    { background:#FFEBEE; }
+    .act-btn.ref    { color:#EF6C00; } .act-btn.ref:hover    { background:#FFF3E0; }
+    .act-btn.upload { color:#6A1B9A; } .act-btn.upload:hover { background:#F3E5F5; }
+    /* ── TABLE ── */
+    .dms-table { width:100%;border-collapse:collapse; }
+    .dms-table thead { background:#fafafa; }
+    .dms-table th { padding:11px 16px;text-align:left;font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e0e0e0; }
+    .dms-table td { padding:12px 16px;font-size:14px;color:#333;border-bottom:1px solid #f5f5f5;vertical-align:middle; }
+    .dms-table tr:hover td { background:#fafafa; }
+    .dms-table input[type=checkbox] { width:15px;height:15px;cursor:pointer; }
+    /* ── MAPPING TYPE BADGES ── */
+    .map-badge { display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600; }
+    .map-ectd  { background:#E8EAF6;color:#3949AB; }
+    .map-gmp   { background:#FFF3E0;color:#E65100; }
+    .map-tmf   { background:#E0F2F1;color:#00796B; }
+    .map-none  { background:#F5F5F5;color:#666; }
+    /* ── STATUS BADGES ── */
+    .sb { display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500; }
+    .sb-active   { background:#E3F2FD;color:#1E88E5; }
+    .sb-inactive { background:#F5F5F5;color:#9E9E9E; }
+    .sb-draft    { background:#EEEEEE;color:#616161; }
+    .sb-review   { background:#FFF3E0;color:#F57C00; }
+    .sb-approved { background:#E8F5E9;color:#43A047; }
+    .sb-rejected { background:#FFEBEE;color:#D32F2F; }
+    .sb-pending  { background:#E3F2FD;color:#1565C0; }
+    .sb-signed   { background:#F3E5F5;color:#7B1FA2; }
+    /* ── FILE ICON ── */
+    .file-icon { width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0; }
+    .fi-docx { background:#EBF2FC;color:#2B579A; }
+    .fi-xlsx { background:#E8F5E9;color:#217346; }
+    .fi-pdf  { background:#FFEBEE;color:#D32F2F; }
+    .fi-pptx { background:#FFF3E0;color:#D24726; }
+    .fi-gen  { background:#F5F5F5;color:#666; }
+    /* ── PANEL ── */
+    .dms-panel-overlay { position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1500; }
+    .dms-panel { position:fixed;top:0;right:0;width:600px;height:100vh;background:#fff;z-index:1501;
+                 display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.15); }
+    .dms-panel-header { padding:20px 24px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:center; }
+    .dms-panel-header h2 { font-size:17px;color:#1B2A4A;margin:0; }
+    .dms-panel-close { background:none;border:none;font-size:20px;cursor:pointer;color:#666;padding:4px 8px;border-radius:4px; }
+    .dms-panel-close:hover { background:#f0f0f0; }
+    .dms-panel-body { flex:1;overflow-y:auto;padding:24px; }
+    .dms-panel-actions { padding:16px 24px;border-top:1px solid #e0e0e0;display:flex;gap:10px; }
+    .detail-grid { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px; }
+    .detail-item .dl { font-size:12px;color:#888;margin-bottom:4px; }
+    .detail-item .dv { font-size:14px;color:#333;font-weight:500; }
+    /* ── ROLE TAG ── */
+    .role-tag { display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600; }
+    .role-admin    { background:#1B2A4A;color:#fff; }
+    .role-author   { background:#2E7D32;color:#fff; }
+    .role-reviewer { background:#E65100;color:#fff; }
+    .role-approver { background:#4527A0;color:#fff; }
+    /* ── DRUG PHASE ── */
+    .phase-tag { display:inline-block;padding:3px 10px;border-radius:4px;font-size:12px;border:1px solid #d0d0d0;color:#555; }
+    /* ── CTD TREE ── */
+    .ctd-layout { display:grid;grid-template-columns:280px 1fr;gap:16px; }
+    .ctd-tree { background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:16px;height:calc(100vh - 280px);overflow-y:auto; }
+    .ctd-tree-item { padding:8px 12px;cursor:pointer;border-radius:6px;font-size:14px;display:flex;align-items:center;gap:8px;transition:all .15s; }
+    .ctd-tree-item:hover { background:#f5f5f5; }
+    .ctd-tree-item.active { background:#E3F2FD;color:#1E88E5;font-weight:500; }
+    .ctd-tree-item.module { font-weight:600;color:#1B2A4A;font-size:13px;margin-top:4px; }
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align:center;padding:60px 20px;color:#bbb; }
+    .empty-state i { font-size:52px;margin-bottom:16px;display:block; }
+    /* ── PAGINATION ── */
+    .pagination { display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid #f0f0f0;font-size:13px;color:#666; }
+    .pag-btns { display:flex;gap:6px; }
+    .pag-btn { padding:5px 12px;border:1px solid #e0e0e0;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;color:#444; }
+    .pag-btn:hover { background:#f5f5f5; }
+    .pag-btn.active { background:#1E88E5;color:#fff;border-color:#1E88E5; }
+    /* ── MISC ── */
+    .mt-8  { margin-top:8px; }
+    .mt-16 { margin-top:16px; }
+    .dfs { display:flex;gap:8px;align-items:center; }
+    .fw500 { font-weight:500; }
+    .pageContainer { padding:0; }
+    .boxCard-demo { background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden; }
   </style>
 </head>
 <body>
 <div id="root"></div>
-<div id="toasts" class="toast-container"></div>
+<div id="toasts" class="toast-host"></div>
 <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
 <script>
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-// ========= MOCK DATA =========
-const MOCK_DOCS = [
-  { id:1, name:'Aspirin_Module2_Clinical_Study.docx', category:'Clinical', status:'Approved', lastModified:'2026-03-10', author:'John Smith', drug:'Aspirin', version:'2.1' },
-  { id:2, name:'Paracetamol_Nonclinical_Safety.docx', category:'Nonclinical', status:'Under Review', lastModified:'2026-03-08', author:'Sarah Johnson', drug:'Paracetamol', version:'1.0' },
-  { id:3, name:'Ibuprofen_Quality_Summary.docx', category:'Quality', status:'Draft', lastModified:'2026-03-07', author:'Mike Davis', drug:'Ibuprofen', version:'1.2' },
-  { id:4, name:'Metformin_CTD_Module3.docx', category:'Quality', status:'Pending Approval', lastModified:'2026-03-05', author:'Emily Wilson', drug:'Metformin', version:'3.0' },
-  { id:5, name:'Amoxicillin_Module1_Admin.docx', category:'Administrative', status:'Approved', lastModified:'2026-03-04', author:'Tom Brown', drug:'Amoxicillin', version:'1.5' },
-  { id:6, name:'Lisinopril_Efficacy_Report.docx', category:'Clinical', status:'Draft', lastModified:'2026-03-02', author:'Anna Lee', drug:'Lisinopril', version:'1.0' },
-  { id:7, name:'Omeprazole_Safety_Review.docx', category:'Nonclinical', status:'Under Review', lastModified:'2026-02-28', author:'Chris Martin', drug:'Omeprazole', version:'2.0' },
-  { id:8, name:'Atorvastatin_Label.docx', category:'Administrative', status:'Approved', lastModified:'2026-02-25', author:'Lisa Chen', drug:'Atorvastatin', version:'4.1' },
+/* ===================================================
+   MOCK DATA
+=================================================== */
+const DOCS = [
+  { id:1, name:'Aspirin_Module2_Clinical_Study.docx', ext:'docx', category:'Clinical', status:'Approved', date:'2026-03-10', author:'John Smith', drug:'Aspirin', ver:'2.1' },
+  { id:2, name:'Paracetamol_Nonclinical_Safety.docx',  ext:'docx', category:'Nonclinical', status:'Pending Approval', date:'2026-03-08', author:'Sarah Johnson', drug:'Paracetamol', ver:'1.0' },
+  { id:3, name:'Ibuprofen_Quality_Summary.docx',        ext:'docx', category:'Quality', status:'Draft', date:'2026-03-07', author:'Mike Davis', drug:'Ibuprofen', ver:'1.2' },
+  { id:4, name:'Metformin_CTD_Module3.docx',            ext:'docx', category:'Quality', status:'Pending Approval', date:'2026-03-05', author:'Emily Wilson', drug:'Metformin', ver:'3.0' },
+  { id:5, name:'Amoxicillin_Module1_Admin.docx',        ext:'docx', category:'Administrative', status:'Approved', date:'2026-03-04', author:'Tom Brown', drug:'Amoxicillin', ver:'1.5' },
+  { id:6, name:'Lisinopril_Efficacy_Report.docx',       ext:'docx', category:'Clinical', status:'Draft', date:'2026-03-02', author:'Anna Lee', drug:'Lisinopril', ver:'1.0' },
+  { id:7, name:'Omeprazole_Safety_Review.docx',         ext:'docx', category:'Nonclinical', status:'Under Review', date:'2026-02-28', author:'Chris Martin', drug:'Omeprazole', ver:'2.0' },
+  { id:8, name:'Atorvastatin_Label_Insert.pdf',         ext:'pdf',  category:'Administrative', status:'Signed', date:'2026-02-25', author:'Lisa Chen', drug:'Atorvastatin', ver:'4.1' },
+];
+const TEMPLATES = [
+  { id:1, name:'Clinical Study Report Template.docx',  ext:'docx', mappingType:'eCTD', ctdFolder:'Module 5', section:'5.3 Clinical Study Reports', country:'Global', ver:'2.0', status:'Active', date:'2026-01-15' },
+  { id:2, name:'Nonclinical Overview Template.docx',   ext:'docx', mappingType:'eCTD', ctdFolder:'Module 4', section:'4.2 Study Reports',             country:'Global', ver:'1.5', status:'Active', date:'2026-01-10' },
+  { id:3, name:'Quality Summary Template.docx',         ext:'docx', mappingType:'GMP',  model:'QA Document',  section:'-',                              country:'EU',     ver:'1.0', status:'Active', date:'2025-12-20' },
+  { id:4, name:'Investigator Brochure.docx',            ext:'docx', mappingType:'eCTD', ctdFolder:'Module 1', section:'1.2 IB',                          country:'US',     ver:'3.0', status:'Active', date:'2025-11-30' },
+  { id:5, name:'GMP Batch Record Template.xlsx',        ext:'xlsx', mappingType:'GMP',  model:'Batch Record', section:'-',                              country:'US',     ver:'1.2', status:'Inactive', date:'2025-10-05' },
+  { id:6, name:'TMF Index Template.docx',               ext:'docx', mappingType:'TMF',  tmfFolder:'Zone 1',   section:'-',                              country:'Global', ver:'1.0', status:'Active', date:'2025-09-18' },
+];
+const CATEGORIES = [
+  { id:1, name:'Administrative',     group:'Module 1', level:1, docs:12, status:'Active' },
+  { id:2, name:'Clinical',           group:'Module 5', level:1, docs:34, status:'Active' },
+  { id:3, name:'Nonclinical',        group:'Module 4', level:1, docs:18, status:'Active' },
+  { id:4, name:'Quality',            group:'Module 3', level:1, docs:27, status:'Active' },
+  { id:5, name:'Summary Documents',  group:'Module 2', level:2, docs:8,  status:'Active' },
+  { id:6, name:'Archived Clinical',  group:'Module 5', level:1, docs:4,  status:'Inactive' },
+];
+const DRUGS = [
+  { id:1, name:'Aspirin',       generic:'Acetylsalicylic Acid', indication:'Pain, Fever, Inflammation', status:'Active', phase:'Marketed' },
+  { id:2, name:'Paracetamol',   generic:'Acetaminophen',        indication:'Pain, Fever',               status:'Active', phase:'Marketed' },
+  { id:3, name:'Ibuprofen',     generic:'Ibuprofen',            indication:'Pain, Inflammation',        status:'Active', phase:'Phase III' },
+  { id:4, name:'Metformin',     generic:'Metformin HCl',        indication:'Type 2 Diabetes',           status:'Active', phase:'Marketed' },
+  { id:5, name:'Lisinopril',    generic:'Lisinopril',           indication:'Hypertension, Heart Failure',status:'Active',phase:'Phase III' },
+  { id:6, name:'Atorvastatin',  generic:'Atorvastatin Calcium', indication:'Hyperlipidemia',            status:'Inactive',phase:'Marketed' },
+];
+const USERS = [
+  { id:1, name:'John Smith',   email:'john.smith@pharma.com',   role:'Admin',    status:'Active',   last:'2026-03-15' },
+  { id:2, name:'Sarah Johnson',email:'sarah.j@pharma.com',      role:'Author',   status:'Active',   last:'2026-03-14' },
+  { id:3, name:'Mike Davis',   email:'mike.davis@pharma.com',   role:'Reviewer', status:'Active',   last:'2026-03-13' },
+  { id:4, name:'Emily Wilson', email:'emily.w@pharma.com',      role:'Approver', status:'Active',   last:'2026-03-12' },
+  { id:5, name:'Tom Brown',    email:'tom.brown@pharma.com',    role:'Author',   status:'Inactive', last:'2026-03-01' },
+  { id:6, name:'Anna Lee',     email:'anna.lee@pharma.com',     role:'Reviewer', status:'Active',   last:'2026-03-10' },
+];
+const CTD_TREE = [
+  { id:'m1', label:'Module 1 – Administrative', isModule:true, docs:12 },
+  { id:'m1-1', label:'1.1 Comprehensive Table of Contents',  isModule:false, parent:'m1', docs:2 },
+  { id:'m1-2', label:'1.2 Investigator Brochure',            isModule:false, parent:'m1', docs:4 },
+  { id:'m2', label:'Module 2 – Summaries', isModule:true, docs:8 },
+  { id:'m2-1', label:'2.4 Nonclinical Overview',  isModule:false, parent:'m2', docs:3 },
+  { id:'m2-2', label:'2.5 Clinical Overview',     isModule:false, parent:'m2', docs:5 },
+  { id:'m3', label:'Module 3 – Quality', isModule:true, docs:27 },
+  { id:'m3-1', label:'3.2.A Facilities & Equipment', isModule:false, parent:'m3', docs:7 },
+  { id:'m3-2', label:'3.2.P Drug Product',           isModule:false, parent:'m3', docs:12 },
+  { id:'m4', label:'Module 4 – Nonclinical', isModule:true, docs:18 },
+  { id:'m4-1', label:'4.2.1 Pharmacology',  isModule:false, parent:'m4', docs:8 },
+  { id:'m4-2', label:'4.2.2 Toxicology',    isModule:false, parent:'m4', docs:10 },
+  { id:'m5', label:'Module 5 – Clinical', isModule:true, docs:34 },
+  { id:'m5-1', label:'5.3.1 Study Reports',   isModule:false, parent:'m5', docs:22 },
+  { id:'m5-2', label:'5.3.5 Reports of Efficacy', isModule:false, parent:'m5', docs:12 },
 ];
 
-const MOCK_USERS = [
-  { id:1, name:'John Smith', email:'john.smith@pharma.com', role:'Admin', status:'Active', lastLogin:'2026-03-15' },
-  { id:2, name:'Sarah Johnson', email:'sarah.j@pharma.com', role:'Author', status:'Active', lastLogin:'2026-03-14' },
-  { id:3, name:'Mike Davis', email:'mike.davis@pharma.com', role:'Reviewer', status:'Active', lastLogin:'2026-03-13' },
-  { id:4, name:'Emily Wilson', email:'emily.w@pharma.com', role:'Approver', status:'Active', lastLogin:'2026-03-12' },
-  { id:5, name:'Tom Brown', email:'tom.brown@pharma.com', role:'Author', status:'Inactive', lastLogin:'2026-03-01' },
-  { id:6, name:'Anna Lee', email:'anna.lee@pharma.com', role:'Reviewer', status:'Active', lastLogin:'2026-03-10' },
-];
-
-const MOCK_CATEGORIES = [
-  { id:1, name:'Administrative', group:'Module 1', level:1, documents:12, status:'Active' },
-  { id:2, name:'Clinical', group:'Module 5', level:1, documents:34, status:'Active' },
-  { id:3, name:'Nonclinical', group:'Module 4', level:1, documents:18, status:'Active' },
-  { id:4, name:'Quality', group:'Module 3', level:1, documents:27, status:'Active' },
-  { id:5, name:'Summary Documents', group:'Module 2', level:2, documents:8, status:'Active' },
-];
-
-const MOCK_TEMPLATES = [
-  { id:1, name:'Clinical Study Report Template', category:'Clinical', type:'Word', lastModified:'2026-01-15', status:'Active' },
-  { id:2, name:'Nonclinical Overview Template', category:'Nonclinical', type:'Word', lastModified:'2026-01-10', status:'Active' },
-  { id:3, name:'Quality Summary Template', category:'Quality', type:'Word', lastModified:'2025-12-20', status:'Active' },
-  { id:4, name:'Investigator Brochure Template', category:'Clinical', type:'Word', lastModified:'2025-11-30', status:'Active' },
-];
-
-const MOCK_DRUGS = [
-  { id:1, name:'Aspirin', genericName:'Acetylsalicylic Acid', indication:'Pain, Fever, Inflammation', status:'Active', phase:'Marketed' },
-  { id:2, name:'Paracetamol', genericName:'Acetaminophen', indication:'Pain, Fever', status:'Active', phase:'Marketed' },
-  { id:3, name:'Ibuprofen', genericName:'Ibuprofen', indication:'Pain, Inflammation', status:'Active', phase:'Phase III' },
-  { id:4, name:'Metformin', genericName:'Metformin HCl', indication:'Type 2 Diabetes', status:'Active', phase:'Marketed' },
-];
-
-const MOCK_STATS = {
-  totalDocuments: 89,
-  templates: 12,
-  categories: 24,
-  users: 18,
-  reviewPending: 11,
-  approved: 45,
-  drafts: 23,
-  rejected: 10
-};
-
-const STATUS_COLORS = {
-  'Approved': 'badge-approved',
-  'Under Review': 'badge-review',
-  'Draft': 'badge-draft',
-  'Pending Approval': 'badge-pending',
-  'Rejected': 'badge-rejected',
-};
-
-// ========= TOAST =========
+/* ===================================================
+   HELPERS
+=================================================== */
 function showToast(msg, type='success') {
   const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':'exclamation-circle') + '" style="color:'+(type==='success'?'#4CAF50':'#F44336')+'"></i><span>' + msg + '</span>';
+  el.className = 'toast-msg ' + type;
+  el.innerHTML = '<i class="fas fa-' + (type==='success'?'check-circle':'exclamation-circle') +
+    '" style="color:' + (type==='success'?'#4CAF50':'#F44336') + '"></i><span>' + msg + '</span>';
   document.getElementById('toasts').appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), 3200);
 }
 
-// ========= COMPONENTS =========
+function fileIcon(ext) {
+  if (ext==='docx'||ext==='doc') return { cls:'fi-docx', icon:'fas fa-file-word' };
+  if (ext==='xlsx'||ext==='xls') return { cls:'fi-xlsx', icon:'fas fa-file-excel' };
+  if (ext==='pdf')                return { cls:'fi-pdf',  icon:'fas fa-file-pdf' };
+  if (ext==='pptx'||ext==='ppt') return { cls:'fi-pptx', icon:'fas fa-file-powerpoint' };
+  return { cls:'fi-gen', icon:'fas fa-file' };
+}
 
-function StatCard({ icon, label, value, color, bg }) {
-  return React.createElement('div', { className: 'stat-card' },
-    React.createElement('div', { className: 'stat-icon', style: { background: bg } },
-      React.createElement('i', { className: icon, style: { color } })
-    ),
-    React.createElement('div', { className: 'stat-info' },
-      React.createElement('h3', null, value),
-      React.createElement('p', null, label)
+function StatusBadge({ status }) {
+  const map = {
+    'Active':'sb sb-active','Inactive':'sb sb-inactive','Draft':'sb sb-draft',
+    'Under Review':'sb sb-review','Pending Approval':'sb sb-pending',
+    'Approved':'sb sb-approved','Rejected':'sb sb-rejected','Signed':'sb sb-signed',
+  };
+  return React.createElement('span', { className: map[status] || 'sb sb-draft' }, status);
+}
+
+function MappingBadge({ type }) {
+  const map = { eCTD:'map-badge map-ectd', GMP:'map-badge map-gmp', TMF:'map-badge map-tmf', None:'map-badge map-none' };
+  return React.createElement('span', { className: map[type] || 'map-badge map-none' }, type || 'None');
+}
+
+function SummaryCard({ icon, title, value, subtitle, color }) {
+  return React.createElement('div', { className: 'summary-card' },
+    React.createElement('div', { className: 'summary-card__border summary-card__border--' + color }),
+    React.createElement('div', { className: 'summary-card__content' },
+      React.createElement('div', { className: 'summary-card__icon-wrapper summary-card__icon-wrapper--' + color },
+        React.createElement('i', { className: icon + ' summary-card__icon' })
+      ),
+      React.createElement('div', { className: 'summary-card__info' },
+        React.createElement('h3', { className: 'summary-card__count' }, value),
+        React.createElement('p',  { className: 'summary-card__title' }, title),
+        subtitle ? React.createElement('p', { className: 'summary-card__subtitle' }, subtitle) : null
+      )
     )
   );
 }
 
-function AdminDashboard() {
-  const [docs, setDocs] = useState(MOCK_DOCS);
-  const [search, setSearch] = useState('');
-  const [showNewDoc, setShowNewDoc] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState(null);
+function Breadcrumb({ items }) {
+  return React.createElement('nav', { className: 'dms-breadcrumb' },
+    React.createElement('ol', { className: 'dms-breadcrumb__list' },
+      items.map((it, i) =>
+        React.createElement('li', { className: 'dms-breadcrumb__item', key: i },
+          i > 0 ? React.createElement('span', { className: 'dms-breadcrumb__separator', style:{marginRight:6} }, '›') : null,
+          React.createElement('span', {
+            className: it.active ? 'dms-breadcrumb__text dms-breadcrumb__text--active' : 'dms-breadcrumb__link',
+          }, it.label)
+        )
+      )
+    )
+  );
+}
 
-  const filtered = docs.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.author.toLowerCase().includes(search.toLowerCase()));
+function GridToolbar({ search, onSearch, onAdd, onUpload, onRefresh, editBtns }) {
+  return React.createElement('div', { className: 'grid-toolbar' },
+    React.createElement('div', { className: 'grid-toolbar-left' },
+      React.createElement('div', { className: 'grid-search' },
+        React.createElement('i', { className: 'fas fa-search', style:{color:'#999',fontSize:13} }),
+        React.createElement('input', {
+          placeholder:'Search...', value:search,
+          onChange: e => onSearch(e.target.value)
+        })
+      ),
+      editBtns
+    ),
+    React.createElement('div', { className: 'grid-toolbar-right' },
+      onAdd && React.createElement('button', { className: 'btn btn-primary', onClick: onAdd },
+        React.createElement('i', {className:'fas fa-plus', style:{marginRight:6}}), 'Add'
+      ),
+      onUpload && React.createElement('button', { className: 'act-btn upload', title:'Excel Upload', onClick: onUpload },
+        React.createElement('i', {className:'fas fa-file-excel'})
+      ),
+      onRefresh && React.createElement('button', { className: 'act-btn ref', title:'Refresh', onClick: onRefresh },
+        React.createElement('i', {className:'fas fa-arrows-rotate'})
+      )
+    )
+  );
+}
+
+function Pagination({ total, page, perPage, onChange }) {
+  const pages = Math.ceil(total / perPage);
+  const start = (page-1)*perPage+1, end = Math.min(page*perPage, total);
+  return React.createElement('div', { className: 'pagination' },
+    React.createElement('span', null, 'Showing ' + start + '–' + end + ' of ' + total),
+    React.createElement('div', { className: 'pag-btns' },
+      React.createElement('button', { className:'pag-btn', onClick:()=>onChange(Math.max(1,page-1)), disabled:page===1 },
+        React.createElement('i',{className:'fas fa-chevron-left'})
+      ),
+      Array.from({length: Math.min(pages,5)}, (_,i) => i+1).map(p =>
+        React.createElement('button', { key:p, className:'pag-btn'+(p===page?' active':''), onClick:()=>onChange(p) }, p)
+      ),
+      React.createElement('button', { className:'pag-btn', onClick:()=>onChange(Math.min(pages,page+1)), disabled:page===pages },
+        React.createElement('i',{className:'fas fa-chevron-right'})
+      )
+    )
+  );
+}
+
+/* ===================================================
+   MODAL (Add / Edit / View / Confirm)
+=================================================== */
+function Modal({ title, onClose, children, footer }) {
+  return React.createElement('div', { className: 'modal-backdrop', onClick: e => { if(e.target===e.currentTarget) onClose(); } },
+    React.createElement('div', { className: 'modal-box' },
+      React.createElement('div', { style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20} },
+        React.createElement('h2', {style:{margin:0}}, title),
+        React.createElement('button', {className:'act-btn', onClick:onClose, style:{fontSize:18}},
+          React.createElement('i',{className:'fas fa-times'})
+        )
+      ),
+      children,
+      footer && React.createElement('div', {className:'modal-actions'}, footer)
+    )
+  );
+}
+
+function ConfirmModal({ title, message, onConfirm, onCancel }) {
+  return React.createElement('div', { className: 'modal-backdrop', onClick: e => { if(e.target===e.currentTarget) onCancel(); } },
+    React.createElement('div', { className: 'confirm-box' },
+      React.createElement('h3', null, React.createElement('i',{className:'fas fa-exclamation-triangle',style:{color:'#F44336',marginRight:10}}), title),
+      React.createElement('p', null, message),
+      React.createElement('div', {className:'modal-actions'},
+        React.createElement('button', {className:'btn btn-secondary',onClick:onCancel},'Cancel'),
+        React.createElement('button', {className:'btn btn-primary',style:{background:'#D32F2F'},onClick:onConfirm},
+          React.createElement('i',{className:'fas fa-trash',style:{marginRight:6}}), 'Yes, Delete'
+        )
+      )
+    )
+  );
+}
+
+function Panel({ title, onClose, children, footer }) {
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className: 'dms-panel-overlay', onClick: onClose }),
+    React.createElement('div', { className: 'dms-panel' },
+      React.createElement('div', { className: 'dms-panel-header' },
+        React.createElement('h2', null, title),
+        React.createElement('button', { className: 'dms-panel-close', onClick: onClose },
+          React.createElement('i', { className: 'fas fa-times' })
+        )
+      ),
+      React.createElement('div', { className: 'dms-panel-body' }, children),
+      footer && React.createElement('div', { className: 'dms-panel-actions' }, footer)
+    )
+  );
+}
+
+/* ===================================================
+   SCREEN: ADMIN DASHBOARD
+=================================================== */
+function AdminDashboard() {
+  const [search, setSearch] = useState('');
+  const [viewDoc, setViewDoc] = useState(null);
+  const [docs, setDocs] = useState(DOCS);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ name:'', category:'Clinical', drug:'', status:'Draft' });
+  const [page, setPage] = useState(1);
+
+  const filtered = docs.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.author.toLowerCase().includes(search.toLowerCase()));
+  const paged = filtered.slice((page-1)*6, page*6);
+
+  const stats = {
+    total: docs.length, approved: docs.filter(d=>d.status==='Approved').length,
+    pending: docs.filter(d=>d.status==='Pending Approval').length, drafts: docs.filter(d=>d.status==='Draft').length,
+    users: USERS.filter(u=>u.status==='Active').length, categories: CATEGORIES.length
+  };
 
   return React.createElement('div', null,
     React.createElement('div', { className: 'page-header' },
       React.createElement('h1', { className: 'page-title' }, 'Admin Dashboard'),
-      React.createElement('p', { className: 'page-subtitle' }, 'Overview of all documents, users, and system activity')
+      React.createElement('p',  { className: 'page-subtitle' }, 'Overview of all documents, users, and system activity')
     ),
-    React.createElement('div', { className: 'stats-grid' },
-      React.createElement(StatCard, { icon:'fas fa-file-alt', label:'Total Documents', value:MOCK_STATS.totalDocuments, color:'#1E88E5', bg:'#E3F2FD' }),
-      React.createElement(StatCard, { icon:'fas fa-check-circle', label:'Approved', value:MOCK_STATS.approved, color:'#4CAF50', bg:'#E8F5E9' }),
-      React.createElement(StatCard, { icon:'fas fa-clock', label:'Pending Review', value:MOCK_STATS.reviewPending, color:'#FF9800', bg:'#FFF3E0' }),
-      React.createElement(StatCard, { icon:'fas fa-edit', label:'Drafts', value:MOCK_STATS.drafts, color:'#9E9E9E', bg:'#FAFAFA' }),
-      React.createElement(StatCard, { icon:'fas fa-users', label:'Active Users', value:MOCK_STATS.users, color:'#7B1FA2', bg:'#F3E5F5' }),
-      React.createElement(StatCard, { icon:'fas fa-folder', label:'Categories', value:MOCK_STATS.categories, color:'#E65100', bg:'#FBE9E7' }),
+    React.createElement('div', { className: 'summary-cards-container' },
+      React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Documents',  value:stats.total,      subtitle:'All documents',       color:'blue'}),
+      React.createElement(SummaryCard, {icon:'fas fa-check-circle',title:'Approved',         value:stats.approved,   subtitle:'Fully approved',      color:'green'}),
+      React.createElement(SummaryCard, {icon:'fas fa-clock',       title:'Pending Review',   value:stats.pending,    subtitle:'Awaiting action',     color:'orange'}),
+      React.createElement(SummaryCard, {icon:'fas fa-pen',         title:'Drafts',           value:stats.drafts,     subtitle:'In progress',         color:'purple'}),
+      React.createElement(SummaryCard, {icon:'fas fa-users',       title:'Active Users',     value:stats.users,      subtitle:'System users',        color:'blue'}),
+      React.createElement(SummaryCard, {icon:'fas fa-folder',      title:'Categories',       value:stats.categories, subtitle:'Document categories',  color:'orange'}),
     ),
-    React.createElement('div', { className: 'data-table-wrap' },
-      React.createElement('div', { className: 'table-header' },
-        React.createElement('h3', null, 'Recent Documents'),
-        React.createElement('div', { style:{display:'flex',gap:10} },
-          React.createElement('input', {
-            placeholder:'Search documents...',
-            value: search,
-            onChange: e => setSearch(e.target.value),
-            style:{padding:'7px 12px',border:'1px solid #ddd',borderRadius:6,fontSize:14,outline:'none',width:220}
-          }),
-          React.createElement('button', { className:'btn-primary', style:{fontSize:13,padding:'7px 14px'}, onClick:()=>setShowNewDoc(true) },
-            React.createElement('i', {className:'fas fa-plus',style:{marginRight:6}}), 'New Document'
-          )
-        )
-      ),
-      React.createElement('table', { className:'data-table' },
+    React.createElement('div', { className: 'boxCard-demo' },
+      React.createElement(GridToolbar, {
+        search, onSearch: setSearch,
+        onAdd: () => setAddOpen(true),
+        onRefresh: () => { setSearch(''); showToast('Refreshed'); },
+        editBtns: null
+      }),
+      React.createElement('table', { className: 'dms-table' },
         React.createElement('thead', null,
           React.createElement('tr', null,
-            React.createElement('th', null, 'Document Name'),
-            React.createElement('th', null, 'Category'),
-            React.createElement('th', null, 'Author'),
-            React.createElement('th', null, 'Status'),
-            React.createElement('th', null, 'Last Modified'),
-            React.createElement('th', null, 'Actions'),
+            ['Document Name','Category','Author','Status','Last Modified','Actions'].map(h =>
+              React.createElement('th', {key:h}, h)
+            )
           )
         ),
         React.createElement('tbody', null,
-          filtered.map(doc =>
-            React.createElement('tr', { key: doc.id },
+          paged.map(d => {
+            const fi = fileIcon(d.ext);
+            return React.createElement('tr', { key: d.id },
               React.createElement('td', null,
-                React.createElement('div', {style:{display:'flex',alignItems:'center',gap:8}},
-                  React.createElement('i', {className:'fas fa-file-word',style:{color:'#2B579A',fontSize:18}}),
-                  React.createElement('span', {style:{fontWeight:500}}, doc.name)
+                React.createElement('div', {className:'dfs'},
+                  React.createElement('div', {className:'file-icon '+fi.cls}, React.createElement('i',{className:fi.icon})),
+                  React.createElement('span', {className:'fw500', style:{marginLeft:8}}, d.name)
                 )
               ),
-              React.createElement('td', null, doc.category),
-              React.createElement('td', null, doc.author),
+              React.createElement('td', null, d.category),
+              React.createElement('td', null, d.author),
+              React.createElement('td', null, React.createElement(StatusBadge, {status:d.status})),
+              React.createElement('td', null, d.date),
               React.createElement('td', null,
-                React.createElement('span', { className:'badge ' + (STATUS_COLORS[doc.status] || 'badge-draft') }, doc.status)
-              ),
-              React.createElement('td', null, doc.lastModified),
-              React.createElement('td', null,
-                React.createElement('div', {style:{display:'flex',gap:4}},
-                  React.createElement('button', { className:'action-btn', title:'View', onClick:()=>setSelectedDoc(doc) },
-                    React.createElement('i', {className:'fas fa-eye'})
-                  ),
-                  React.createElement('button', { className:'action-btn', title:'Edit' },
-                    React.createElement('i', {className:'fas fa-edit'})
-                  ),
-                  React.createElement('button', { className:'action-btn', title:'Delete', onClick:()=>{ setDocs(docs.filter(d=>d.id!==doc.id)); showToast('Document removed'); }},
-                    React.createElement('i', {className:'fas fa-trash',style:{color:'#e53935'}})
-                  ),
+                React.createElement('div', {className:'dfs'},
+                  React.createElement('button', {className:'act-btn view', title:'View', onClick:()=>setViewDoc(d)}, React.createElement('i',{className:'fas fa-eye'})),
+                  React.createElement('button', {className:'act-btn edit', title:'Edit'}, React.createElement('i',{className:'fas fa-pen-to-square'})),
+                  React.createElement('button', {className:'act-btn del', title:'Delete', onClick:()=>{ setDocs(docs.filter(x=>x.id!==d.id)); showToast('Document deleted','error'); }},
+                    React.createElement('i',{className:'fas fa-trash-can'})
+                  )
                 )
               )
-            )
+            );
+          })
+        )
+      ),
+      React.createElement(Pagination, {total:filtered.length, page, perPage:6, onChange:setPage})
+    ),
+    addOpen && React.createElement(Modal, {
+      title: React.createElement('span', null, React.createElement('i',{className:'fas fa-plus-circle',style:{marginRight:10,color:'#1E88E5'}}), 'Create New Document'),
+      onClose: () => setAddOpen(false),
+      footer: [
+        React.createElement('button', {key:'c', className:'btn btn-secondary', onClick:()=>setAddOpen(false)}, 'Cancel'),
+        React.createElement('button', {key:'s', className:'btn btn-primary', onClick:()=>{
+          setDocs([{...form, id:Date.now(), ext:'docx', date:new Date().toISOString().split('T')[0], author:'John Smith', ver:'1.0'}, ...docs]);
+          setAddOpen(false); showToast('Document created successfully');
+        }}, React.createElement('i',{className:'fas fa-save',style:{marginRight:6}}), 'Create')
+      ]
+    },
+      [['name','Document Name','text'],['drug','Drug Name','text']].map(([f,l,t]) =>
+        React.createElement('div', {key:f},
+          React.createElement('label', {className:'modal-form-label'}, l),
+          React.createElement('input', {className:'modal-form-input', type:t, value:form[f], onChange:e=>setForm({...form,[f]:e.target.value}), placeholder:l})
+        )
+      ).concat([
+        React.createElement('div', {key:'cat'},
+          React.createElement('label', {className:'modal-form-label'}, 'Category'),
+          React.createElement('select', {className:'modal-form-select', value:form.category, onChange:e=>setForm({...form,category:e.target.value})},
+            ['Administrative','Clinical','Nonclinical','Quality'].map(c=>React.createElement('option',{key:c},c))
           )
         )
-      )
+      ])
     ),
-    showNewDoc && React.createElement(NewDocumentModal, { onClose:()=>setShowNewDoc(false), onSave:(doc)=>{ setDocs([{...doc,id:Date.now(),lastModified:new Date().toISOString().split('T')[0]},...docs]); setShowNewDoc(false); showToast('Document created successfully'); } }),
-    selectedDoc && React.createElement(ViewDocumentModal, { doc: selectedDoc, onClose:()=>setSelectedDoc(null) })
-  );
-}
-
-function NewDocumentModal({ onClose, onSave }) {
-  const [form, setForm] = useState({ name:'', category:'Clinical', author:'John Smith', status:'Draft', drug:'Aspirin' });
-  return React.createElement('div', { className:'modal-backdrop', onClick:e=>{ if(e.target===e.currentTarget) onClose(); } },
-    React.createElement('div', { className:'modal-box' },
-      React.createElement('h2', null, React.createElement('i',{className:'fas fa-plus-circle',style:{marginRight:10,color:'#1E88E5'}}),'Create New Document'),
-      ['name','drug'].map(f =>
-        React.createElement('div', {className:'form-group', key:f},
-          React.createElement('label', null, f==='name'?'Document Name':'Drug Name'),
-          React.createElement('input', { value:form[f], onChange:e=>setForm({...form,[f]:e.target.value}), placeholder:f==='name'?'Enter document name...':'Drug name' })
-        )
-      ),
-      React.createElement('div', {className:'form-group'},
-        React.createElement('label', null, 'Category'),
-        React.createElement('select', {value:form.category, onChange:e=>setForm({...form,category:e.target.value})},
-          ['Administrative','Clinical','Nonclinical','Quality','Summary Documents'].map(c=>React.createElement('option',{key:c},c))
-        )
-      ),
-      React.createElement('div', {className:'form-group'},
-        React.createElement('label', null, 'Status'),
-        React.createElement('select', {value:form.status, onChange:e=>setForm({...form,status:e.target.value})},
-          ['Draft','Under Review','Pending Approval'].map(s=>React.createElement('option',{key:s},s))
-        )
-      ),
-      React.createElement('div', {className:'modal-actions'},
-        React.createElement('button', {className:'btn-secondary',onClick:onClose},'Cancel'),
-        React.createElement('button', {className:'btn-primary',onClick:()=>onSave(form)}, React.createElement('i',{className:'fas fa-save',style:{marginRight:6}}),'Create Document')
-      )
-    )
-  );
-}
-
-function ViewDocumentModal({ doc, onClose }) {
-  return React.createElement('div', { className:'modal-backdrop', onClick:e=>{ if(e.target===e.currentTarget) onClose(); } },
-    React.createElement('div', { className:'modal-box' },
-      React.createElement('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}},
-        React.createElement('h2', {style:{margin:0}}, React.createElement('i',{className:'fas fa-file-word',style:{marginRight:10,color:'#2B579A'}}), doc.name),
-        React.createElement('button', {className:'btn-secondary',onClick:onClose,style:{padding:'6px 14px'}},
-          React.createElement('i',{className:'fas fa-times'})
-        )
-      ),
-      React.createElement('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 24px'}},
-        ...[['Category',doc.category],['Author',doc.author],['Drug',doc.drug],['Version',doc.version||'1.0'],['Last Modified',doc.lastModified]].map(([k,v])=>
-          React.createElement('div', {key:k},
-            React.createElement('div', {style:{fontSize:12,color:'#888',marginBottom:3}}, k),
-            React.createElement('div', {style:{fontSize:14,fontWeight:500}}, v)
+    viewDoc && React.createElement(Panel, {
+      title: viewDoc.name,
+      onClose: () => setViewDoc(null),
+      footer: [
+        React.createElement('button',{key:'d',className:'btn btn-primary'}, React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}), 'Download'),
+        React.createElement('button',{key:'e',className:'btn btn-secondary'}, React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}), 'Edit'),
+        React.createElement('button',{key:'c',className:'btn btn-secondary', onClick:()=>setViewDoc(null)}, 'Close'),
+      ]
+    },
+      React.createElement('div', {className:'detail-grid'},
+        [['Category',viewDoc.category],['Author',viewDoc.author],['Drug',viewDoc.drug],['Version',viewDoc.ver],['Last Modified',viewDoc.date]].map(([k,v])=>
+          React.createElement('div', {key:k, className:'detail-item'},
+            React.createElement('div',{className:'dl'},k),
+            React.createElement('div',{className:'dv'},v)
           )
         ),
-        React.createElement('div', {key:'status'},
-          React.createElement('div', {style:{fontSize:12,color:'#888',marginBottom:3}}, 'Status'),
-          React.createElement('span', {className:'badge '+(STATUS_COLORS[doc.status]||'badge-draft')}, doc.status)
-        )
-      ),
-      React.createElement('div', {style:{marginTop:20}},
-        React.createElement('div', {style:{fontSize:12,color:'#888',marginBottom:8}}, 'Workflow Progress'),
-        React.createElement('div', {className:'workflow-timeline'},
-          [['Draft','fas fa-edit','done'],['Under Review','fas fa-eye',doc.status==='Under Review'||doc.status==='Pending Approval'||doc.status==='Approved'?'done':''],['Pending Approval','fas fa-clock',doc.status==='Pending Approval'||doc.status==='Approved'?'done':''],['Approved','fas fa-check-circle',doc.status==='Approved'?'done':'']].map(([label,icon,cls])=>
-            React.createElement('div', {className:'workflow-step',key:label},
-              React.createElement('div', {className:'step-circle '+(cls==='done'?'done':'')},
-                React.createElement('i', {className:icon})
-              ),
-              React.createElement('div', {className:'step-label'}, label)
-            )
-          )
-        )
-      ),
-      React.createElement('div', {className:'modal-actions'},
-        React.createElement('button', {className:'btn-secondary',onClick:onClose},'Close'),
-        React.createElement('button', {className:'btn-primary'}, React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download')
-      )
-    )
-  );
-}
-
-function ManageDocuments({ filterPending, filterMine }) {
-  const [docs, setDocs] = useState(MOCK_DOCS);
-  const [search, setSearch] = useState('');
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const filteredDocs = docs.filter(d => {
-    if (filterPending) return d.status === 'Pending Approval' || d.status === 'Under Review';
-    if (filterMine) return d.author === 'John Smith';
-    return d.name.toLowerCase().includes(search.toLowerCase());
-  });
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, filterPending ? 'Assigned to Me' : filterMine ? 'My Documents' : 'All Documents'),
-      React.createElement('p', {className:'page-subtitle'}, filteredDocs.length + ' documents')
-    ),
-    !filterPending && !filterMine && React.createElement('div', {className:'search-bar'},
-      React.createElement('input', {placeholder:'Search by name, author...', value:search, onChange:e=>setSearch(e.target.value)})
-    ),
-    React.createElement('div', {className:'data-table-wrap'},
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          React.createElement('th', null, 'Document'),
-          React.createElement('th', null, 'Category'),
-          React.createElement('th', null, 'Author'),
-          React.createElement('th', null, 'Status'),
-          React.createElement('th', null, 'Modified'),
-          React.createElement('th', null, 'Actions'),
-        )),
-        React.createElement('tbody', null, filteredDocs.map(doc =>
-          React.createElement('tr', {key:doc.id},
-            React.createElement('td', null, React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},React.createElement('i',{className:'fas fa-file-word',style:{color:'#2B579A',fontSize:18}}),React.createElement('span',{style:{fontWeight:500}},doc.name))),
-            React.createElement('td', null, doc.category),
-            React.createElement('td', null, doc.author),
-            React.createElement('td', null, React.createElement('span',{className:'badge '+(STATUS_COLORS[doc.status]||'badge-draft')},doc.status)),
-            React.createElement('td', null, doc.lastModified),
-            React.createElement('td', null,
-              React.createElement('div', {style:{display:'flex',gap:4}},
-                React.createElement('button', {className:'action-btn',title:'View',onClick:()=>setSelectedDoc(doc)},React.createElement('i',{className:'fas fa-eye'})),
-                filterPending && React.createElement('button', {className:'btn-primary',style:{fontSize:12,padding:'4px 10px'},onClick:()=>{ setDocs(docs.map(d=>d.id===doc.id?{...d,status:'Approved'}:d)); showToast('Document approved!'); }},
-                  React.createElement('i',{className:'fas fa-check',style:{marginRight:4}}),'Approve'
-                ),
-                filterPending && React.createElement('button', {className:'btn-secondary',style:{fontSize:12,padding:'4px 10px'},onClick:()=>{ setDocs(docs.map(d=>d.id===doc.id?{...d,status:'Rejected'}:d)); showToast('Document rejected','error'); }},
-                  React.createElement('i',{className:'fas fa-times',style:{marginRight:4}}),'Reject'
-                ),
-              )
-            )
-          )
-        ))
-      )
-    ),
-    selectedDoc && React.createElement(ViewDocumentModal, {doc:selectedDoc, onClose:()=>setSelectedDoc(null)})
-  );
-}
-
-function ManageUsers() {
-  const [users, setUsers] = useState(MOCK_USERS);
-  const [showAdd, setShowAdd] = useState(false);
-  const [search, setSearch] = useState('');
-  const filtered = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Manage Users'),
-      React.createElement('p', {className:'page-subtitle'}, users.length + ' users in system')
-    ),
-    React.createElement('div', {className:'data-table-wrap'},
-      React.createElement('div', {className:'table-header'},
-        React.createElement('h3', null, 'System Users'),
-        React.createElement('div', {style:{display:'flex',gap:10}},
-          React.createElement('input', {placeholder:'Search users...', value:search, onChange:e=>setSearch(e.target.value), style:{padding:'7px 12px',border:'1px solid #ddd',borderRadius:6,fontSize:14,outline:'none'}}),
-          React.createElement('button', {className:'btn-primary',style:{fontSize:13,padding:'7px 14px'},onClick:()=>setShowAdd(true)},
-            React.createElement('i',{className:'fas fa-user-plus',style:{marginRight:6}}),'Add User'
-          )
-        )
-      ),
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          React.createElement('th', null,'User'), React.createElement('th', null,'Email'), React.createElement('th', null,'Role'), React.createElement('th', null,'Status'), React.createElement('th', null,'Last Login'), React.createElement('th', null,'Actions'),
-        )),
-        React.createElement('tbody', null, filtered.map(user =>
-          React.createElement('tr', {key:user.id},
-            React.createElement('td', null,
-              React.createElement('div', {style:{display:'flex',alignItems:'center',gap:10}},
-                React.createElement('div', {style:{width:32,height:32,borderRadius:'50%',background:'#1E88E5',color:'white',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:600,fontSize:13}}, user.name.split(' ').map(n=>n[0]).join('')),
-                user.name
-              )
-            ),
-            React.createElement('td', null, user.email),
-            React.createElement('td', null,
-              React.createElement('span', {className:'role-badge role-'+user.role.toLowerCase()}, user.role)
-            ),
-            React.createElement('td', null,
-              React.createElement('span', {className:'badge '+(user.status==='Active'?'badge-approved':'badge-draft')}, user.status)
-            ),
-            React.createElement('td', null, user.lastLogin),
-            React.createElement('td', null,
-              React.createElement('div', {style:{display:'flex',gap:4}},
-                React.createElement('button', {className:'action-btn', title:'Edit'}, React.createElement('i',{className:'fas fa-edit'})),
-                React.createElement('button', {className:'action-btn', title:'Remove', onClick:()=>{ setUsers(users.filter(u=>u.id!==user.id)); showToast('User removed'); }},
-                  React.createElement('i', {className:'fas fa-trash', style:{color:'#e53935'}})
-                )
-              )
-            )
-          )
-        ))
-      )
-    ),
-    showAdd && React.createElement('div', {className:'modal-backdrop',onClick:e=>{ if(e.target===e.currentTarget) setShowAdd(false); }},
-      React.createElement('div', {className:'modal-box'},
-        React.createElement('h2', null, React.createElement('i',{className:'fas fa-user-plus',style:{marginRight:10,color:'#1E88E5'}}),'Add New User'),
-        React.createElement('div', {className:'form-group'}, React.createElement('label', null, 'Full Name'), React.createElement('input', {placeholder:'Enter full name'})),
-        React.createElement('div', {className:'form-group'}, React.createElement('label', null, 'Email Address'), React.createElement('input', {type:'email', placeholder:'user@pharma.com'})),
-        React.createElement('div', {className:'form-group'},
-          React.createElement('label', null, 'Role'),
-          React.createElement('select', null, ['Admin','Author','Reviewer','Approver','HR'].map(r=>React.createElement('option',{key:r},r)))
-        ),
-        React.createElement('div', {className:'modal-actions'},
-          React.createElement('button', {className:'btn-secondary',onClick:()=>setShowAdd(false)},'Cancel'),
-          React.createElement('button', {className:'btn-primary',onClick:()=>{ setShowAdd(false); showToast('User added successfully'); }},
-            React.createElement('i',{className:'fas fa-save',style:{marginRight:6}}),'Add User'
-          )
+        React.createElement('div',{className:'detail-item'},
+          React.createElement('div',{className:'dl'},'Status'),
+          React.createElement(StatusBadge,{status:viewDoc.status})
         )
       )
     )
   );
 }
 
-function ManageCategories() {
-  const [cats, setCats] = useState(MOCK_CATEGORIES);
-  const [showAdd, setShowAdd] = useState(false);
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Categories'),
-      React.createElement('p', {className:'page-subtitle'}, 'Manage document categories and CTD modules')
-    ),
-    React.createElement('div', {className:'data-table-wrap'},
-      React.createElement('div', {className:'table-header'},
-        React.createElement('h3', null, 'Document Categories'),
-        React.createElement('button', {className:'btn-primary',style:{fontSize:13,padding:'7px 14px'},onClick:()=>setShowAdd(true)},
-          React.createElement('i',{className:'fas fa-plus',style:{marginRight:6}}),'Add Category'
-        )
-      ),
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          ['Category Name','CTD Module','Level','Documents','Status','Actions'].map(h=>React.createElement('th',{key:h},h))
-        )),
-        React.createElement('tbody', null, cats.map(cat =>
-          React.createElement('tr', {key:cat.id},
-            React.createElement('td', null, React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},React.createElement('i',{className:'fas fa-folder',style:{color:'#F59E0B',fontSize:18}}),React.createElement('strong',null,cat.name))),
-            React.createElement('td', null, cat.group),
-            React.createElement('td', null, 'Level ' + cat.level),
-            React.createElement('td', null, cat.documents),
-            React.createElement('td', null, React.createElement('span',{className:'badge badge-approved'},cat.status)),
-            React.createElement('td', null,
-              React.createElement('div', {style:{display:'flex',gap:4}},
-                React.createElement('button',{className:'action-btn'},React.createElement('i',{className:'fas fa-edit'})),
-                React.createElement('button',{className:'action-btn',onClick:()=>{ setCats(cats.filter(c=>c.id!==cat.id)); showToast('Category removed'); }},React.createElement('i',{className:'fas fa-trash',style:{color:'#e53935'}}))
-              )
-            )
-          )
-        ))
-      )
-    )
-  );
-}
-
+/* ===================================================
+   SCREEN: MANAGE TEMPLATES
+=================================================== */
 function ManageTemplates() {
-  const [templates] = useState(MOCK_TEMPLATES);
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Templates'),
-      React.createElement('p', {className:'page-subtitle'}, 'Manage document templates for authors')
-    ),
-    React.createElement('div', {className:'data-table-wrap'},
-      React.createElement('div', {className:'table-header'},
-        React.createElement('h3', null, 'Document Templates'),
-        React.createElement('button', {className:'btn-primary',style:{fontSize:13,padding:'7px 14px'}},
-          React.createElement('i',{className:'fas fa-upload',style:{marginRight:6}}),'Upload Template'
-        )
-      ),
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          ['Template Name','Category','Type','Last Modified','Status','Actions'].map(h=>React.createElement('th',{key:h},h))
-        )),
-        React.createElement('tbody', null, templates.map(t =>
-          React.createElement('tr', {key:t.id},
-            React.createElement('td', null, React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},React.createElement('i',{className:'fas fa-file-word',style:{color:'#2B579A',fontSize:18}}),t.name)),
-            React.createElement('td', null, t.category),
-            React.createElement('td', null, t.type),
-            React.createElement('td', null, t.lastModified),
-            React.createElement('td', null, React.createElement('span',{className:'badge badge-approved'},t.status)),
-            React.createElement('td', null,
-              React.createElement('div',{style:{display:'flex',gap:4}},
-                React.createElement('button',{className:'action-btn'},React.createElement('i',{className:'fas fa-download'})),
-                React.createElement('button',{className:'action-btn'},React.createElement('i',{className:'fas fa-edit'}))
-              )
-            )
-          )
-        ))
-      )
-    )
-  );
-}
+  const [templates, setTemplates] = useState(TEMPLATES);
+  const [search, setSearch] = useState('');
+  const [mapFilter, setMapFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
+  const [selected, setSelected] = useState([]);
+  const [viewTpl, setViewTpl] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
-function DrugsDatabase() {
-  const [drugs, setDrugs] = useState(MOCK_DRUGS);
-  const [showAdd, setShowAdd] = useState(false);
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, '💊 Drugs Database'),
-      React.createElement('p', {className:'page-subtitle'}, 'Manage pharmaceutical compounds and products')
-    ),
-    React.createElement('div', {className:'data-table-wrap'},
-      React.createElement('div', {className:'table-header'},
-        React.createElement('h3', null, 'Drug Registry'),
-        React.createElement('button', {className:'btn-primary',style:{fontSize:13,padding:'7px 14px'},onClick:()=>setShowAdd(true)},
-          React.createElement('i',{className:'fas fa-plus',style:{marginRight:6}}),'Add Drug'
-        )
-      ),
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          ['Brand Name','Generic Name','Indication','Phase','Status','Actions'].map(h=>React.createElement('th',{key:h},h))
-        )),
-        React.createElement('tbody', null, drugs.map(d =>
-          React.createElement('tr', {key:d.id},
-            React.createElement('td', null, React.createElement('strong',null,d.name)),
-            React.createElement('td', null, d.genericName),
-            React.createElement('td', null, d.indication),
-            React.createElement('td', null, d.phase),
-            React.createElement('td', null, React.createElement('span',{className:'badge badge-approved'},d.status)),
-            React.createElement('td', null,
-              React.createElement('div',{style:{display:'flex',gap:4}},
-                React.createElement('button',{className:'action-btn'},React.createElement('i',{className:'fas fa-edit'})),
-                React.createElement('button',{className:'action-btn',onClick:()=>{ setDrugs(drugs.filter(x=>x.id!==d.id)); showToast('Drug removed'); }},React.createElement('i',{className:'fas fa-trash',style:{color:'#e53935'}}))
-              )
-            )
-          )
-        ))
-      )
-    )
+  const filtered = templates.filter(t =>
+    (t.name.toLowerCase().includes(search.toLowerCase())) &&
+    (mapFilter === 'All' || t.mappingType === mapFilter) &&
+    (statusFilter === 'All' || t.status === statusFilter) &&
+    (countryFilter === 'All' || t.country === countryFilter)
   );
-}
+  const paged = filtered.slice((page-1)*6, page*6);
 
-function Reports() {
-  const months = ['Oct','Nov','Dec','Jan','Feb','Mar'];
-  const vals = [12, 18, 15, 22, 19, 27];
-  const max = Math.max(...vals);
+  const counts = { total: filtered.length, ectd: filtered.filter(t=>t.mappingType==='eCTD').length,
+    gmp: filtered.filter(t=>t.mappingType==='GMP').length, tmf: filtered.filter(t=>t.mappingType==='TMF').length };
+
+  const countries = [...new Set(templates.map(t=>t.country))];
+
+  const toggleSelect = (id) => setSelected(s => s.includes(id) ? s.filter(x=>x!==id) : [...s, id]);
+
   return React.createElement('div', null,
     React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Document Reports'),
-      React.createElement('p', {className:'page-subtitle'}, 'Analytics and statistics for document workflows')
+      React.createElement('h1', {className:'page-title'}, 'Manage Templates')
     ),
-    React.createElement('div', {className:'stats-grid', style:{marginBottom:24}},
-      React.createElement(StatCard, {icon:'fas fa-file-alt',label:'Total Documents',value:89,color:'#1E88E5',bg:'#E3F2FD'}),
-      React.createElement(StatCard, {icon:'fas fa-check-circle',label:'Approved This Month',value:14,color:'#4CAF50',bg:'#E8F5E9'}),
-      React.createElement(StatCard, {icon:'fas fa-clock',label:'Avg Review Time',value:'3.2d',color:'#FF9800',bg:'#FFF3E0'}),
-      React.createElement(StatCard, {icon:'fas fa-percent',label:'Approval Rate',value:'82%',color:'#7B1FA2',bg:'#F3E5F5'}),
+    React.createElement('div', {className:'summary-cards-container'},
+      React.createElement(SummaryCard, {icon:'fas fa-file-alt',   title:'Total Templates', value:counts.total, subtitle:'All templates',    color:'blue'}),
+      React.createElement(SummaryCard, {icon:'fas fa-dna',         title:'eCTD Templates',  value:counts.ectd,  subtitle:'Mapped to eCTD',  color:'purple'}),
+      React.createElement(SummaryCard, {icon:'fas fa-flask',       title:'GMP Templates',   value:counts.gmp,   subtitle:'Mapped to GMP',   color:'orange'}),
+      React.createElement(SummaryCard, {icon:'fas fa-folder-tree', title:'TMF Templates',   value:counts.tmf,   subtitle:'Mapped to TMF',   color:'green'}),
     ),
-    React.createElement('div', {style:{display:'grid',gridTemplateColumns:'2fr 1fr',gap:20}},
-      React.createElement('div', {className:'report-chart'},
-        React.createElement('h3', {style:{margin:'0 0 4px',fontSize:16,fontWeight:600,color:'#1B2A4A'}}, 'Documents Submitted per Month'),
-        React.createElement('p', {style:{fontSize:13,color:'#888',margin:0}}, 'Last 6 months'),
-        React.createElement('div', {className:'chart-bars'},
-          months.map((m,i) =>
-            React.createElement('div', {className:'chart-bar-wrap',key:m},
-              React.createElement('div', {className:'chart-bar-val'}, vals[i]),
-              React.createElement('div', {className:'chart-bar', style:{height: (vals[i]/max*130)+'px', background: i===5?'#1E88E5':'#90CAF9'}}),
-              React.createElement('div', {className:'chart-bar-label'}, m)
-            )
-          )
-        )
+    React.createElement('div', {className:'filter-row'},
+      React.createElement('select', {className:'filter-select', value:mapFilter, onChange:e=>{setMapFilter(e.target.value);setPage(1);}},
+        ['All Types','eCTD','GMP','TMF','None'].map(v=>React.createElement('option',{key:v,value:v==='All Types'?'All':v},v))
       ),
-      React.createElement('div', {className:'card-section'},
-        React.createElement('h3', null, 'Status Breakdown'),
-        ...[['Approved','#4CAF50',45],['Under Review','#FF9800',11],['Drafts','#9E9E9E',23],['Rejected','#F44336',10]].map(([label,color,count]) =>
-          React.createElement('div', {key:label, style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}},
-            React.createElement('div', {style:{display:'flex',alignItems:'center',gap:8}},
-              React.createElement('div', {style:{width:10,height:10,borderRadius:'50%',background:color}}),
-              React.createElement('span', {style:{fontSize:14}}, label)
-            ),
-            React.createElement('div', {style:{display:'flex',alignItems:'center',gap:10}},
-              React.createElement('div', {style:{width:80,height:6,background:'#f0f0f0',borderRadius:3}},
-                React.createElement('div', {style:{width:(count/89*100)+'%',height:'100%',background:color,borderRadius:3}})
+      React.createElement('select', {className:'filter-select', value:statusFilter, onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+      ),
+      React.createElement('select', {className:'filter-select', value:countryFilter, onChange:e=>{setCountryFilter(e.target.value);setPage(1);}},
+        [React.createElement('option',{key:'all',value:'All'},'All Countries'),
+          ...countries.map(c=>React.createElement('option',{key:c,value:c},c))]
+      )
+    ),
+    React.createElement(Breadcrumb, {items:[{label:'Home'},{label:'Manage Templates',active:true}]}),
+    React.createElement('div', {className:'boxCard-demo'},
+      React.createElement(GridToolbar, {
+        search, onSearch:v=>{setSearch(v);setPage(1);},
+        onAdd: ()=>setAddOpen(true),
+        onUpload: ()=>showToast('Excel Upload opened'),
+        onRefresh: ()=>{ setSearch(''); setMapFilter('All'); setStatusFilter('All'); setCountryFilter('All'); showToast('Refreshed'); },
+        editBtns: selected.length > 0 ? React.createElement('div', {className:'dfs', style:{marginLeft:8}},
+          selected.length === 1 && React.createElement('button', {className:'act-btn edit', title:'Edit', onClick:()=>showToast('Edit template')}, React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button', {className:'act-btn del', title:'Delete', onClick:()=>setDeleteTarget(selected)}, React.createElement('i',{className:'fas fa-trash-can'}))
+        ) : null
+      }),
+      React.createElement('table', {className:'dms-table'},
+        React.createElement('thead', null,
+          React.createElement('tr', null,
+            React.createElement('th', {style:{width:36}}, ''),
+            ['Template Name','Version','Country','Mapping Type','Folder / Zone','Section / Model','Upload Date','Status','Action'].map(h=>React.createElement('th',{key:h},h))
+          )
+        ),
+        React.createElement('tbody', null,
+          paged.map(t => {
+            const fi = fileIcon(t.ext);
+            return React.createElement('tr', {key:t.id},
+              React.createElement('td', null,
+                React.createElement('input', {type:'checkbox', checked:selected.includes(t.id), onChange:()=>toggleSelect(t.id)})
               ),
-              React.createElement('span', {style:{fontSize:13,fontWeight:600,color:'#444',minWidth:24}}, count)
-            )
-          )
-        )
-      )
-    )
-  );
-}
-
-function AuthorDashboard() {
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Author Dashboard'),
-      React.createElement('p', {className:'page-subtitle'}, 'Create and manage your drug documents')
-    ),
-    React.createElement('div', {className:'stats-grid'},
-      React.createElement(StatCard, {icon:'fas fa-file-alt',label:'My Documents',value:8,color:'#1E88E5',bg:'#E3F2FD'}),
-      React.createElement(StatCard, {icon:'fas fa-clock',label:'Pending Review',value:3,color:'#FF9800',bg:'#FFF3E0'}),
-      React.createElement(StatCard, {icon:'fas fa-check-circle',label:'Approved',value:4,color:'#4CAF50',bg:'#E8F5E9'}),
-      React.createElement(StatCard, {icon:'fas fa-edit',label:'Drafts',value:1,color:'#9E9E9E',bg:'#FAFAFA'}),
-    ),
-    React.createElement(ManageDocuments, {filterMine: true})
-  );
-}
-
-function ReviewerDashboard() {
-  const [docs, setDocs] = useState(MOCK_DOCS.filter(d=>d.status==='Under Review'));
-  return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Review Queue'),
-      React.createElement('p', {className:'page-subtitle'}, 'Documents awaiting your review')
-    ),
-    React.createElement('div', {className:'stats-grid'},
-      React.createElement(StatCard, {icon:'fas fa-inbox',label:'In Queue',value:docs.length,color:'#1E88E5',bg:'#E3F2FD'}),
-      React.createElement(StatCard, {icon:'fas fa-check-circle',label:'Reviewed Today',value:5,color:'#4CAF50',bg:'#E8F5E9'}),
-    ),
-    React.createElement('div', {className:'data-table-wrap', style:{marginTop:20}},
-      React.createElement('div', {className:'table-header'},
-        React.createElement('h3', null, 'Documents for Review')
-      ),
-      React.createElement('table', {className:'data-table'},
-        React.createElement('thead', null, React.createElement('tr', null,
-          ['Document','Category','Author','Submitted','Actions'].map(h=>React.createElement('th',{key:h},h))
-        )),
-        React.createElement('tbody', null, docs.map(doc =>
-          React.createElement('tr', {key:doc.id},
-            React.createElement('td', null, React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},React.createElement('i',{className:'fas fa-file-word',style:{color:'#2B579A'}}),doc.name)),
-            React.createElement('td', null, doc.category),
-            React.createElement('td', null, doc.author),
-            React.createElement('td', null, doc.lastModified),
-            React.createElement('td', null,
-              React.createElement('div', {style:{display:'flex',gap:6}},
-                React.createElement('button', {className:'btn-primary',style:{fontSize:12,padding:'4px 12px'},onClick:()=>{ setDocs(docs.filter(d=>d.id!==doc.id)); showToast('Sent for approval!'); }},
-                  React.createElement('i',{className:'fas fa-check',style:{marginRight:4}}),'Approve for Forwarding'
-                ),
-                React.createElement('button', {className:'btn-secondary',style:{fontSize:12,padding:'4px 12px'},onClick:()=>{ setDocs(docs.filter(d=>d.id!==doc.id)); showToast('Sent back to author','error'); }},
-                  React.createElement('i',{className:'fas fa-undo',style:{marginRight:4}}),'Return'
+              React.createElement('td', null,
+                React.createElement('div', {className:'dfs'},
+                  React.createElement('div',{className:'file-icon '+fi.cls}, React.createElement('i',{className:fi.icon})),
+                  React.createElement('span', {style:{marginLeft:8}}, t.name)
+                )
+              ),
+              React.createElement('td', null, t.ver),
+              React.createElement('td', null, t.country),
+              React.createElement('td', null, React.createElement(MappingBadge, {type:t.mappingType})),
+              React.createElement('td', null, t.ctdFolder || t.model || t.tmfFolder || '-'),
+              React.createElement('td', null, t.section || '-'),
+              React.createElement('td', null, t.date),
+              React.createElement('td', null, React.createElement(StatusBadge, {status:t.status})),
+              React.createElement('td', null,
+                React.createElement('button', {className:'act-btn view', title:'View', onClick:()=>setViewTpl(t)},
+                  React.createElement('i',{className:'fas fa-eye'})
                 )
               )
-            )
+            );
+          })
+        )
+      ),
+      React.createElement(Pagination, {total:filtered.length, page, perPage:6, onChange:setPage})
+    ),
+    deleteTarget && React.createElement(ConfirmModal, {
+      title:'Delete Template(s)',
+      message:'This template will be deleted permanently. Are you sure?',
+      onConfirm: () => { setTemplates(templates.filter(t=>!deleteTarget.includes(t.id))); setSelected([]); setDeleteTarget(null); showToast('Deleted successfully','error'); },
+      onCancel: () => setDeleteTarget(null)
+    }),
+    viewTpl && React.createElement(Panel, {
+      title: 'Template: ' + viewTpl.name,
+      onClose: ()=>setViewTpl(null),
+      footer: [
+        React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),
+        React.createElement('button',{key:'e',className:'btn btn-secondary'},React.createElement('i',{className:'fas fa-pen-to-square',style:{marginRight:6}}),'Edit'),
+        React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewTpl(null)},'Close'),
+      ]
+    },
+      React.createElement('div',{className:'detail-grid'},
+        [['Template Name',viewTpl.name],['Version',viewTpl.ver],['Country',viewTpl.country],
+          ['Mapping Type',viewTpl.mappingType],['Folder / Zone',viewTpl.ctdFolder||viewTpl.model||viewTpl.tmfFolder||'-'],
+          ['Section',viewTpl.section||'-'],['Upload Date',viewTpl.date],['Status',viewTpl.status]
+        ].map(([k,v])=>
+          React.createElement('div',{key:k,className:'detail-item'},
+            React.createElement('div',{className:'dl'},k),
+            k==='Status'?React.createElement(StatusBadge,{status:v}):React.createElement('div',{className:'dv'},v)
           )
-        ))
+        )
+      ),
+      React.createElement('div',{style:{height:300,background:'#f5f5f5',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'#bbb'}},
+        React.createElement('div',{style:{textAlign:'center'}},
+          React.createElement('i',{className:'fas fa-file-alt',style:{fontSize:48,marginBottom:12,display:'block'}}),
+          React.createElement('p',null,'File preview available in SharePoint')
+        )
       )
     )
   );
 }
 
-function ApproverDashboard() {
+/* ===================================================
+   SCREEN: MANAGE CATEGORIES
+=================================================== */
+function ManageCategories() {
+  const [cats, setCats] = useState(CATEGORIES);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [selected, setSelected] = useState([]);
+  const [viewCat, setViewCat] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const filtered = cats.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) &&
+    (statusFilter==='All' || c.status===statusFilter)
+  );
+  const paged = filtered.slice((page-1)*6, page*6);
+
+  const counts = { total:cats.length, active:cats.filter(c=>c.status==='Active').length, inactive:cats.filter(c=>c.status==='Inactive').length };
+  const toggleSelect = id => setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+
   return React.createElement('div', null,
-    React.createElement('div', {className:'page-header'},
-      React.createElement('h1', {className:'page-title'}, 'Approver Dashboard'),
-      React.createElement('p', {className:'page-subtitle'}, 'Review and approve drug documents')
+    React.createElement('div',{className:'page-header'},
+      React.createElement('h1',{className:'page-title'},'Manage Categories')
     ),
-    React.createElement('div', {className:'stats-grid'},
-      React.createElement(StatCard, {icon:'fas fa-inbox',label:'Awaiting Approval',value:MOCK_DOCS.filter(d=>d.status==='Pending Approval').length,color:'#FF9800',bg:'#FFF3E0'}),
-      React.createElement(StatCard, {icon:'fas fa-check-circle',label:'Approved This Month',value:12,color:'#4CAF50',bg:'#E8F5E9'}),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-folder',       title:'Total Categories', value:counts.total,    subtitle:'All categories',  color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-open',  title:'Active',           value:counts.active,   subtitle:'Active categories', color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',         value:counts.inactive, subtitle:'Inactive categories', color:'orange'}),
     ),
-    React.createElement(ManageDocuments, {filterPending: true})
+    React.createElement('div',{className:'filter-row'},
+      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+        ['All Status','Active','Inactive'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+      )
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'Manage Categories',active:true}]}),
+    React.createElement('div',{className:'boxCard-demo'},
+      React.createElement(GridToolbar,{
+        search, onSearch:v=>{setSearch(v);setPage(1);},
+        onAdd:()=>showToast('Add Category'),
+        onUpload:()=>showToast('Excel Upload'),
+        onRefresh:()=>{setSearch('');setStatusFilter('All');showToast('Refreshed');},
+        editBtns: selected.length>0 ? React.createElement('div',{className:'dfs',style:{marginLeft:8}},
+          selected.length===1&&React.createElement('button',{className:'act-btn edit',title:'Edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button',{className:'act-btn del',title:'Delete',onClick:()=>setDeleteTarget(selected)},React.createElement('i',{className:'fas fa-trash-can'}))
+        ):null
+      }),
+      React.createElement('table',{className:'dms-table'},
+        React.createElement('thead',null,
+          React.createElement('tr',null,
+            React.createElement('th',{style:{width:36}},''),
+            ['Category Name','Group / Module','Level','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h))
+          )
+        ),
+        React.createElement('tbody',null,
+          paged.map(c=>
+            React.createElement('tr',{key:c.id},
+              React.createElement('td',null,React.createElement('input',{type:'checkbox',checked:selected.includes(c.id),onChange:()=>toggleSelect(c.id)})),
+              React.createElement('td',null,
+                React.createElement('div',{className:'dfs'},
+                  React.createElement('i',{className:'fas fa-folder',style:{color:'#FF9800',marginRight:8}}),
+                  React.createElement('span',{className:'fw500'},c.name)
+                )
+              ),
+              React.createElement('td',null,c.group),
+              React.createElement('td',null,React.createElement('span',{className:'map-badge map-none'},'Level '+c.level)),
+              React.createElement('td',null,c.docs+' docs'),
+              React.createElement('td',null,React.createElement(StatusBadge,{status:c.status})),
+              React.createElement('td',null,
+                React.createElement('button',{className:'act-btn view',title:'View',onClick:()=>setViewCat(c)},React.createElement('i',{className:'fas fa-eye'}))
+              )
+            )
+          )
+        )
+      ),
+      React.createElement(Pagination,{total:filtered.length,page,perPage:6,onChange:setPage})
+    ),
+    deleteTarget&&React.createElement(ConfirmModal,{
+      title:'Delete Category',message:'Delete selected category? This cannot be undone.',
+      onConfirm:()=>{setCats(cats.filter(c=>!deleteTarget.includes(c.id)));setSelected([]);setDeleteTarget(null);showToast('Deleted','error');},
+      onCancel:()=>setDeleteTarget(null)
+    }),
+    viewCat&&React.createElement(Panel,{
+      title:viewCat.name,onClose:()=>setViewCat(null),
+      footer:[React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewCat(null)},'Close')]
+    },
+      React.createElement('div',{className:'detail-grid'},
+        [['Category Name',viewCat.name],['Group / Module',viewCat.group],['Level','Level '+viewCat.level],['Documents',viewCat.docs],['Status',viewCat.status]].map(([k,v])=>
+          React.createElement('div',{key:k,className:'detail-item'},
+            React.createElement('div',{className:'dl'},k),
+            k==='Status'?React.createElement(StatusBadge,{status:v}):React.createElement('div',{className:'dv'},v)
+          )
+        )
+      )
+    )
   );
 }
 
-// ========= NAV ITEMS =========
-function getNavItems(role) {
-  switch(role) {
-    case 'Admin': return [
-      {id:'dashboard',label:'Dashboard',icon:'fas fa-chart-pie'},
-      {id:'_master',label:'MASTER',section:true},
-      {id:'categories',label:'Categories',icon:'fas fa-folder'},
-      {id:'templates',label:'Templates',icon:'fas fa-file-alt'},
-      {id:'drugsDatabase',label:'Drugs',icon:'fas fa-pills'},
-      {id:'_documents',label:'DOCUMENTS',section:true},
-      {id:'documents',label:'All Documents',icon:'fas fa-file-alt'},
-      {id:'myDocuments',label:'My Documents',icon:'fas fa-file-signature'},
-      {id:'pendingApproval',label:'Assigned to Me',icon:'fas fa-hourglass-half'},
-      {id:'reports',label:'Document Reports',icon:'fas fa-chart-bar'},
-      {id:'_users',label:'USERS',section:true},
-      {id:'users',label:'Manage Users',icon:'fas fa-users'},
-    ];
-    case 'Author': return [
-      {id:'dashboard',label:'Dashboard',icon:'fas fa-chart-pie'},
-      {id:'_documents',label:'DOCUMENTS',section:true},
-      {id:'myDocuments',label:'My Documents',icon:'fas fa-file-signature'},
-      {id:'documents',label:'Assigned to Me',icon:'fas fa-file-alt'},
-      {id:'reports',label:'Reports',icon:'fas fa-chart-bar'},
-    ];
-    case 'Reviewer': return [
-      {id:'dashboard',label:'Review Queue',icon:'fas fa-inbox'},
-    ];
-    case 'Approver': return [
-      {id:'dashboard',label:'Dashboard',icon:'fas fa-chart-pie'},
-      {id:'_documents',label:'DOCUMENTS',section:true},
-      {id:'pendingApproval',label:'Assigned to Me',icon:'fas fa-check-circle'},
-      {id:'myDocuments',label:'My Documents',icon:'fas fa-file-signature'},
-      {id:'reports',label:'Reports',icon:'fas fa-chart-bar'},
-    ];
-    default: return [{id:'dashboard',label:'Dashboard',icon:'fas fa-chart-pie'}];
-  }
+/* ===================================================
+   SCREEN: DRUGS DATABASE
+=================================================== */
+function DrugsDatabase() {
+  const [drugs, setDrugs] = useState(DRUGS);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState([]);
+  const [viewDrug, setViewDrug] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const filtered = drugs.filter(d=>d.name.toLowerCase().includes(search.toLowerCase())||d.generic.toLowerCase().includes(search.toLowerCase()));
+  const paged = filtered.slice((page-1)*6,page*6);
+  const counts = {total:drugs.length,active:drugs.filter(d=>d.status==='Active').length,marketed:drugs.filter(d=>d.phase==='Marketed').length,phaseIII:drugs.filter(d=>d.phase==='Phase III').length};
+  const toggleSelect = id=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Drugs Database')),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-capsules',    title:'Total Drugs',   value:counts.total,    subtitle:'All drugs',        color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-check-circle',title:'Active Drugs',  value:counts.active,   subtitle:'Active entries',   color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-store',        title:'Marketed',     value:counts.marketed, subtitle:'On the market',    color:'orange'}),
+      React.createElement(SummaryCard,{icon:'fas fa-flask',        title:'In Trials',    value:counts.phaseIII, subtitle:'Phase III',        color:'purple'}),
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'Drugs Database',active:true}]}),
+    React.createElement('div',{className:'boxCard-demo'},
+      React.createElement(GridToolbar,{
+        search,onSearch:v=>{setSearch(v);setPage(1);},
+        onAdd:()=>showToast('Add Drug'),
+        onRefresh:()=>{setSearch('');showToast('Refreshed');},
+        editBtns:selected.length>0?React.createElement('div',{className:'dfs',style:{marginLeft:8}},
+          selected.length===1&&React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button',{className:'act-btn del',onClick:()=>setDeleteTarget(selected)},React.createElement('i',{className:'fas fa-trash-can'}))
+        ):null
+      }),
+      React.createElement('table',{className:'dms-table'},
+        React.createElement('thead',null,
+          React.createElement('tr',null,
+            React.createElement('th',{style:{width:36}},''),
+            ['Drug Name','Generic Name','Indication','Phase','Status','Action'].map(h=>React.createElement('th',{key:h},h))
+          )
+        ),
+        React.createElement('tbody',null,
+          paged.map(d=>React.createElement('tr',{key:d.id},
+            React.createElement('td',null,React.createElement('input',{type:'checkbox',checked:selected.includes(d.id),onChange:()=>toggleSelect(d.id)})),
+            React.createElement('td',null,React.createElement('span',{className:'fw500'},d.name)),
+            React.createElement('td',null,d.generic),
+            React.createElement('td',null,d.indication),
+            React.createElement('td',null,React.createElement('span',{className:'phase-tag'},d.phase)),
+            React.createElement('td',null,React.createElement(StatusBadge,{status:d.status})),
+            React.createElement('td',null,
+              React.createElement('button',{className:'act-btn view',onClick:()=>setViewDrug(d)},React.createElement('i',{className:'fas fa-eye'}))
+            )
+          ))
+        )
+      ),
+      React.createElement(Pagination,{total:filtered.length,page,perPage:6,onChange:setPage})
+    ),
+    deleteTarget&&React.createElement(ConfirmModal,{
+      title:'Delete Drug',message:'Delete selected drug(s)?',
+      onConfirm:()=>{setDrugs(drugs.filter(d=>!deleteTarget.includes(d.id)));setSelected([]);setDeleteTarget(null);showToast('Deleted','error');},
+      onCancel:()=>setDeleteTarget(null)
+    }),
+    viewDrug&&React.createElement(Panel,{title:viewDrug.name,onClose:()=>setViewDrug(null),
+      footer:[React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDrug(null)},'Close')]
+    },
+      React.createElement('div',{className:'detail-grid'},
+        [['Drug Name',viewDrug.name],['Generic Name',viewDrug.generic],['Indication',viewDrug.indication],['Phase',viewDrug.phase],['Status',viewDrug.status]].map(([k,v])=>
+          React.createElement('div',{key:k,className:'detail-item'},
+            React.createElement('div',{className:'dl'},k),
+            k==='Status'?React.createElement(StatusBadge,{status:v}):React.createElement('div',{className:'dv'},v)
+          )
+        )
+      )
+    )
+  );
 }
 
-// ========= MAIN APP =========
-function App() {
-  const [role, setRole] = useState('Admin');
-  const [view, setView] = useState('dashboard');
-  const roles = ['Admin','Author','Reviewer','Approver'];
+/* ===================================================
+   SCREEN: ALL DOCUMENTS
+=================================================== */
+function AllDocuments({ filterUser, filterPending }) {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [docs, setDocs] = useState(DOCS);
+  const [viewDoc, setViewDoc] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const renderContent = () => {
-    if (role === 'Reviewer') return React.createElement(ReviewerDashboard);
-    if (role === 'Author') {
-      if (view === 'myDocuments') return React.createElement(ManageDocuments, {filterMine:true});
-      if (view === 'documents') return React.createElement(ManageDocuments);
-      if (view === 'reports') return React.createElement(Reports);
-      return React.createElement(AuthorDashboard);
-    }
-    if (role === 'Approver') {
-      if (view === 'pendingApproval') return React.createElement(ManageDocuments, {filterPending:true});
-      if (view === 'myDocuments') return React.createElement(ManageDocuments, {filterMine:true});
-      if (view === 'reports') return React.createElement(Reports);
-      return React.createElement(ApproverDashboard);
-    }
-    // Admin
+  let filtered = docs.filter(d=>
+    (d.name.toLowerCase().includes(search.toLowerCase())) &&
+    (statusFilter==='All'||d.status===statusFilter)
+  );
+  if (filterUser) filtered = filtered.filter(d=>d.author==='John Smith');
+  if (filterPending) filtered = filtered.filter(d=>d.status==='Pending Approval');
+  const paged = filtered.slice((page-1)*6,page*6);
+
+  const title = filterUser ? 'My Documents' : filterPending ? 'Assigned to Me' : 'All Documents';
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},title)),
+    React.createElement('div',{className:'filter-row'},
+      React.createElement('select',{className:'filter-select',value:statusFilter,onChange:e=>{setStatusFilter(e.target.value);setPage(1);}},
+        ['All Status','Draft','Under Review','Pending Approval','Approved','Rejected','Signed'].map(v=>React.createElement('option',{key:v,value:v==='All Status'?'All':v},v))
+      )
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:title,active:true}]}),
+    React.createElement('div',{className:'boxCard-demo'},
+      React.createElement(GridToolbar,{search,onSearch:v=>{setSearch(v);setPage(1);},onRefresh:()=>{setSearch('');setStatusFilter('All');showToast('Refreshed');},editBtns:null}),
+      React.createElement('table',{className:'dms-table'},
+        React.createElement('thead',null,
+          React.createElement('tr',null,
+            ['Document Name','Category','Drug','Author','Status','Date','Action'].map(h=>React.createElement('th',{key:h},h))
+          )
+        ),
+        React.createElement('tbody',null,
+          paged.map(d=>{
+            const fi=fileIcon(d.ext);
+            return React.createElement('tr',{key:d.id},
+              React.createElement('td',null,React.createElement('div',{className:'dfs'},React.createElement('div',{className:'file-icon '+fi.cls},React.createElement('i',{className:fi.icon})),React.createElement('span',{style:{marginLeft:8}},d.name))),
+              React.createElement('td',null,d.category),
+              React.createElement('td',null,d.drug),
+              React.createElement('td',null,d.author),
+              React.createElement('td',null,React.createElement(StatusBadge,{status:d.status})),
+              React.createElement('td',null,d.date),
+              React.createElement('td',null,React.createElement('button',{className:'act-btn view',onClick:()=>setViewDoc(d)},React.createElement('i',{className:'fas fa-eye'})))
+            );
+          })
+        )
+      ),
+      React.createElement(Pagination,{total:filtered.length,page,perPage:6,onChange:setPage})
+    ),
+    viewDoc&&React.createElement(Panel,{title:viewDoc.name,onClose:()=>setViewDoc(null),
+      footer:[React.createElement('button',{key:'d',className:'btn btn-primary'},React.createElement('i',{className:'fas fa-download',style:{marginRight:6}}),'Download'),React.createElement('button',{key:'c',className:'btn btn-secondary',onClick:()=>setViewDoc(null)},'Close')]
+    },
+      React.createElement('div',{className:'detail-grid'},
+        [['Category',viewDoc.category],['Author',viewDoc.author],['Drug',viewDoc.drug],['Version',viewDoc.ver],['Date',viewDoc.date]].map(([k,v])=>
+          React.createElement('div',{key:k,className:'detail-item'},React.createElement('div',{className:'dl'},k),React.createElement('div',{className:'dv'},v))
+        ),
+        React.createElement('div',{className:'detail-item'},React.createElement('div',{className:'dl'},'Status'),React.createElement(StatusBadge,{status:viewDoc.status}))
+      )
+    )
+  );
+}
+
+/* ===================================================
+   SCREEN: CTD VIEW
+=================================================== */
+function CTDView() {
+  const [activeNode, setActiveNode] = useState('m5-1');
+  const [search, setSearch] = useState('');
+  const active = CTD_TREE.find(n=>n.id===activeNode);
+  const nodeDocs = DOCS.filter(d=>d.category==='Clinical');
+  const filtered = nodeDocs.filter(d=>d.name.toLowerCase().includes(search.toLowerCase()));
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'CTD View')),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5,            subtitle:'CTD modules',     color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5,            subtitle:'Top-level',       color:'purple'}),
+      React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5,            subtitle:'Active modules',  color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0,            subtitle:'Inactive',        color:'orange'}),
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'CTD View',active:true}]}),
+    React.createElement('div',{className:'ctd-layout'},
+      React.createElement('div',{className:'ctd-tree'},
+        CTD_TREE.map(n=>
+          React.createElement('div',{
+            key:n.id,
+            className:'ctd-tree-item'+(n.isModule?' module':'')+(n.id===activeNode?' active':''),
+            style:{ paddingLeft: n.isModule ? 12 : 24 },
+            onClick:()=>!n.isModule&&setActiveNode(n.id)
+          },
+            React.createElement('i',{className:n.isModule?'fas fa-layer-group':'fas fa-folder',style:{marginRight:6}}),
+            n.label
+          )
+        )
+      ),
+      React.createElement('div',{className:'boxCard-demo'},
+        React.createElement('div',{className:'grid-toolbar'},
+          React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A'}}, active ? active.label : ''),
+          React.createElement('div',{className:'grid-search',style:{width:240}},
+            React.createElement('i',{className:'fas fa-search',style:{color:'#999',fontSize:13}}),
+            React.createElement('input',{placeholder:'Search...',value:search,onChange:e=>setSearch(e.target.value)})
+          )
+        ),
+        React.createElement('table',{className:'dms-table'},
+          React.createElement('thead',null,React.createElement('tr',null,['Document Name','Author','Status','Date','Action'].map(h=>React.createElement('th',{key:h},h)))),
+          React.createElement('tbody',null,
+            filtered.map(d=>{
+              const fi=fileIcon(d.ext);
+              return React.createElement('tr',{key:d.id},
+                React.createElement('td',null,React.createElement('div',{className:'dfs'},React.createElement('div',{className:'file-icon '+fi.cls},React.createElement('i',{className:fi.icon})),React.createElement('span',{style:{marginLeft:8}},d.name))),
+                React.createElement('td',null,d.author),
+                React.createElement('td',null,React.createElement(StatusBadge,{status:d.status})),
+                React.createElement('td',null,d.date),
+                React.createElement('td',null,React.createElement('button',{className:'act-btn view'},React.createElement('i',{className:'fas fa-eye'})))
+              );
+            })
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ===================================================
+   SCREEN: MANAGE USERS
+=================================================== */
+function ManageUsers() {
+  const [users, setUsers] = useState(USERS);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  const [selected, setSelected] = useState([]);
+  const [page, setPage] = useState(1);
+
+  const filtered = users.filter(u=>
+    (u.name.toLowerCase().includes(search.toLowerCase())||u.email.toLowerCase().includes(search.toLowerCase())) &&
+    (roleFilter==='All'||u.role===roleFilter)
+  );
+  const paged = filtered.slice((page-1)*6,page*6);
+  const counts = {total:users.length,active:users.filter(u=>u.status==='Active').length,admins:users.filter(u=>u.role==='Admin').length,authors:users.filter(u=>u.role==='Author').length};
+  const toggleSelect = id=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Manage Users')),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-users',       title:'Total Users',  value:counts.total,   subtitle:'All users',    color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-user-check',  title:'Active Users', value:counts.active,  subtitle:'Active',       color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-user-shield', title:'Admins',       value:counts.admins,  subtitle:'Admin role',   color:'purple'}),
+      React.createElement(SummaryCard,{icon:'fas fa-user-pen',    title:'Authors',      value:counts.authors, subtitle:'Author role',  color:'orange'}),
+    ),
+    React.createElement('div',{className:'filter-row'},
+      React.createElement('select',{className:'filter-select',value:roleFilter,onChange:e=>{setRoleFilter(e.target.value);setPage(1);}},
+        ['All Roles','Admin','Author','Reviewer','Approver','HR'].map(v=>React.createElement('option',{key:v,value:v==='All Roles'?'All':v},v))
+      )
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'Manage Users',active:true}]}),
+    React.createElement('div',{className:'boxCard-demo'},
+      React.createElement(GridToolbar,{
+        search,onSearch:v=>{setSearch(v);setPage(1);},
+        onAdd:()=>showToast('Add User'),
+        onRefresh:()=>{setSearch('');setRoleFilter('All');showToast('Refreshed');},
+        editBtns:selected.length>0?React.createElement('div',{className:'dfs',style:{marginLeft:8}},
+          selected.length===1&&React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'})),
+          React.createElement('button',{className:'act-btn del',onClick:()=>{ setUsers(users.filter(u=>!selected.includes(u.id))); setSelected([]); showToast('User(s) removed','error'); }},React.createElement('i',{className:'fas fa-trash-can'}))
+        ):null
+      }),
+      React.createElement('table',{className:'dms-table'},
+        React.createElement('thead',null,
+          React.createElement('tr',null,
+            React.createElement('th',{style:{width:36}},''),
+            ['Name','Email','Role','Status','Last Login','Action'].map(h=>React.createElement('th',{key:h},h))
+          )
+        ),
+        React.createElement('tbody',null,
+          paged.map(u=>React.createElement('tr',{key:u.id},
+            React.createElement('td',null,React.createElement('input',{type:'checkbox',checked:selected.includes(u.id),onChange:()=>toggleSelect(u.id)})),
+            React.createElement('td',null,
+              React.createElement('div',{className:'dfs'},
+                React.createElement('div',{style:{width:32,height:32,borderRadius:'50%',background:'#1E88E5',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:600,fontSize:13,flexShrink:0}},
+                  u.name.split(' ').map(n=>n[0]).join('')
+                ),
+                React.createElement('span',{style:{marginLeft:10,fontWeight:500}},u.name)
+              )
+            ),
+            React.createElement('td',null,u.email),
+            React.createElement('td',null,
+              React.createElement('span',{className:'role-tag role-'+u.role.toLowerCase()},u.role)
+            ),
+            React.createElement('td',null,React.createElement(StatusBadge,{status:u.status})),
+            React.createElement('td',null,u.last),
+            React.createElement('td',null,React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'})))
+          ))
+        )
+      ),
+      React.createElement(Pagination,{total:filtered.length,page,perPage:6,onChange:setPage})
+    )
+  );
+}
+
+/* ===================================================
+   SCREEN: CTD FOLDER STRUCTURE (CREATE CTD FOLDER)
+=================================================== */
+function CTDFolderStructure() {
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'CTD Folder Structure')),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-layer-group',  title:'Total Modules', value:5, subtitle:'CTD modules',    color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-tree',  title:'Root Modules',  value:5, subtitle:'Top-level',      color:'purple'}),
+      React.createElement(SummaryCard,{icon:'fas fa-check-circle', title:'Active',        value:5, subtitle:'Active modules', color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-folder-minus', title:'Inactive',      value:0, subtitle:'Inactive',       color:'orange'}),
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'CTD Folder Structure',active:true}]}),
+    React.createElement('div',{className:'boxCard-demo'},
+      React.createElement('div',{className:'grid-toolbar'},
+        React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A'}},'Module Tree'),
+        React.createElement('button',{className:'btn btn-primary',onClick:()=>showToast('Add Folder')},React.createElement('i',{className:'fas fa-plus',style:{marginRight:6}}),'Add Folder')
+      ),
+      React.createElement('table',{className:'dms-table'},
+        React.createElement('thead',null,React.createElement('tr',null,['Module','Description','Documents','Status','Action'].map(h=>React.createElement('th',{key:h},h)))),
+        React.createElement('tbody',null,
+          CTD_TREE.map(n=>React.createElement('tr',{key:n.id},
+            React.createElement('td',null,
+              React.createElement('div',{className:'dfs',style:{paddingLeft:n.isModule?0:20}},
+                React.createElement('i',{className:n.isModule?'fas fa-layer-group':'fas fa-folder',style:{color:n.isModule?'#1B2A4A':'#FF9800',marginRight:8}}),
+                React.createElement('span',{style:{fontWeight:n.isModule?600:400}},n.label)
+              )
+            ),
+            React.createElement('td',null,n.isModule?'CTD Module':'Sub-section'),
+            React.createElement('td',null,n.docs+' docs'),
+            React.createElement('td',null,React.createElement(StatusBadge,{status:'Active'})),
+            React.createElement('td',null,
+              React.createElement('div',{className:'dfs'},
+                React.createElement('button',{className:'act-btn view'},React.createElement('i',{className:'fas fa-eye'})),
+                React.createElement('button',{className:'act-btn edit'},React.createElement('i',{className:'fas fa-pen-to-square'}))
+              )
+            )
+          ))
+        )
+      )
+    )
+  );
+}
+
+/* ===================================================
+   SCREEN: REPORTS
+=================================================== */
+function Reports() {
+  return React.createElement('div',null,
+    React.createElement('div',{className:'page-header'},React.createElement('h1',{className:'page-title'},'Document Reports')),
+    React.createElement('div',{className:'summary-cards-container'},
+      React.createElement(SummaryCard,{icon:'fas fa-chart-pie',    title:'Total Reports', value:14,  subtitle:'All reports',      color:'blue'}),
+      React.createElement(SummaryCard,{icon:'fas fa-chart-line',   title:'Workflow',      value:6,   subtitle:'Workflow reports', color:'green'}),
+      React.createElement(SummaryCard,{icon:'fas fa-chart-bar',    title:'Usage',         value:5,   subtitle:'Usage reports',    color:'orange'}),
+      React.createElement(SummaryCard,{icon:'fas fa-file-export',  title:'Exports',       value:3,   subtitle:'Exported',         color:'purple'}),
+    ),
+    React.createElement(Breadcrumb,{items:[{label:'Home'},{label:'Reports',active:true}]}),
+    React.createElement('div',{className:'boxCard-demo',style:{padding:24}},
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}},
+        [['Document Status Distribution','fas fa-chart-pie'],['Monthly Uploads','fas fa-chart-bar'],['Approval Rate','fas fa-chart-line'],['User Activity','fas fa-users']].map(([t,ic])=>
+          React.createElement('div',{key:t,style:{background:'#f9f9f9',borderRadius:8,padding:20,border:'1px solid #eee'}},
+            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:16}},
+              React.createElement('i',{className:ic,style:{color:'#1E88E5',fontSize:18}}),
+              React.createElement('span',{style:{fontWeight:600,color:'#1B2A4A',fontSize:15}},t)
+            ),
+            React.createElement('div',{style:{height:120,display:'flex',alignItems:'flex-end',gap:8}},
+              [65,45,30,80,55,40].map((h,i)=>
+                React.createElement('div',{key:i,style:{flex:1,height:h+'%',background:'#1E88E5',borderRadius:'4px 4px 0 0',opacity:0.7+i*0.05}})
+              )
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ===================================================
+   MAIN APP SHELL
+=================================================== */
+const NAV_ITEMS = [
+  { id:'dashboard',          label:'Dashboard',           icon:'fas fa-chart-pie' },
+  { id:'__master',           label:'MASTER',              isSection:true },
+  { id:'categories',         label:'Categories',          icon:'fas fa-folder' },
+  { id:'templates',          label:'Templates',           icon:'fas fa-file-alt' },
+  { id:'createCTDFolder',    label:'CTD Folder Structure',icon:'fas fa-folder-tree' },
+  { id:'drugsDatabase',      label:'Drugs',               icon:'fas fa-capsules' },
+  { id:'__documents',        label:'DOCUMENTS',           isSection:true },
+  { id:'documents',          label:'All Documents',       icon:'fas fa-file' },
+  { id:'myDocuments',        label:'My Documents',        icon:'fas fa-file-pen' },
+  { id:'pendingApproval',    label:'Assigned to Me',      icon:'fas fa-hourglass-half' },
+  { id:'ctdView',            label:'CTD View',            icon:'fas fa-sitemap' },
+  { id:'reports',            label:'Document Reports',    icon:'fas fa-chart-line' },
+  { id:'workflowReports',    label:'Workflow Reports',    icon:'fas fa-chart-bar' },
+  { id:'__users',            label:'USERS',               isSection:true },
+  { id:'users',              label:'Manage Users',        icon:'fas fa-users' },
+];
+
+function App() {
+  const [view, setView] = useState('dashboard');
+  const [role, setRole] = useState('Admin');
+
+  const renderScreen = () => {
     switch(view) {
-      case 'documents': return React.createElement(ManageDocuments);
-      case 'myDocuments': return React.createElement(ManageDocuments, {filterMine:true});
-      case 'pendingApproval': return React.createElement(ManageDocuments, {filterPending:true});
-      case 'categories': return React.createElement(ManageCategories);
-      case 'templates': return React.createElement(ManageTemplates);
-      case 'users': return React.createElement(ManageUsers);
-      case 'reports': return React.createElement(Reports);
-      case 'drugsDatabase': return React.createElement(DrugsDatabase);
-      default: return React.createElement(AdminDashboard);
+      case 'dashboard':       return React.createElement(AdminDashboard);
+      case 'templates':       return React.createElement(ManageTemplates);
+      case 'categories':      return React.createElement(ManageCategories);
+      case 'drugsDatabase':   return React.createElement(DrugsDatabase);
+      case 'documents':       return React.createElement(AllDocuments, {});
+      case 'myDocuments':     return React.createElement(AllDocuments, {filterUser:true});
+      case 'pendingApproval': return React.createElement(AllDocuments, {filterPending:true});
+      case 'ctdView':         return React.createElement(CTDView);
+      case 'createCTDFolder': return React.createElement(CTDFolderStructure);
+      case 'reports':
+      case 'workflowReports': return React.createElement(Reports);
+      case 'users':           return React.createElement(ManageUsers);
+      default:                return React.createElement(AdminDashboard);
     }
   };
 
-  const navItems = getNavItems(role);
-
-  return React.createElement('div', {className:'app'},
-    // Header
-    React.createElement('header', {className:'header'},
-      React.createElement('div', {className:'header-title'}, 'Drug Management System'),
-      React.createElement('div', {className:'header-right'},
-        React.createElement('div', {style:{display:'flex',alignItems:'center',gap:8,marginRight:8}},
-          React.createElement('label', {style:{fontSize:13,color:'#666'}}, 'Role:'),
+  return React.createElement('div', { className: 'app' },
+    /* ── HEADER ── */
+    React.createElement('header', { className: 'header' },
+      React.createElement('div', { className: 'header-title' }, 'Drug Management System'),
+      React.createElement('div', { className: 'header-right' },
+        React.createElement('div', { style:{ display:'flex', alignItems:'center', gap:8 } },
+          React.createElement('label', { style:{fontSize:13,color:'#666'} }, 'Role:'),
           React.createElement('select', {
             value: role,
             onChange: e => { setRole(e.target.value); setView('dashboard'); },
-            style:{padding:'5px 10px',border:'1px solid #ddd',borderRadius:4,fontSize:13,cursor:'pointer',outline:'none'}
-          }, roles.map(r => React.createElement('option', {key:r, value:r}, r)))
+            style:{ padding:'5px 10px', border:'1px solid #d0d0d0', borderRadius:6, fontSize:13, cursor:'pointer' }
+          },
+            ['Admin','Author','Reviewer','Approver','HR'].map(r => React.createElement('option',{key:r,value:r},r))
+          )
         ),
-        React.createElement('div', {className:'user-info'},
-          React.createElement('div', {className:'user-details'},
-            React.createElement('div', {className:'user-name'}, 'John Smith'),
-            React.createElement('div', {className:'user-role'}, role)
+        React.createElement('div', { className: 'user-info' },
+          React.createElement('div', { className: 'user-details' },
+            React.createElement('div', { className: 'user-name' }, 'John Smith'),
+            React.createElement('div', { className: 'user-role' }, role)
           ),
-          React.createElement('div', {className:'user-avatar'}, 'JS')
+          React.createElement('div', { className: 'user-avatar' }, 'JS')
         )
       )
     ),
-    // Sidebar
-    React.createElement('nav', {className:'sidebar'},
-      React.createElement('div', {className:'nav-section'},
-        navItems.map(item =>
-          item.section
-            ? React.createElement('div', {key:item.id, className:'nav-section-title'}, item.label)
+    /* ── SIDEBAR ── */
+    React.createElement('nav', { className: 'sidebar' },
+      React.createElement('div', { className: 'nav-section' },
+        NAV_ITEMS.map(item =>
+          item.isSection
+            ? React.createElement('div', { key: item.id, className: 'nav-section-title' }, item.label)
             : React.createElement('div', {
                 key: item.id,
-                className: 'nav-item ' + (view === item.id ? 'active' : ''),
-                onClick: () => setView(item.id),
+                className: 'nav-item' + (view === item.id ? ' active' : ''),
+                onClick: () => setView(item.id)
               },
-              React.createElement('i', {className: item.icon + ' nav-icon'}),
-              React.createElement('span', {className:'nav-label'}, item.label)
-            )
+                React.createElement('i', { className: item.icon + ' nav-icon' }),
+                React.createElement('span', { className: 'nav-label' }, item.label)
+              )
         )
       )
     ),
-    // Main Content
-    React.createElement('main', {className:'main-content'},
-      renderContent()
+    /* ── MAIN CONTENT ── */
+    React.createElement('main', { className: 'main-content' },
+      renderScreen()
     )
   );
 }
@@ -909,26 +1200,35 @@ ReactDOM.render(React.createElement(App), document.getElementById('root'));
 </html>`;
 
 const server = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url);
-  const pathname = parsedUrl.pathname;
+  const reqUrl = req.url.split('?')[0];
 
-  if (pathname === '/app.css') {
+  if (reqUrl === '/app.css') {
     res.writeHead(200, { 'Content-Type': 'text/css' });
-    res.end(appCss);
-    return;
+    return res.end(appCss);
   }
-  if (pathname === '/ui-professional.css') {
+  if (reqUrl === '/styles.css') {
     res.writeHead(200, { 'Content-Type': 'text/css' });
-    res.end(uiCss);
-    return;
+    return res.end(stylesCss);
   }
-  if (pathname === '/enhanced-styles.css') {
+  if (reqUrl === '/ui-professional.css') {
     res.writeHead(200, { 'Content-Type': 'text/css' });
-    res.end(enhancedCss);
-    return;
+    return res.end(uiCss);
+  }
+  if (reqUrl === '/enhanced-styles.css') {
+    res.writeHead(200, { 'Content-Type': 'text/css' });
+    return res.end(enhancedCss);
   }
 
-  res.writeHead(200, { 'Content-Type': 'text/html', 'X-Powered-By': 'DMS' });
+  /* serve static assets (fonts, images) */
+  const assetsBase = path.join(__dirname, 'src/webparts/drugManagementSystem/assets');
+  const candidate = path.join(assetsBase, reqUrl);
+  if (reqUrl !== '/' && !reqUrl.includes('..') && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    const ext = path.extname(candidate);
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    return res.end(fs.readFileSync(candidate));
+  }
+
+  res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end(HTML);
 });
 
