@@ -102,7 +102,7 @@ export default class DrugManagementSystemWebPart extends BaseClientSideWebPart<I
     // this._isDarkTheme = !!currentTheme.isInverted;
     const {
       semanticColors
-    } = currentTheme;
+    } = currentTheme as any;
 
     if (semanticColors) {
       this.domElement.style.setProperty('--bodyText', semanticColors.bodyText || null);

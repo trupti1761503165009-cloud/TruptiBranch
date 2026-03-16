@@ -387,7 +387,7 @@ export const handleProjectManagerExcel = async (provider: IDataProvider, fileUrl
         // ];
 
         // Cache block template rows
-        const rowTemplates = [];
+        const rowTemplates: any[] = [];
         for (let r = 1; r <= blockHeight; r++) {
             const row = templateSheet.getRow(r);
             const rowCopy: any = {

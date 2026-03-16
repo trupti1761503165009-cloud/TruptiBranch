@@ -27,7 +27,7 @@ export const PAStatusFilter: React.FunctionComponent<IPAStatusFilterProps> = (pr
     const getDepartmentNameList = () => {
         provider.choiceOption(ListNames.PAProcess, 'PAStatus')
             .then((response) => {
-                const employeeStatusOptions = [];
+                const employeeStatusOptions: any[] = [];
                 employeeStatusOptions.push({ value: '', label: 'Select PA Status' });
                 const sortedOptions = response
                     .map((status: any) => ({ value: status, label: status }))
