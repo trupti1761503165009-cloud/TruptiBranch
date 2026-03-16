@@ -6,6 +6,8 @@ Review and validate all SharePoint list schemas in sharepoint/assets folder
 Ensure Categories.xml supports DocumentCategory, Group, SubGroup, ArtifactName, TemplateName fields with proper choice values
 Verify Templates.xml has MappingType, MappedCTDFolderId, eCTDSection, eCTDSubsection, Country, Status fields
 Confirm Documents.xml includes Drug, Country, Template, CTDFolder, CTDModule, Submodule, Status, Reviewer, Approver, Comments fields
+
+
 Validate CTDFolders.xml hierarchical structure with FolderId, ParentFolderId, EctdSection lookup
 Ensure DrugsDatabase.xml has all required drug information fields
 Cross-reference eCTDSections.xml with CTD dossier reference documents
