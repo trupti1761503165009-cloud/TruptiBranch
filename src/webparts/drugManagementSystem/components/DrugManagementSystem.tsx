@@ -227,34 +227,27 @@ const DmsShell: React.FC = () => {
 
   const renderContent = () => {
     const effectiveRole = siteAdmin ? 'Admin' : currentRole;
-    // Common view handling for shared views across roles
-    switch (currentView) {
-      case 'myDocuments':
-        return <DocumentsViewRouter filterByCurrentUser={true} />;
-      case 'pendingApproval':
-        return <DocumentsViewRouter filterByPending={true} />;
-      case 'ctdView':
-        return <CTDView />;
-      case 'workflowReports':
-        return <Reports />;
-      case 'usageReport':
-        return <Reports />;
-      case 'rolesPermissions':
-        return <UsersViewRouter />;
-      default:
-        break;
-    }
     if (effectiveRole === 'Admin') {
       switch (currentView) {
         case 'documents':
           return <DocumentsViewRouter />;
+        case 'myDocuments':
+          return <DocumentsViewRouter filterByCurrentUser={true} />;
+        case 'pendingApproval':
+          return <DocumentsViewRouter filterByPending={true} />;
         case 'templates':
           return <TemplatesViewRouter />;
         case 'categories':
           return <CategoriesViewRouter />;
         case 'users':
           return <UsersViewRouter />;
+        case 'rolesPermissions':
+          return <UsersViewRouter />;
         case 'reports':
+          return <Reports />;
+        case 'workflowReports':
+          return <Reports />;
+        case 'usageReport':
           return <Reports />;
         case 'drugsDatabase':
           return <DrugsViewRouter />;
@@ -264,22 +257,28 @@ const DmsShell: React.FC = () => {
           return <GMPViewRouter />;
         case 'tmfMaster':
           return <TMFViewRouter />;
+        case 'ctdView':
+          return <CTDView />;
         default:
           return <AdminDashboard />;
       }
     } else if (effectiveRole === 'Author') {
-      return <DocumentsViewRouter filterByCurrentUser={currentView === 'myDocuments' || currentView === 'dashboard'} filterByPending={currentView === 'pendingApproval'} hideAddButton={false} hideFolderSidebar={true} />;
+      return <DocumentsViewRouter
+        filterByCurrentUser={currentView !== 'pendingApproval'}
+        filterByPending={currentView === 'pendingApproval'}
+        hideAddButton={false}
+        hideFolderSidebar={true}
+      />;
     } else if (effectiveRole === 'Reviewer') {
       return <ReviewerDashboard />;
     } else if (effectiveRole === 'Approver') {
-      return currentView === 'authorDocs' ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} /> : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
+      return currentView === 'myDocuments'
+        ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />
+        : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
     } else if (effectiveRole === 'HR') {
-      switch (currentView) {
-        case 'pendingApproval':
-          return <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
-        default:
-          return <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;
-      }
+      return currentView === 'pendingApproval'
+        ? <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />
+        : <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;
     }
     return <AdminDashboard />;
   };

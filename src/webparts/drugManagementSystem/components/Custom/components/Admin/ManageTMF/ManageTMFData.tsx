@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useAtomValue } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
+import { ListNames } from '../../../../../../Shared/Enum/ListNames';
 
 export interface ITMFFolder {
   id: number;
@@ -59,15 +60,36 @@ export function ManageTMFData() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<ITMFFolder | null>(null);
 
-  // Current drill-down trail: parentFolderIds stack
   const [folderTrail, setFolderTrail] = React.useState<string[]>([]);
 
   const loadItems = React.useCallback(async () => {
     if (!provider) return;
     setIsLoading(true);
     try {
-      const data = await provider.getTMFFolders();
-      setItems(data || []);
+      const data = await provider.getItemsByQuery({
+        listName: ListNames.TMFFolders,
+        select: ['ID', 'Title', 'FolderId', 'ParentFolderId', 'IsFolder', 'SortOrder',
+                 'Zone', 'ZoneName', 'Section', 'SectionName', 'ArtifactId', 'ArtifactName', 'Reference'],
+        top: 2000,
+        orderBy: 'SortOrder',
+        isSortOrderAsc: true
+      });
+      const mapped: ITMFFolder[] = (data || []).map((item: any) => ({
+        id: item.ID,
+        name: item.Title || '',
+        folderId: item.FolderId || String(item.ID),
+        parentFolderId: item.ParentFolderId || undefined,
+        isFolder: item.IsFolder !== false && item.IsFolder !== 0,
+        sortOrder: item.SortOrder || 0,
+        zone: item.Zone || 0,
+        zoneName: item.ZoneName || '',
+        section: item.Section || '',
+        sectionName: item.SectionName || '',
+        artifactId: item.ArtifactId || '',
+        artifactName: item.ArtifactName || '',
+        reference: item.Reference || ''
+      }));
+      setItems(mapped);
       setErrorMessage('');
     } catch {
       setErrorMessage('Failed to load TMF Folders. Please try again.');
@@ -142,7 +164,12 @@ export function ManageTMFData() {
   };
 
   const openEditPanel = (item: ITMFFolder) => {
-    setFormData({ name: item.name, folderId: item.folderId, parentFolderId: item.parentFolderId || '', isFolder: item.isFolder, sortOrder: item.sortOrder, zone: item.zone, zoneName: item.zoneName, section: item.section, sectionName: item.sectionName, artifactId: item.artifactId, artifactName: item.artifactName, reference: item.reference });
+    setFormData({
+      name: item.name, folderId: item.folderId, parentFolderId: item.parentFolderId || '',
+      isFolder: item.isFolder, sortOrder: item.sortOrder, zone: item.zone, zoneName: item.zoneName,
+      section: item.section, sectionName: item.sectionName, artifactId: item.artifactId,
+      artifactName: item.artifactName, reference: item.reference
+    });
     setFieldErrors({});
     setEditingItem(item);
     setPanelMode('edit');
@@ -150,7 +177,12 @@ export function ManageTMFData() {
   };
 
   const openViewPanel = (item: ITMFFolder) => {
-    setFormData({ name: item.name, folderId: item.folderId, parentFolderId: item.parentFolderId || '', isFolder: item.isFolder, sortOrder: item.sortOrder, zone: item.zone, zoneName: item.zoneName, section: item.section, sectionName: item.sectionName, artifactId: item.artifactId, artifactName: item.artifactName, reference: item.reference });
+    setFormData({
+      name: item.name, folderId: item.folderId, parentFolderId: item.parentFolderId || '',
+      isFolder: item.isFolder, sortOrder: item.sortOrder, zone: item.zone, zoneName: item.zoneName,
+      section: item.section, sectionName: item.sectionName, artifactId: item.artifactId,
+      artifactName: item.artifactName, reference: item.reference
+    });
     setFieldErrors({});
     setEditingItem(item);
     setPanelMode('view');
@@ -169,12 +201,45 @@ export function ManageTMFData() {
     setIsLoading(true);
     try {
       const zoneChoice = TMF_ZONE_CHOICES.find(z => z.value === formData.zoneName);
-      const saveData = { ...formData, zone: zoneChoice?.zone || formData.zone };
+      const zone = zoneChoice?.zone || formData.zone;
       if (panelMode === 'add') {
-        if (provider) await provider.createTMFFolder(saveData);
+        if (provider) await provider.createItem(
+          {
+            Title: formData.name,
+            FolderId: formData.folderId,
+            ParentFolderId: formData.parentFolderId || '',
+            IsFolder: formData.isFolder ? 1 : 0,
+            SortOrder: formData.sortOrder || 0,
+            Zone: zone,
+            ZoneName: formData.zoneName || '',
+            Section: formData.section || '',
+            SectionName: formData.sectionName || '',
+            ArtifactId: formData.artifactId || '',
+            ArtifactName: formData.artifactName || '',
+            Reference: formData.reference || ''
+          },
+          ListNames.TMFFolders
+        );
         setSuccessMessage('TMF Folder added successfully.');
       } else if (panelMode === 'edit' && editingItem) {
-        if (provider) await provider.updateTMFFolder(editingItem.id, saveData);
+        if (provider) await provider.updateItem(
+          {
+            Title: formData.name,
+            FolderId: formData.folderId,
+            ParentFolderId: formData.parentFolderId || '',
+            IsFolder: formData.isFolder ? 1 : 0,
+            SortOrder: formData.sortOrder || 0,
+            Zone: zone,
+            ZoneName: formData.zoneName || '',
+            Section: formData.section || '',
+            SectionName: formData.sectionName || '',
+            ArtifactId: formData.artifactId || '',
+            ArtifactName: formData.artifactName || '',
+            Reference: formData.reference || ''
+          },
+          ListNames.TMFFolders,
+          editingItem.id
+        );
         setSuccessMessage('TMF Folder updated successfully.');
       }
       await loadItems();
@@ -195,7 +260,7 @@ export function ManageTMFData() {
     if (!itemToDelete) return;
     setIsLoading(true);
     try {
-      if (provider) await provider.deleteTMFFolder(itemToDelete.id);
+      if (provider) await provider.deleteItem(ListNames.TMFFolders, itemToDelete.id);
       setSuccessMessage('TMF Folder deleted successfully.');
       await loadItems();
       setIsDeleteDialogOpen(false);

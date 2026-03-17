@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useAtomValue } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
+import { ListNames } from '../../../../../../Shared/Enum/ListNames';
 
 export interface IGMPModel {
   id: number;
@@ -46,8 +47,21 @@ export function ManageGMPData() {
     if (!provider) return;
     setIsLoading(true);
     try {
-      const data = await provider.getGMPModels();
-      setItems(data || []);
+      const data = await provider.getItemsByQuery({
+        listName: ListNames.GmpModels,
+        select: ['ID', 'Title', 'Category', 'SubGroup', 'SortOrder'],
+        top: 1000,
+        orderBy: 'SortOrder',
+        isSortOrderAsc: true
+      });
+      const mapped: IGMPModel[] = (data || []).map((item: any) => ({
+        id: item.ID,
+        name: item.Title || '',
+        category: item.Category || '',
+        subGroup: item.SubGroup || '',
+        sortOrder: item.SortOrder || 0
+      }));
+      setItems(mapped);
       setErrorMessage('');
     } catch {
       setErrorMessage('Failed to load GMP Models. Please try again.');
@@ -114,10 +128,17 @@ export function ManageGMPData() {
     setIsLoading(true);
     try {
       if (panelMode === 'add') {
-        if (provider) await provider.createGMPModel(formData);
+        if (provider) await provider.createItem(
+          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '', SortOrder: formData.sortOrder || 0 },
+          ListNames.GmpModels
+        );
         setSuccessMessage('GMP Model added successfully.');
       } else if (panelMode === 'edit' && editingItem) {
-        if (provider) await provider.updateGMPModel(editingItem.id, formData);
+        if (provider) await provider.updateItem(
+          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '', SortOrder: formData.sortOrder || 0 },
+          ListNames.GmpModels,
+          editingItem.id
+        );
         setSuccessMessage('GMP Model updated successfully.');
       }
       await loadItems();
@@ -138,7 +159,7 @@ export function ManageGMPData() {
     if (!itemToDelete) return;
     setIsLoading(true);
     try {
-      if (provider) await provider.deleteGMPModel(itemToDelete.id);
+      if (provider) await provider.deleteItem(ListNames.GmpModels, itemToDelete.id);
       setSuccessMessage('GMP Model deleted successfully.');
       await loadItems();
       setIsDeleteDialogOpen(false);

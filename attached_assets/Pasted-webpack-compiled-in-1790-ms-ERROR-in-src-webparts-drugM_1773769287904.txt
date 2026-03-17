@@ -1,0 +1,112 @@
+webpack compiled in 1790 ms
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageGMP/ManageGMPData.tsx:49:35
+TS2339: Property 'getGMPModels' does not exist on type 'IDataProvider'.
+    47 |     setIsLoading(true);
+    48 |     try {
+  > 49 |       const data = await provider.getGMPModels();
+       |                                   ^^^^^^^^^^^^
+    50 |       setItems(data || []);
+    51 |       setErrorMessage('');
+    52 |     } catch {
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageGMP/ManageGMPData.tsx:117:38
+TS2339: Property 'createGMPModel' does not exist on type 'IDataProvider'.
+    115 |     try {
+    116 |       if (panelMode === 'add') {
+  > 117 |         if (provider) await provider.createGMPModel(formData);
+        |                                      ^^^^^^^^^^^^^^
+    118 |         setSuccessMessage('GMP Model added successfully.');
+    119 |       } else if (panelMode === 'edit' && editingItem) {
+    120 |         if (provider) await provider.updateGMPModel(editingItem.id, formData);
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageGMP/ManageGMPData.tsx:120:38
+TS2339: Property 'updateGMPModel' does not exist on type 'IDataProvider'.
+    118 |         setSuccessMessage('GMP Model added successfully.');
+    119 |       } else if (panelMode === 'edit' && editingItem) {
+  > 120 |         if (provider) await provider.updateGMPModel(editingItem.id, formData);
+        |                                      ^^^^^^^^^^^^^^
+    121 |         setSuccessMessage('GMP Model updated successfully.');
+    122 |       }
+    123 |       await loadItems();
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageGMP/ManageGMPData.tsx:141:36
+TS2339: Property 'deleteGMPModel' does not exist on type 'IDataProvider'.
+    139 |     setIsLoading(true);
+    140 |     try {
+  > 141 |       if (provider) await provider.deleteGMPModel(itemToDelete.id);
+        |                                    ^^^^^^^^^^^^^^
+    142 |       setSuccessMessage('GMP Model deleted successfully.');
+    143 |       await loadItems();
+    144 |       setIsDeleteDialogOpen(false);
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageTMF/ManageTMFData.tsx:69:35
+TS2551: Property 'getTMFFolders' does not exist on type 'IDataProvider'. Did you mean 'getCTDFolders'?
+    67 |     setIsLoading(true);
+    68 |     try {
+  > 69 |       const data = await provider.getTMFFolders();
+       |                                   ^^^^^^^^^^^^^
+    70 |       setItems(data || []);
+    71 |       setErrorMessage('');
+    72 |     } catch {
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageTMF/ManageTMFData.tsx:174:38
+TS2551: Property 'createTMFFolder' does not exist on type 'IDataProvider'. Did you mean 'createCTDFolder'?
+    172 |       const saveData = { ...formData, zone: zoneChoice?.zone || formData.zone };
+    173 |       if (panelMode === 'add') {
+  > 174 |         if (provider) await provider.createTMFFolder(saveData);
+        |                                      ^^^^^^^^^^^^^^^
+    175 |         setSuccessMessage('TMF Folder added successfully.');
+    176 |       } else if (panelMode === 'edit' && editingItem) {
+    177 |         if (provider) await provider.updateTMFFolder(editingItem.id, saveData);
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageTMF/ManageTMFData.tsx:177:38
+TS2551: Property 'updateTMFFolder' does not exist on type 'IDataProvider'. Did you mean 'updateCTDFolder'?
+    175 |         setSuccessMessage('TMF Folder added successfully.');
+    176 |       } else if (panelMode === 'edit' && editingItem) {
+  > 177 |         if (provider) await provider.updateTMFFolder(editingItem.id, saveData);
+        |                                      ^^^^^^^^^^^^^^^
+    178 |         setSuccessMessage('TMF Folder updated successfully.');
+    179 |       }
+    180 |       await loadItems();
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageTMF/ManageTMFData.tsx:198:36
+TS2551: Property 'deleteTMFFolder' does not exist on type 'IDataProvider'. Did you mean 'deleteCTDFolder'?
+    196 |     setIsLoading(true);
+    197 |     try {
+  > 198 |       if (provider) await provider.deleteTMFFolder(itemToDelete.id);
+        |                                    ^^^^^^^^^^^^^^^
+    199 |       setSuccessMessage('TMF Folder deleted successfully.');
+    200 |       await loadItems();
+    201 |       setIsDeleteDialogOpen(false);
+
+ERROR in ./src/webparts/drugManagementSystem/components/DrugManagementSystem.tsx:271:56
+TS2367: This condition will always return 'false' since the types '"dashboard" | "documents" | "categories" | "templates" | "users" | "reports" | "drugsDatabase" | "createCTDFolder" | "gmpMaster" | "tmfMaster" | "approvals" | "authorDocs"' and '"myDocuments"' have no overlap.
+    269 |       }
+    270 |     } else if (effectiveRole === 'Author') {
+  > 271 |       return <DocumentsViewRouter filterByCurrentUser={currentView === 'myDocuments' || currentView === 'dashboard'} filterByPending={currentView === 'pendingApproval'} hideAddButton={false} hideFolderSidebar={true} />;
+        |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    272 |     } else if (effectiveRole === 'Reviewer') {
+    273 |       return <ReviewerDashboard />;
+    274 |     } else if (effectiveRole === 'Approver') {
+
+ERROR in ./src/webparts/drugManagementSystem/components/DrugManagementSystem.tsx:271:135
+TS2367: This condition will always return 'false' since the types '"dashboard" | "documents" | "categories" | "templates" | "users" | "reports" | "drugsDatabase" | "createCTDFolder" | "gmpMaster" | "tmfMaster" | "approvals" | "authorDocs"' and '"pendingApproval"' have no overlap.
+    269 |       }
+    270 |     } else if (effectiveRole === 'Author') {
+  > 271 |       return <DocumentsViewRouter filterByCurrentUser={currentView === 'myDocuments' || currentView === 'dashboard'} filterByPending={currentView === 'pendingApproval'} hideAddButton={false} hideFolderSidebar={true} />;
+        |                                                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    272 |     } else if (effectiveRole === 'Reviewer') {
+    273 |       return <ReviewerDashboard />;
+    274 |     } else if (effectiveRole === 'Approver') {
+
+ERROR in ./src/webparts/drugManagementSystem/components/DrugManagementSystem.tsx:278:14
+TS2678: Type '"pendingApproval"' is not comparable to type '"dashboard" | "documents" | "categories" | "templates" | "users" | "reports" | "drugsDatabase" | "createCTDFolder" | "gmpMaster" | "tmfMaster" | "approvals" | "authorDocs"'.
+    276 |     } else if (effectiveRole === 'HR') {
+    277 |       switch (currentView) {
+  > 278 |         case 'pendingApproval':
+        |              ^^^^^^^^^^^^^^^^^
+    279 |           return <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
+    280 |         default:
+    281 |           return <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;
+
+Found 11 errors in 2187 ms.
