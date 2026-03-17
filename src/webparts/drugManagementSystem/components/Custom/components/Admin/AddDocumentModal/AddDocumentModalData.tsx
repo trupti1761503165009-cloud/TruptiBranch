@@ -158,20 +158,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         orderBy: 'SortOrder',
         isSortOrderAsc: true
       }),
-      Promise.all([
-        provider.getUsersFromGroup('HR').catch(() => []),
-        provider.getUsersFromGroup('Admin').catch(() => []),
-        provider.getUsersFromGroup('Users').catch(() => [])
-      ]).then(([hr, admin, users]) => {
-        const combined = [...hr, ...admin, ...users];
-        // unique by value/email
-        const seen = new Set();
-        return combined.filter(u => {
-          if (!u.value || seen.has(u.value)) return false;
-          seen.add(u.value);
-          return true;
-        });
-      })
+      provider.getUsersFromGroup('HR').catch(() => [])
     ]);
 
     setDrugs(
