@@ -1,0 +1,1470 @@
+import * as React from 'react';
+import type { CTDFolder, Document } from '../../../types';
+import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
+import { TextField } from '@fluentui/react/lib/TextField';
+import { DatePicker } from '@fluentui/react/lib/DatePicker';
+import { getFileTypeIcon } from '../../../../Common/utils';
+import { Link } from '@fluentui/react/lib/Link';
+import { TooltipHost } from '@fluentui/react/lib/Tooltip';
+import '../ManageDocuments.css';
+import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
+import { ManageDocumentsData, type DateFilter } from './ManageDocumentsData';
+import ReactDropdown, { type IReactDropOptionProps } from '../../../../Common/ReactSelectDropdown';
+import { CustomModal } from '../../../../Common/CustomModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faChevronRight, faClockRotateLeft, faDownload, faEye, faFileExport, faFolder, faFolderOpen, faPenToSquare, faPlus, faTrashCan, faFileLines, faClock, faCheckDouble, faFileSignature, faArrowsRotate, faArrowUpRightFromSquare, faPaperPlane, faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { CreateDocumentPage } from '../CreateDocumentPage/CreateDocumentPage';
+import { Loader } from '../../../../Common/Loader/Loader';
+import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/MessageDialog';
+import { FileIconHelper } from '../../../utils/fileIconHelper';
+import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
+import { ComponentNameEnum } from '../../../../../models/ComponentNameEnum';
+import { IColumn, Panel, PanelType, Pivot, PivotItem } from '@fluentui/react';
+import { Breadcrumb as CustomBreadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
+
+export const ManageDocuments: React.FC<any> = (props) => {
+  const {
+    drugs,
+    documents,
+    selectedDrugId,
+    categories,
+    filteredDocuments,
+    activeTab,
+    setActiveTab,
+    subTab,
+    setSubTab,
+    ctdFolders,
+    selectedIds,
+    currentPage,
+    searchTerm,
+    isDocPanelOpen,
+    isAddModalOpen,
+    isEditModalOpen,
+    isDeleteDialogOpen,
+    isSignatureModalOpen,
+    viewingDocument,
+    editingDocument,
+    versionHistory,
+    compareVersion,
+    editForm,
+    signature,
+    canApprove,
+    canEdit,
+    canDelete,
+    ctdStructure,
+    isStructureDisabled,
+    filters,
+    itemsPerPage,
+    errorMessage,
+    successMessage,
+    isLoading,
+    reviewerComments,
+    reviewerCommentError,
+
+    setSelectedIds,
+    setCurrentPage,
+    setSearchTerm,
+    setIsDocPanelOpen,
+    setIsAddModalOpen,
+    setIsEditModalOpen,
+    setIsDeleteDialogOpen,
+    setIsSignatureModalOpen,
+    setCompareVersion,
+    setEditForm,
+    setSignature,
+    setEditingDocument,
+    setFilters,
+    setReviewerComments,
+    setReviewerCommentError,
+    setSelectedDrugId,
+    isAdmin,
+    tmfFolders,
+    gmpFolders,
+    showDeleted,
+    setShowDeleted,
+
+    handleStructureChange,
+    handleViewDocument,
+    openDocumentInReviewMode,
+    handleApprove,
+    handleFinalApprove,
+    handleReject,
+    confirmReject,
+    handleBulkDelete,
+    handleExport,
+    loadData,
+    initiateAdobeSign,
+    openEditModal,
+    handleSaveEdit,
+    handleCompareVersion,
+    resetFilters,
+    handleSubmitForReview,
+    getWorkflowSteps,
+    canCreate,
+    rejectReason,
+    isRejectModalOpen,
+    setRejectReason,
+    setIsRejectModalOpen,
+  } = ManageDocumentsData(props);
+
+  const isVisibleCrud = React.useRef(true);
+  const [isDisplayEDbtn, setisDisplayEDbtn] = React.useState(false);
+  const [isDisplayEditButtonview, setIsDisplayEditButtonview] = React.useState(false);
+  const [isSelectedData, setisSelectedData] = React.useState(false);
+  const [updateItem, setUpdateItem] = React.useState<any[]>([]);
+
+  const _onItemSelected = (item: any): void => {
+    setSelectedIds(item.map((i: any) => i.id));
+    if (item.length > 0) {
+        if (item.length == 1) {
+            setisSelectedData(true);
+            setUpdateItem(item);
+            setIsDisplayEditButtonview(true);
+        } else {
+            setisSelectedData(true);
+            setUpdateItem(item);
+            setIsDisplayEditButtonview(false);
+        }
+        setisDisplayEDbtn(true);
+    } else {
+        setisSelectedData(false);
+        setUpdateItem([]);
+        setisDisplayEDbtn(false);
+    }
+  };
+
+  const onclickEdit = () => {
+    if (updateItem.length > 0) {
+      openEditModal(updateItem[0]);
+    }
+  };
+
+  const onclickconfirmdelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const selectedDrug = React.useMemo(
+    () => (selectedDrugId !== null ? drugs.find(d => d.id === selectedDrugId) : undefined),
+    [drugs, selectedDrugId]
+  );
+
+  // Message Dialog State (replaces toasts)
+  const [messageDialog, setMessageDialog] = React.useState<{
+    hidden: boolean;
+    type: MessageType;
+    title: string;
+    message: string;
+    fields: string[];
+  }>({ hidden: true, type: 'info', title: '', message: '', fields: [] });
+
+  const showMessage = (type: MessageType, title: string, message: string, fields: string[] = []) => {
+    setMessageDialog({ hidden: false, type, title, message, fields });
+  };
+
+  const hideMessage = () => {
+    setMessageDialog(prev => ({ ...prev, hidden: true }));
+  };
+
+  React.useEffect(() => {
+    if (successMessage) showMessage('success', 'Success', successMessage);
+  }, [successMessage]);
+  React.useEffect(() => {
+    if (errorMessage) showMessage('error', 'Error', errorMessage);
+  }, [errorMessage]);
+
+  const categoryOptions: IReactDropOptionProps[] = React.useMemo(
+    () => categories.map(cat => ({ label: cat.name, value: cat.name })),
+    [categories]
+  );
+  const editCategoryOptions: IReactDropOptionProps[] = React.useMemo(
+    () => categories.map(cat => ({ label: cat.name, value: cat.id })),
+    [categories]
+  );
+
+  const statusOptions: IReactDropOptionProps[] = React.useMemo(
+    () => [
+      { label: 'Draft', value: 'Draft' },
+      { label: 'Pending Approval', value: 'Pending Approval' },
+      { label: 'Pending for Signature', value: 'Pending for Signature' },
+      { label: 'Signed', value: 'Signed' },
+      { label: 'Final', value: 'Final' },
+      { label: 'In Review', value: 'In Review' },
+      { label: 'Revision', value: 'Revision' },
+      { label: 'Initiate for Signature', value: 'Initiate for Signature' },
+      { label: 'Approved', value: 'Approved' },
+      { label: 'Rejected', value: 'Rejected' }
+    ],
+    []
+  );
+
+  const dateOptions: IReactDropOptionProps[] = React.useMemo(
+    () => [
+      { label: 'Today', value: 'today' },
+      { label: 'Yesterday', value: 'yesterday' },
+      { label: 'Last 7 Days', value: 'last7days' },
+      { label: 'Last 30 Days', value: 'last30days' },
+      { label: 'Last Month', value: 'lastmonth' },
+      { label: 'This Month', value: 'thismonth' },
+      { label: 'Year To Date', value: 'yeartodate' },
+      { label: 'Custom Date Range', value: 'daterange' }
+    ],
+    []
+  );
+
+  const structureOptions: IReactDropOptionProps[] = React.useMemo(
+    () => [
+      { label: 'eCTD', value: 'ectd' },
+      { label: 'DIA reference', value: 'dossier' }
+    ],
+    []
+  );
+
+  const categoryDefault = React.useMemo(
+    () => categoryOptions.find(o => o.value === filters.category),
+    [categoryOptions, filters.category]
+  );
+  const statusDefault = React.useMemo(
+    () => statusOptions.find(o => o.value === filters.status),
+    [statusOptions, filters.status]
+  );
+  const dateDefault = React.useMemo(
+    () => dateOptions.find(o => o.value === filters.dateFilter),
+    [dateOptions, filters.dateFilter]
+  );
+  const structureDefault = React.useMemo(
+    () => structureOptions.find(o => o.value === ctdStructure) ?? structureOptions[0],
+    [structureOptions, ctdStructure]
+  );
+
+  const folderLabelMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    const traverse = (nodes: CTDFolder[]) => {
+      nodes.forEach((node: any) => {
+        map.set(node.id, node.name);
+        if (node.children) traverse(node.children);
+      });
+    };
+    traverse(ctdFolders);
+    return map;
+  }, [ctdFolders]);
+
+  // Summary stats calculations
+  const totalDocCount = filteredDocuments.length;
+  const pendingCount = filteredDocuments.filter(d => d.status === 'Pending Approval' || d.status === 'In Review').length;
+  const draftCount = filteredDocuments.filter(d => d.status === 'Draft' || d.status === 'Revision').length;
+  const finalCount = filteredDocuments.filter(d => d.status === 'Final' || d.status === 'Signed' || d.status === 'Approved').length;
+
+  // Folder-wise drilldown (grid + breadcrumb) after Drug selection
+  const [folderTrail, setFolderTrail] = React.useState<string[]>([]);
+  const [folderSearchTerm, setFolderSearchTerm] = React.useState('');
+  const [isFolderLoading, setIsFolderLoading] = React.useState(false);
+
+  const navigateToFolder = React.useCallback((folderId: string) => {
+    setIsFolderLoading(true);
+    setFolderTrail(prev => [...prev, folderId]);
+    setCurrentPage(1);
+    setFolderSearchTerm('');
+    setTimeout(() => setIsFolderLoading(false), 400);
+  }, [setCurrentPage]);
+
+  React.useEffect(() => {
+    // Reset folder navigation when changing drug
+    setFolderTrail([]);
+    setFolderSearchTerm('');
+    setIsFolderLoading(false);
+  }, [selectedDrugId]);
+
+  const findFolderNode = React.useCallback((nodes: CTDFolder[], id: any): CTDFolder | undefined => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      if (n.children?.length) {
+        const hit = findFolderNode(n.children, id);
+        if (hit) return hit;
+      }
+    }
+    return undefined;
+  }, []);
+
+  const currentFolderNode = React.useMemo(
+    () => (folderTrail.length ? findFolderNode(ctdFolders, folderTrail[folderTrail.length - 1]) : undefined),
+    [ctdFolders, folderTrail, findFolderNode]
+  );
+
+  const currentFolderChildren = React.useMemo(() => {
+    if (!folderTrail.length) {
+      if (ctdStructure === 'ectd') return ctdFolders;
+      if (ctdStructure === 'dossier') return tmfFolders; 
+      // Add GMP check if needed
+      return ctdFolders;
+    }
+    return currentFolderNode?.children || [];
+  }, [ctdFolders, tmfFolders, gmpFolders, currentFolderNode, folderTrail.length, ctdStructure]);
+
+  const isShowingFolders = currentFolderChildren.length > 0;
+  const currentFolderId = folderTrail.length ? folderTrail[folderTrail.length - 1] : undefined;
+
+  const docsForCurrentFolder = React.useMemo(() => {
+    if (!currentFolderId) return filteredDocuments;
+    return filteredDocuments.filter((d) => d.ctdFolder === currentFolderId || d.ctdModule === currentFolderId || d.submodule === currentFolderId);
+  }, [currentFolderId, filteredDocuments]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFolderId]);
+
+  const folderTotalPages = React.useMemo(
+    () => Math.ceil(docsForCurrentFolder.length / itemsPerPage),
+    [docsForCurrentFolder.length, itemsPerPage]
+  );
+
+  const folderCurrentPageData = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return docsForCurrentFolder.slice(startIndex, endIndex);
+  }, [currentPage, docsForCurrentFolder, itemsPerPage]);
+
+  const folderGridItems = React.useMemo(() => {
+    const normalized = (v?: string) => (v ? String(v) : '');
+    const getDescendantIds = (node: CTDFolder): string[] => {
+      const ids: string[] = [node.id];
+      (node.children || []).forEach((c) => ids.push(...getDescendantIds(c)));
+      return ids;
+    };
+
+    return currentFolderChildren.map((f) => {
+      const descendantIds = new Set(getDescendantIds(f));
+      const count = filteredDocuments.filter(
+        (d) =>
+          descendantIds.has(normalized(d.ctdFolder)) ||
+          descendantIds.has(normalized(d.ctdModule)) ||
+          descendantIds.has(normalized(d.submodule))
+      ).length;
+      return { id: f.id, name: f.name, count };
+    });
+  }, [currentFolderChildren, filteredDocuments]);
+
+  const folderColumns: any[] = React.useMemo(
+    () => [
+      {
+        key: 'name',
+        name: 'FOLDER',
+        fieldName: 'name',
+        minWidth: 260,
+        maxWidth: 520,
+        isSortingRequired: true,
+        onRender: (item: any) => (
+          <div className="doc-name-cell">
+            <img
+              className="doc-icon"
+              src={getFileTypeIcon('folder')}
+              alt=""
+              style={{ width: 16, height: 16, marginRight: 8 }}
+            />
+            <span>{item.name}</span>
+          </div>
+        )
+      },
+      { key: 'count', name: 'DOCUMENTS', fieldName: 'count', minWidth: 110, maxWidth: 140, isSortingRequired: true }
+    ],
+    []
+  );
+
+  const documentColumns: any[] = [
+    {
+      key: 'name',
+      name: 'DOCUMENT NAME',
+      fieldName: 'name',
+      minWidth: 220,
+      maxWidth: 340,
+      isSortingRequired: true,
+      onRender: (doc: Document) => {
+        const iconInfo = FileIconHelper.getFileIcon(doc.fileName || doc.name);
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              fontSize: 16,
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: iconInfo.bgColor,
+              borderRadius: 4,
+              color: iconInfo.color
+            }}>
+              <FontAwesomeIcon icon={iconInfo.icon} />
+            </div>
+            <span>{doc.name}</span>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'category',
+      name: 'CATEGORY',
+      fieldName: 'category',
+      minWidth: 140,
+      maxWidth: 220,
+      isSortingRequired: true
+    },
+    {
+      key: 'ctdFolder',
+      name: 'CTD FOLDER',
+      fieldName: 'ctdFolder',
+      minWidth: 140,
+      maxWidth: 220,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{folderLabelMap.get(doc.ctdFolder || '') || doc.ctdFolder || 'N/A'}</span>
+    },
+    {
+      key: 'status',
+      name: 'STATUS',
+      fieldName: 'status',
+      minWidth: 140,
+      maxWidth: 200,
+      isSortingRequired: true,
+      onRender: (doc: Document) => (
+        <span className={`status-badge status-${doc.status.toLowerCase().replace(/\s+/g, '-')}`}>{doc.status}</span>
+      )
+    },
+    {
+      key: 'version',
+      name: 'VERSION',
+      fieldName: 'version',
+      minWidth: 90,
+      maxWidth: 120,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>v{doc.version || 1}</span>
+    },
+    {
+      key: 'lastModified',
+      name: 'LAST MODIFIED',
+      fieldName: 'lastModified',
+      minWidth: 140,
+      maxWidth: 180,
+      isSortingRequired: true
+    },
+    {
+      key: 'actions',
+      name: 'ACTIONS',
+      minWidth: 100,
+      maxWidth: 120,
+      onRender: (doc: Document) => (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <TooltipHost content="View Details">
+            <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#1E88E5' }}>
+              <FontAwesomeIcon icon={faEye} />
+            </Link>
+          </TooltipHost>
+          {doc.sharePointUrl && (
+            <TooltipHost content="Open Document">
+              <Link href={doc.sharePointUrl} target="_blank" style={{ fontSize: 16, color: '#43A047' }}>
+                <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+              </Link>
+            </TooltipHost>
+          )}
+        </div>
+      )
+    },
+  ];
+
+  const assignedToMeColumns = [
+    ...documentColumns.filter(c => c.key !== 'status'),
+    {
+      key: 'status',
+      name: 'STATUS',
+      fieldName: 'status',
+      minWidth: 140,
+      maxWidth: 200,
+      isSortingRequired: true,
+      onRender: (doc: Document) => (
+        <span className={`status-badge status-${doc.status.toLowerCase().replace(/\s+/g, '-')}`} style={{ fontWeight: 'bold' }}>{doc.status}</span>
+      )
+    }
+  ];
+
+  const effectiveColumns = activeTab === 'assignedToMe' ? assignedToMeColumns : documentColumns;
+
+
+
+  // DRUG SELECTED VIEW (inside a specific drug folder)
+  return (
+    <div className="documents-page pageContainer" data-testid="manage-documents-inner-view" style={{ paddingTop: 0 }}>
+      {isLoading && <Loader />}
+
+      {/* Message Dialog */}
+      <MessageDialog
+        hidden={messageDialog.hidden}
+        onDismiss={hideMessage}
+        type={messageDialog.type}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        fields={messageDialog.fields}
+      />
+
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Documents</h1>
+
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          <SummaryCard
+            title="Total Documents"
+            value={totalDocCount}
+            icon={faFileLines}
+            color="blue"
+          />
+          <SummaryCard
+            title="Pending Approval"
+            value={pendingCount}
+            icon={faClock}
+            color="orange"
+          />
+          <SummaryCard
+            title="Drafts"
+            value={draftCount}
+            icon={faPenToSquare}
+            color="purple"
+          />
+          <SummaryCard
+            title="Final / Signed"
+            value={finalCount}
+            icon={faCheckDouble}
+            color="green"
+          />
+        </div>
+      </div>
+
+      {/* ===== SECTION 2: Filters ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+        <div className="ms-Grid">
+          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="ctdStructure" options={structureOptions} defaultOption={structureDefault}
+                  onChange={(opt) => handleStructureChange((opt?.value as 'ectd' | 'dossier') ?? 'ectd')}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} isDisabled={isStructureDisabled} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="category" options={categoryOptions} defaultOption={categoryDefault}
+                  onChange={(opt) => setFilters({ ...filters, category: opt?.value ?? '' })}
+                  isCloseMenuOnSelect={true} isSorted={true} isClearable={true} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="status" options={statusOptions} defaultOption={statusDefault}
+                  onChange={(opt) => setFilters({ ...filters, status: opt?.value ?? 'All' })}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={true} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="dateFilter" options={dateOptions} defaultOption={dateDefault}
+                  onChange={(opt) => setFilters({ ...filters, dateFilter: (opt?.value as DateFilter) ?? 'all', dateFrom: '', dateTo: '' })}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={true} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 1 }}>
+              <DefaultButton
+                text="Reset"
+                onClick={() => { resetFilters(); }}
+                styles={{
+                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  label: { color: '#fff', fontWeight: 600 },
+                  icon: { color: '#fff' }
+                }}
+                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== SECTION 3: Breadcrumb ===== */}
+      <div className="customebreadcrumb" style={{ marginBottom: 16 }}>
+        <CustomBreadcrumb
+          items={[
+            { label: 'Manage Documents', onClick: () => setSelectedDrugId(null), isActive: selectedDrugId === null && activeTab !== 'workspace' },
+            ...(activeTab === 'workspace'
+              ? [{ label: 'Document Folder', isActive: true }]
+              : selectedDrugId !== null
+                ? [{ label: selectedDrug?.name || 'Drug Folder', isActive: true }]
+                : [])
+          ]}
+        />
+      </div>
+
+      {/* Primary Tabs: Drugs Folder | Document Folder — hidden when inside a drug */}
+      {selectedDrugId === null && (
+        <div style={{ marginBottom: 15 }}>
+          <Pivot
+            aria-label="Document Views"
+            selectedKey={activeTab}
+            onLinkClick={(item) => item?.props.itemKey && setActiveTab(item.props.itemKey as any)}
+          >
+            <PivotItem headerText="Drugs Folder" itemKey="all" />
+            <PivotItem headerText="Document Folder" itemKey="workspace" />
+          </Pivot>
+        </div>
+      )}
+
+      {/* Sub-Tabs: Folder Structure vs List View */}
+      {selectedDrugId !== null && (
+        <div style={{ marginBottom: 15 }}>
+          <Pivot
+            aria-label="Sub Views"
+            selectedKey={subTab}
+            onLinkClick={(item) => setSubTab(item?.props.itemKey as any)}
+            styles={{ root: { marginBottom: 15, borderBottom: '1px solid #eee' } }}
+          >
+            <PivotItem headerText="DRUG Structure" itemKey="folder" itemIcon="FolderList" />
+            <PivotItem headerText="Documents" itemKey="list" itemIcon="Documentation" />
+          </Pivot>
+        </div>
+      )}
+
+      {/* Folder Breadcrumb - compact inline trail for subfolder navigation */}
+      {selectedDrug && subTab === 'folder' && (
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginBottom: 10, fontSize: 13 }}>
+          <span
+            onClick={() => { setIsFolderLoading(true); setFolderTrail([]); setTimeout(() => setIsFolderLoading(false), 300); }}
+            style={{ cursor: 'pointer', color: '#1E88E5', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            <FontAwesomeIcon icon={faFolderOpen} style={{ fontSize: 14 }} />
+            {selectedDrug.name}
+          </span>
+          {folderTrail.map((id, idx) => (
+            <React.Fragment key={id}>
+              <span style={{ color: '#bbb' }}>›</span>
+              <span
+                style={idx === folderTrail.length - 1
+                  ? { color: '#333', fontWeight: 600 }
+                  : { cursor: 'pointer', color: '#1E88E5' }}
+                onClick={() => {
+                  if (idx < folderTrail.length - 1) {
+                    setIsFolderLoading(true);
+                    setFolderTrail(folderTrail.slice(0, idx + 1));
+                    setTimeout(() => setIsFolderLoading(false), 300);
+                  }
+                }}
+              >
+                {folderLabelMap.get(id) || id}
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+      {/* Main Content Area: Drugs Grid or Documents/Folders Grid */}
+      <div className="boxCard" style={{ padding: 0, position: 'relative' }}>
+        {isFolderLoading && (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 5 }}>
+            <Loader />
+          </div>
+        )}
+        {activeTab === 'workspace' ? (
+          <MemoizedDataGridComponent
+            key="doc-folder-flat-list"
+            items={filteredDocuments}
+            columns={effectiveColumns}
+            reRenderComponent={true}
+            searchable={true}
+            isPagination={true}
+            CustomselectionMode={isVisibleCrud.current ? 2 : 0}
+            onSelectedItem={_onItemSelected}
+            isAddNew={true}
+            addNewContent={
+              <div className="dflex pb-1">
+                {canCreate && (
+                  <PrimaryButton
+                    className="btn btn-primary"
+                    text="Add Document"
+                    onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.AddDocument })}
+                  />
+                )}
+                <Link className="actionBtn iconSize btnRefresh ml-10" onClick={loadData}>
+                  <TooltipHost content="Refresh Grid"><FontAwesomeIcon icon={faArrowsRotate} /></TooltipHost>
+                </Link>
+              </div>
+            }
+            addEDButton={
+              isDisplayEDbtn && isVisibleCrud.current && (
+                <div className="dflex">
+                  {isDisplayEditButtonview && (
+                    <Link className="actionBtn iconSize btnView" onClick={() => updateItem[0] && void handleViewDocument(updateItem[0])}>
+                      <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
+                    </Link>
+                  )}
+                  {canEdit && isDisplayEditButtonview && (
+                    <Link className="actionBtn iconSize btnEdit ml-10" onClick={onclickEdit}>
+                      <TooltipHost content="Edit"><FontAwesomeIcon icon={faPenToSquare} /></TooltipHost>
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Link className="actionBtn iconSize btnDanger ml-10" onClick={onclickconfirmdelete}>
+                      <TooltipHost content="Delete"><FontAwesomeIcon icon={faTrashCan} /></TooltipHost>
+                    </Link>
+                  )}
+                </div>
+              )
+            }
+          />
+        ) : selectedDrugId === null ? (
+          <MemoizedDataGridComponent
+            key="drug-selection-grid"
+            items={drugs}
+            columns={[
+              {
+                key: 'name',
+                name: 'DRUG FOLDER',
+                fieldName: 'name',
+                minWidth: 350,
+                isSortingRequired: true,
+                onRender: (drug: any) => {
+                  const drugDocs = documents.filter(d => d.drugId === drug.id);
+                  return (
+                    <div
+                      className="folder-row-clickable"
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '8px 0' }}
+                      onClick={() => setSelectedDrugId(drug.id)}
+                    >
+                      <FontAwesomeIcon icon={faFolder} style={{ fontSize: 22, color: '#FFA000' }} />
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: '#333' }}>{drug.name}</span>
+                        <span style={{ marginLeft: 12, fontSize: 12, color: '#666' }}>({drugDocs.length} {drugDocs.length === 1 ? 'item' : 'items'})</span>
+                      </div>
+                      <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 14, color: '#999' }} />
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'folderCount',
+                name: 'DOCUMENT FOLDERS',
+                fieldName: 'folderCount',
+                minWidth: 160,
+                onRender: (drug: any) => {
+                  const drugDocs = documents.filter(d => d.drugId === drug.id);
+                  const folderCount = new Set(drugDocs.map(d => d.ctdFolder || d.ctdModule).filter(Boolean)).size;
+                  return <span>{folderCount} Folders</span>;
+                }
+              },
+              {
+                key: 'category',
+                name: 'CATEGORY',
+                fieldName: 'category',
+                minWidth: 150
+              },
+              {
+                key: 'status',
+                name: 'STATUS',
+                fieldName: 'status',
+                minWidth: 120,
+                onRender: (drug: any) => <span className={`status-badge status-${drug.status?.toLowerCase() || 'active'}`}>{drug.status || 'Active'}</span>
+              }
+            ]}
+            reRenderComponent={true}
+            searchable={true}
+            CustomselectionMode={isVisibleCrud.current ? 2 : 0}
+            onSelectedItem={_onItemSelected}
+            isAddNew={true}
+            addNewContent={
+              <div className="dflex pb-1">
+                <Link className="btn-back-ml-4 dticon">
+                    <TooltipHost content="Export options">
+                      <DefaultButton
+                        text="Export"
+                        iconProps={{ iconName: "Download", style: { color: "#ffffff" } }}
+                        onClick={() => handleExport('excel')}
+                        className="btn export-btn-primary"
+                      />
+                    </TooltipHost>
+                  </Link>
+                {canCreate && (
+                    <TooltipHost content="Add New">
+                      <PrimaryButton
+                        className="btn btn-primary ml-10"
+                        text="Add"
+                        onClick={() => {
+                          props.manageComponentView({
+                            currentComponentName: ComponentNameEnum.AddDocument,
+                            componentProps: { drugId: selectedDrugId }
+                          });
+                        }}
+                      />
+                    </TooltipHost>
+                )}
+
+                <Link
+                  className="actionBtn iconSize btnRefresh ml-10"
+                  onClick={loadData}
+                >
+                  <TooltipHost content={"Refresh Grid"}>
+                    <FontAwesomeIcon icon={faArrowsRotate} />
+                  </TooltipHost>
+                </Link>
+              </div>
+            }
+          />
+        ) : (
+          subTab === 'folder' ? (
+            isShowingFolders ? (
+            <MemoizedDataGridComponent
+              key={`folder-tree-${folderTrail.join('-') || 'root'}`}
+              items={folderGridItems}
+              columns={folderColumns}
+              reRenderComponent={true}
+              searchable={true}
+              isPagination={true}
+              onItemInvoked={(item?: any) => {
+                if (item?.id) navigateToFolder(item.id);
+              }}
+              isAddNew={true}
+              addNewContent={
+                <div className="dflex pb-1">
+                  <Link
+                    className="actionBtn iconSize btnRefresh icon-mr"
+                    onClick={loadData}
+                  >
+                    <TooltipHost content={"Refresh Grid"}>
+                      <FontAwesomeIcon icon={faArrowsRotate} />
+                    </TooltipHost>
+                  </Link>
+                  <Link
+                    className="actionBtn iconSize btnEdit ml-10"
+                    onClick={() => {
+                      props.manageComponentView({
+                        currentComponentName: ComponentNameEnum.AddDocument,
+                        componentProps: { drugId: selectedDrugId }
+                      });
+                    }}
+                  >
+                    <TooltipHost content="Add Document">
+                      <FontAwesomeIcon icon={faPlus} />
+                    </TooltipHost>
+                  </Link>
+                </div>
+              }
+              onSelectedItem={() => {}}
+            />
+          ) : (
+            <MemoizedDataGridComponent
+              key={`folder-docs-${currentFolderId || 'root'}`}
+              items={folderCurrentPageData}
+              columns={effectiveColumns}
+              reRenderComponent={true}
+              searchable={true}
+              isPagination={true}
+              CustomselectionMode={isVisibleCrud.current ? 2 : 0}
+              onSelectedItem={_onItemSelected}
+              isAddNew={true}
+              addNewContent={
+                <div className="dflex pb-1">
+                  <Link
+                    className="actionBtn iconSize btnRefresh icon-mr"
+                    onClick={loadData}
+                  >
+                    <TooltipHost content={"Refresh Grid"}>
+                      <FontAwesomeIcon icon={faArrowsRotate} />
+                    </TooltipHost>
+                  </Link>
+                  {canCreate && (
+                    <Link
+                        className="actionBtn iconSize btnEdit ml-10"
+                        onClick={() => {
+                        props.manageComponentView({
+                            currentComponentName: ComponentNameEnum.AddDocument,
+                            componentProps: { drugId: selectedDrugId }
+                        });
+                        }}
+                    >
+                        <TooltipHost content="Add Document">
+                        <FontAwesomeIcon icon={faPlus} />
+                        </TooltipHost>
+                    </Link>
+                  )}
+                </div>
+              }
+              addEDButton={
+                isDisplayEDbtn && isVisibleCrud.current && (
+                  <div className="dflex">
+                    {isDisplayEditButtonview && (
+                      <>
+                        <Link
+                          className="actionBtn iconSize btnView"
+                          onClick={() => {
+                            if (updateItem.length > 0) void handleViewDocument(updateItem[0]);
+                          }}
+                        >
+                          <TooltipHost content={"View Detail"}>
+                            <FontAwesomeIcon icon={faEye} />
+                          </TooltipHost>
+                        </Link>
+                        {canEdit && (
+                          <Link
+                            className="actionBtn iconSize btnEdit ml-10"
+                            onClick={onclickEdit}
+                          >
+                            <TooltipHost content={"Edit Detail"}>
+                              <FontAwesomeIcon icon={faPenToSquare} />
+                            </TooltipHost>
+                          </Link>
+                        )}
+                      </>
+                    )}
+                    {canDelete && (
+                      <Link
+                        className="actionBtn iconSize btnDanger ml-10"
+                        onClick={onclickconfirmdelete}
+                      >
+                        <TooltipHost content={"Delete"}>
+                          <FontAwesomeIcon icon={faTrashCan} />
+                        </TooltipHost>
+                      </Link>
+                    )}
+                    <Link
+                      className="actionBtn iconSize btnGreen ml-10"
+                      onClick={() => handleExport('pdf')}
+                    >
+                      <TooltipHost content={"Export"}>
+                        <FontAwesomeIcon icon={faFileExport} />
+                      </TooltipHost>
+                    </Link>
+                  </div>
+                )
+              }
+            />
+          )) : (
+            <MemoizedDataGridComponent
+              key={`list-view-${activeTab}`}
+              items={filteredDocuments}
+              columns={effectiveColumns}
+              reRenderComponent={true}
+              searchable={true}
+              isPagination={true}
+              CustomselectionMode={isVisibleCrud.current ? 2 : 0}
+              onSelectedItem={_onItemSelected}
+              isAddNew={true}
+              addNewContent={
+                <div className="dflex pb-1">
+                  {canCreate && (
+                    <Link
+                      className="actionBtn iconSize btnEdit ml-10"
+                      onClick={() => {
+                        props.manageComponentView({
+                          currentComponentName: ComponentNameEnum.AddDocument,
+                          componentProps: { drugId: selectedDrugId }
+                        });
+                      }}
+                    >
+                      <TooltipHost content="Add Document">
+                        <FontAwesomeIcon icon={faPlus} />
+                      </TooltipHost>
+                    </Link>
+                  )}
+
+                  <Link
+                    className="actionBtn iconSize btnRefresh ml-10"
+                    onClick={loadData}
+                  >
+                    <TooltipHost content={"Refresh Grid"}>
+                      <FontAwesomeIcon icon={faArrowsRotate} />
+                    </TooltipHost>
+                  </Link>
+                </div>
+              }
+            />
+          )
+        )}
+      </div>
+      {!isShowingFolders && folderCurrentPageData.length === 0 && (
+        <div className="empty-state-modern" style={{ padding: 40, textAlign: 'center', color: '#666' }}>
+          <p>No documents found. Try adjusting your filters or add a new document.</p>
+        </div>
+      )}
+
+      {/* Document View Panel */}
+      <Panel
+        isOpen={isDocPanelOpen}
+        onDismiss={() => {
+          setIsDocPanelOpen(false);
+          setReviewerComments([]);
+          setReviewerCommentError('');
+        }}
+        type={PanelType.large}
+        headerText={viewingDocument ? `Document: ${viewingDocument.name}` : 'Document Details'}
+        closeButtonAriaLabel="Close"
+        data-testid="document-view-panel"
+      >
+        {isLoading && <Loader />}
+        {viewingDocument && (
+          <div style={{ padding: '20px 0' }}>
+            {/* Workflow Status */}
+            <div className="workflow-breadcrumb" style={{ marginBottom: 24 }}>
+              {getWorkflowSteps(viewingDocument.status).map((step, index) => (
+                <React.Fragment key={step.label}>
+                  <div className={`workflow-step ${step.completed ? 'completed' : ''} ${step.active ? 'active' : ''}`}>
+                    {step.completed && <span className="step-check">✓</span>}
+                    <span className="step-label">{step.label}</span>
+                  </div>
+                  {index < getWorkflowSteps(viewingDocument.status).length - 1 && <div className="workflow-arrow">→</div>}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Document Details using ms-Grid */}
+            <div className="ms-Grid">
+              <div className="ms-Grid-row">
+                <div className="ms-Grid-col ms-sm12">
+                  <div className="form-section-header">Document Information</div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Document Name</div>
+                    <div className="detail-value">{viewingDocument.name}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Category</div>
+                    <div className="detail-value">{viewingDocument.category}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">CTD Folder</div>
+                    <div className="detail-value">{viewingDocument.ctdFolder || 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Status</div>
+                    <div className="detail-value">
+                      <span className={`status-badge status-${viewingDocument.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                        {viewingDocument.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Version</div>
+                    <div className="detail-value">v{viewingDocument.version || 1}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Author</div>
+                    <div className="detail-value">{viewingDocument.author || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Last Modified</div>
+                    <div className="detail-value">{viewingDocument.lastModified}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments Section */}
+              <div className="ms-Grid-row" style={{ marginTop: 24 }}>
+                <div className="ms-Grid-col ms-sm12">
+                  <div className="form-section-header">Comments</div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Document Comments</div>
+                    <div className="detail-value">
+                      {viewingDocument.comments && viewingDocument.comments.length > 0 ? (
+                        <ul style={{ margin: 0, paddingLeft: 16 }}>
+                          {viewingDocument.comments.map((comment) => (
+                            <li key={comment.id}>
+                              <strong>{comment.author}:</strong> {comment.text}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        'No comments'
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Reviewer Comments</div>
+                    <div className="detail-value">
+                      {reviewerCommentError && <div className="field-error">{reviewerCommentError}</div>}
+                      {reviewerComments.length > 0 ? (
+                        <ul style={{ margin: 0, paddingLeft: 16 }}>
+                          {reviewerComments.map((comment) => (
+                            <li key={comment.id}>
+                              <strong>{comment.author}:</strong> {comment.text}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        'No reviewer comments'
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Version History */}
+              <div className="ms-Grid-row" style={{ marginTop: 24 }}>
+                <div className="ms-Grid-col ms-sm12">
+                  <div className="form-section-header">
+                    <FontAwesomeIcon icon={faClockRotateLeft} style={{ marginRight: 8 }} />
+                    Version History
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12">
+                  <div className="table-wrapper">
+                    <table className="version-table">
+                      <thead>
+                        <tr>
+                          <th>Version</th>
+                          <th>Modified By</th>
+                          <th>Modified Date</th>
+                          <th>Changes</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {versionHistory.map(version => (
+                          <tr key={version.id ?? version.version}>
+                            <td>v{version.version}</td>
+                            <td>{version.modifiedBy}</td>
+                            <td>{version.modifiedDate}</td>
+                            <td>{version.changes}</td>
+                            <td>
+                              <DefaultButton onClick={() => version.id !== undefined && handleCompareVersion(version.id)}>
+                                <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
+                                Compare
+                              </DefaultButton>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="ms-Grid-row" style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #E0E0E0' }}>
+                <div className="ms-Grid-col ms-sm12" style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <DefaultButton
+                    onClick={() => {
+                      setIsDocPanelOpen(false);
+                      setReviewerComments([]);
+                      setReviewerCommentError('');
+                    }}
+                  >
+                    Close
+                  </DefaultButton>
+
+                  {/* AUTHOR: Submit for Approval (Draft only) */}
+                  {viewingDocument.status === 'Draft' && (
+                    <PrimaryButton
+                      onClick={handleSubmitForReview}
+                      styles={{
+                        root: { background: '#1E88E5', borderColor: '#1E88E5' },
+                        rootHovered: { background: '#1976D2', borderColor: '#1976D2' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                      Submit for Approval
+                    </PrimaryButton>
+                  )}
+
+                  {/* AUTHOR: Resubmit after Rejection */}
+                  {viewingDocument.status === 'Rejected' && (
+                    <PrimaryButton
+                      onClick={handleSubmitForReview}
+                      styles={{
+                        root: { background: '#F57C00', borderColor: '#F57C00' },
+                        rootHovered: { background: '#E65100', borderColor: '#E65100' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                      Resubmit for Approval
+                    </PrimaryButton>
+                  )}
+
+                  {/* APPROVER: Reject — shown ONLY when Pending Approval */}
+                  {canApprove && viewingDocument.status === 'Pending Approval' && (
+                    <DefaultButton
+                      onClick={handleReject}
+                      styles={{
+                        root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' },
+                        rootHovered: { background: '#c62828', borderColor: '#c62828', color: '#fff' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
+                      Reject
+                    </DefaultButton>
+                  )}
+
+                  {/* APPROVER: Approve — shown ONLY when Pending Approval */}
+                  {canApprove && viewingDocument.status === 'Pending Approval' && (
+                    <PrimaryButton
+                      onClick={handleApprove}
+                      styles={{
+                        root: { background: '#2e7d32', borderColor: '#2e7d32' },
+                        rootHovered: { background: '#1b5e20', borderColor: '#1b5e20' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
+                      Approve
+                    </PrimaryButton>
+                  )}
+
+                  {/* AUTHOR: Initiate Adobe Sign when Approved */}
+                  {viewingDocument.status === 'Approved' && (
+                    <PrimaryButton
+                      onClick={() => initiateAdobeSign(viewingDocument)}
+                      styles={{
+                        root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
+                        rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                      Initiate Adobe Sign
+                    </PrimaryButton>
+                  )}
+
+                  {/* AUTHOR: Sign Document when Pending for Signature */}
+                  {viewingDocument.status === 'Pending for Signature' && (
+                    <PrimaryButton
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      styles={{
+                        root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
+                        rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                      Sign Document
+                    </PrimaryButton>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Panel>
+
+      <CustomModal
+        isModalOpenProps={isRejectModalOpen}
+        setModalpopUpFalse={setIsRejectModalOpen}
+        subject="Rejection Reason"
+        isLoading={isLoading}
+        message={
+          <div className="form-group">
+            <label className="form-label">Please provide a reason for rejecting this document:</label>
+            <TextField
+              multiline
+              rows={4}
+              value={rejectReason}
+              onChange={(_, val) => setRejectReason(val || '')}
+              placeholder="Enter rejection reason here..."
+            />
+          </div>
+        }
+        yesButtonText="Confirm Reject"
+        onClickOfYes={confirmReject}
+        closeButtonText="Cancel"
+      />
+
+      <CustomModal
+        isModalOpenProps={isDeleteDialogOpen}
+        setModalpopUpFalse={setIsDeleteDialogOpen}
+        subject="Confirm Delete"
+        isLoading={isLoading}
+        message={`Are you sure you want to delete ${selectedIds.length} document(s)? This action cannot be undone.`}
+        yesButtonText="Delete"
+        onClickOfYes={handleBulkDelete}
+        closeButtonText="Cancel"
+      />
+
+      <CustomModal
+        isModalOpenProps={isEditModalOpen}
+        setModalpopUpFalse={(open) => {
+          setIsEditModalOpen(open);
+          if (!open) {
+            setEditingDocument(null);
+            setEditForm({
+              name: '',
+              categoryId: 0,
+              status: 'Draft',
+              ctdModule: '',
+              submodule: '',
+              approverId: 0
+            });
+          }
+        }}
+        subject={`Edit Document${editingDocument ? ` - ${editingDocument.name}` : ''}`}
+        closeButtonText="Cancel"
+        isLoading={isLoading}
+        message={
+          <div>
+            <div className="form-group">
+              <TextField
+                label="Document Name"
+                value={editForm.name}
+                onChange={(_e, v) => setEditForm({ ...editForm, name: v ?? '' })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <ReactDropdown
+                name="editCategory"
+                options={editCategoryOptions}
+                defaultOption={editCategoryOptions.find(o => o.value === editForm.categoryId) || null}
+                onChange={(opt) => setEditForm({ ...editForm, categoryId: Number(opt?.value) || 0 })}
+                isCloseMenuOnSelect={true}
+                isSorted={true}
+                isClearable={false}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <ReactDropdown
+                name="status"
+                options={statusOptions.filter(opt => opt.value !== 'All')}
+                defaultOption={statusOptions.find(o => o.value === editForm.status) ?? statusOptions[1]}
+                onChange={(opt) => setEditForm({ ...editForm, status: (opt?.value as any) ?? 'Draft' })}
+                isCloseMenuOnSelect={true}
+                isSorted={false}
+                isClearable={false}
+              />
+            </div>
+            <div className="form-group">
+              <TextField
+                label="CTD Module"
+                value={editForm.ctdModule}
+                onChange={(_e, v) => setEditForm({ ...editForm, ctdModule: v ?? '' })}
+              />
+            </div>
+            <div className="form-group">
+              <TextField
+                label="Submodule"
+                value={editForm.submodule}
+                onChange={(_e, v) => setEditForm({ ...editForm, submodule: v ?? '' })}
+              />
+            </div>
+          </div>
+        }
+        yesButtonText="Save Changes"
+        onClickOfYes={handleSaveEdit}
+      />
+
+      <CustomModal
+        isModalOpenProps={isSignatureModalOpen}
+        setModalpopUpFalse={setIsSignatureModalOpen}
+        subject="Adobe Signature"
+        isLoading={isLoading}
+        message={
+          <div>
+            <TextField
+              label="Signature"
+              placeholder="Type your name to sign"
+              value={signature}
+              onChange={(_e, v) => setSignature(v ?? '')}
+            />
+            <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+              Applying signature will create Commented and Final Signed documents.
+            </p>
+          </div>
+        }
+        yesButtonText="Apply Signature"
+        onClickOfYes={handleFinalApprove}
+        isYesButtonDisbale={!signature.trim()}
+        closeButtonText="Cancel"
+      />
+
+      <CustomModal
+        isModalOpenProps={!!compareVersion}
+        setModalpopUpFalse={(open) => {
+          if (!open) setCompareVersion(null);
+        }}
+        subject="Compare Metadata"
+        closeButtonText="Close"
+        isLoading={isLoading}
+        message={
+          compareVersion && viewingDocument ? (
+            <div className="document-details">
+              <div className="detail-item">
+                <div className="detail-label">Status</div>
+                <div className="detail-value">
+                  <div>Current: {viewingDocument.status}</div>
+                  <div>Previous: {compareVersion.Status || '-'}</div>
+                </div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Category</div>
+                <div className="detail-value">
+                  <div>Current: {viewingDocument.category || '-'}</div>
+                  <div>Previous: {compareVersion.Category || '-'}</div>
+                </div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">CTD Module</div>
+                <div className="detail-value">
+                  <div>Current: {viewingDocument.ctdModule || '-'}</div>
+                  <div>Previous: {compareVersion.CTDModule || '-'}</div>
+                </div>
+              </div>
+              <div className="detail-item">
+                <div className="detail-label">Submodule</div>
+                <div className="detail-value">
+                  <div>Current: {viewingDocument.submodule || '-'}</div>
+                  <div>Previous: {compareVersion.Submodule || '-'}</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            ''
+          )
+        }
+      />
+
+    </div >
+  );
+};
+
