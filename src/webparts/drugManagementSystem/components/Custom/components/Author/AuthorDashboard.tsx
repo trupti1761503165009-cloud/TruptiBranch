@@ -161,6 +161,8 @@ export const AuthorDashboard: React.FC = () => {
           reRenderComponent={true}
           searchable={true}
           isPagination={true}
+          CustomselectionMode={0}
+          onSelectedItem={() => {}}
           isAddNew={true}
           addNewContent={
             <div className="dflex pb-1">
