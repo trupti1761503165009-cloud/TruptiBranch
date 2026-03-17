@@ -1,8 +1,16 @@
 import * as React from 'react';
+import * as CamlBuilder from 'camljs';
 import { useAtomValue } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 import { currentUserAtom } from '../../../../../jotai/adminAtoms';
 import { ListNames } from '../../../../../../Shared/Enum/ListNames';
+
+const parseLookupId = (value: any): number => {
+  if (!value) return 0;
+  if (typeof value === 'number') return value;
+  const m = String(value).match(/^(\d+)/);
+  return m ? Number(m[1]) : 0;
+};
 
 export interface AddDocumentModalDataParams {
   onClose: () => void;
@@ -135,13 +143,19 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         isSortOrderAsc: true
       }).catch(() => []),
 
-      provider.getItemsByQuery({
-        listName: ListNames.Templates,
-        select: ['ID', 'Title'],
-        top: 5000,
-        orderBy: 'Title',
-        isSortOrderAsc: true
-      }).catch(() => []),
+      (async () => {
+        try {
+          const q = new CamlBuilder()
+            .View(['ID', 'LinkFilename', 'FileLeafRef', 'Status',
+                   'Category', 'CategoryId', 'Country', 'CountryId'])
+            .RowLimit(5000, true)
+            .Query();
+          return await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
+        } catch (e) {
+          console.error('Templates CAML load failed:', e);
+          return [];
+        }
+      })(),
 
       provider.getItemsByQuery({
         listName: ListNames.CTDFolders,
@@ -181,15 +195,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     setTemplates(
       (templateItems || []).map((item: any) => ({
         id: item.ID,
-        name: item.Title || item.FileLeafRef || 'Template',
-        categoryId: item.Category?.Id,
-        categoryName: item.Category?.Title,
-        artifactName: item.Category?.ArtifactName,
-        countryId: item.Country?.Id,
-        status: item.Status,
-        mappedFolderId: item.MappedCTDFolder?.FolderId,
-        fileRef: item.FileRef,
-        fileLeafRef: item.FileLeafRef
+        name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
+        categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,
+        countryId: Number(item.CountryId || parseLookupId(item.Country)) || 0,
+        status: item.Status || '',
+        fileLeafRef: item.FileLeafRef || item.LinkFilename || ''
       }))
     );
     setModules(
