@@ -13,7 +13,7 @@ import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
 
 import { ComponentNameEnum } from '../../../../../models/ComponentNameEnum';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { TooltipHost, Link } from 'office-ui-fabric-react';
+import { TooltipHost, Link, DefaultButton } from 'office-ui-fabric-react';
 import * as React from 'react';
 
 export const DrugsDatabase: React.FC<any> = (props) => {
@@ -221,6 +221,20 @@ export const DrugsDatabase: React.FC<any> = (props) => {
                   isClearable={false}
                 />
               </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4" style={{ paddingTop: 4, display: 'flex', alignItems: 'center' }}>
+              <DefaultButton
+                text="Reset"
+                onClick={() => { setStatusFilter('All'); setSearchTerm(''); }}
+                styles={{
+                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  label: { color: '#fff', fontWeight: 600 },
+                  icon: { color: '#fff' }
+                }}
+                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
+              />
             </div>
           </div>
         </div>

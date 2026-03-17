@@ -116,6 +116,9 @@ export const ManageCategories: React.FC<any> = (props) => {
   const [selectedCategory, setSelectedCategory] = React.useState<(Category & any) | null>(null);
   const [hierarchyPath, setHierarchyPath] = React.useState<HierarchyPath>({});
 
+  // Delete confirmation dialog state
+  const [hideDeleteDialog, setHideDeleteDialog] = React.useState(true);
+
   // Message Dialog State (replaces toasts)
   const [messageDialog, setMessageDialog] = React.useState<{
     hidden: boolean;
@@ -208,13 +211,56 @@ export const ManageCategories: React.FC<any> = (props) => {
 
 
   const hierarchyLevel = React.useMemo(() => {
+    const hasValue = (v?: string) => v && String(v).trim().length > 0;
+    const norm = (v?: string) => (v && String(v).trim().length > 0 ? String(v).trim() : '');
+
     if (!hierarchyPath.documentCategory) return 'documentCategory';
     if (!hierarchyPath.group) return 'group';
-    if (!hierarchyPath.subGroup) return 'subGroup';
-    if (!hierarchyPath.artifactName) return 'artifactName';
-    if (!hierarchyPath.templateName) return 'templateName';
+
+    if (!hierarchyPath.subGroup) {
+      const hasSubGroups = displayCategories
+        .filter((c: any) => norm(c.documentCategory) === norm(hierarchyPath.documentCategory))
+        .filter((c: any) => norm(c.group) === norm(hierarchyPath.group))
+        .some((c: any) => hasValue(c.subGroup));
+      if (!hasSubGroups) {
+        const hasArtifacts = displayCategories
+          .filter((c: any) => norm(c.documentCategory) === norm(hierarchyPath.documentCategory))
+          .filter((c: any) => norm(c.group) === norm(hierarchyPath.group))
+          .some((c: any) => hasValue(c.artifactName));
+        return hasArtifacts ? 'artifactName' : 'items';
+      }
+      return 'subGroup';
+    }
+
+    if (!hierarchyPath.artifactName) {
+      const hasArtifacts = displayCategories
+        .filter((c: any) => norm(c.documentCategory) === norm(hierarchyPath.documentCategory))
+        .filter((c: any) => norm(c.group) === norm(hierarchyPath.group))
+        .filter((c: any) => !hasValue(hierarchyPath.subGroup) || norm(c.subGroup) === norm(hierarchyPath.subGroup))
+        .some((c: any) => hasValue(c.artifactName));
+      if (!hasArtifacts) {
+        const hasTemplates = displayCategories
+          .filter((c: any) => norm(c.documentCategory) === norm(hierarchyPath.documentCategory))
+          .filter((c: any) => norm(c.group) === norm(hierarchyPath.group))
+          .some((c: any) => hasValue(c.templateName));
+        return hasTemplates ? 'templateName' : 'items';
+      }
+      return 'artifactName';
+    }
+
+    if (!hierarchyPath.templateName) {
+      const hasTemplates = displayCategories
+        .filter((c: any) => norm(c.documentCategory) === norm(hierarchyPath.documentCategory))
+        .filter((c: any) => norm(c.group) === norm(hierarchyPath.group))
+        .filter((c: any) => !hasValue(hierarchyPath.subGroup) || norm(c.subGroup) === norm(hierarchyPath.subGroup))
+        .filter((c: any) => !hasValue(hierarchyPath.artifactName) || norm(c.artifactName) === norm(hierarchyPath.artifactName))
+        .some((c: any) => hasValue(c.templateName));
+      if (!hasTemplates) return 'items';
+      return 'templateName';
+    }
+
     return 'items';
-  }, [hierarchyPath]);
+  }, [hierarchyPath, displayCategories]);
 
   const breadcrumbs = React.useMemo(() => {
     const crumbs: Array<{ key: 'root' | 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName'; label: string }> = [
@@ -276,12 +322,14 @@ export const ManageCategories: React.FC<any> = (props) => {
   */
 
   const currentItems = React.useMemo(() => {
-    const normalized = (v?: string) => (v && String(v).trim().length > 0 ? String(v) : '(Blank)');
+    const normalized = (v?: string) => (v && String(v).trim().length > 0 ? String(v).trim() : '');
+    const isBlank = (v?: string) => !v || String(v).trim().length === 0;
 
     if (hierarchyLevel === 'documentCategory') {
       const map = new Map<string, number>();
       displayCategories.forEach((c: any) => {
         const key = normalized(c.documentCategory);
+        if (!key) return;
         map.set(key, (map.get(key) || 0) + 1);
       });
       return Array.from(map.entries()).map(([name, count]) => ({
@@ -289,7 +337,7 @@ export const ManageCategories: React.FC<any> = (props) => {
         name,
         count,
         _kind: 'node' as const,
-        _value: name === '(Blank)' ? '' : name
+        _value: name
       }));
     }
 
@@ -299,6 +347,7 @@ export const ManageCategories: React.FC<any> = (props) => {
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .forEach((c: any) => {
           const key = normalized(c.group);
+          if (!key) return;
           map.set(key, (map.get(key) || 0) + 1);
         });
       return Array.from(map.entries()).map(([name, count]) => ({
@@ -306,7 +355,7 @@ export const ManageCategories: React.FC<any> = (props) => {
         name,
         count,
         _kind: 'node' as const,
-        _value: name === '(Blank)' ? '' : name
+        _value: name
       }));
     }
 
@@ -317,15 +366,22 @@ export const ManageCategories: React.FC<any> = (props) => {
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
         .forEach((c: any) => {
           const key = normalized(c.subGroup);
+          if (!key) return;
           map.set(key, (map.get(key) || 0) + 1);
         });
-      return Array.from(map.entries()).map(([name, count]) => ({
+      const subGroupItems = Array.from(map.entries()).map(([name, count]) => ({
         id: `sg:${name}`,
         name,
         count,
         _kind: 'node' as const,
-        _value: name === '(Blank)' ? '' : name
+        _value: name
       }));
+      if (subGroupItems.length === 0) {
+        return displayCategories
+          .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
+          .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group));
+      }
+      return subGroupItems;
     }
 
     if (hierarchyLevel === 'artifactName') {
@@ -333,18 +389,26 @@ export const ManageCategories: React.FC<any> = (props) => {
       displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
-        .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
+        .filter((c: any) => isBlank(hierarchyPath.subGroup) || normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
         .forEach((c: any) => {
           const key = normalized(c.artifactName);
+          if (!key) return;
           map.set(key, (map.get(key) || 0) + 1);
         });
-      return Array.from(map.entries()).map(([name, count]) => ({
+      const artifactItems = Array.from(map.entries()).map(([name, count]) => ({
         id: `an:${name}`,
         name,
         count,
         _kind: 'node' as const,
-        _value: name === '(Blank)' ? '' : name
+        _value: name
       }));
+      if (artifactItems.length === 0) {
+        return displayCategories
+          .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
+          .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
+          .filter((c: any) => isBlank(hierarchyPath.subGroup) || normalized(c.subGroup) === normalized(hierarchyPath.subGroup));
+      }
+      return artifactItems;
     }
 
     if (hierarchyLevel === 'templateName') {
@@ -352,27 +416,36 @@ export const ManageCategories: React.FC<any> = (props) => {
       displayCategories
         .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
         .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
-        .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
-        .filter((c: any) => normalized(c.artifactName) === normalized(hierarchyPath.artifactName))
+        .filter((c: any) => isBlank(hierarchyPath.subGroup) || normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
+        .filter((c: any) => isBlank(hierarchyPath.artifactName) || normalized(c.artifactName) === normalized(hierarchyPath.artifactName))
         .forEach((c: any) => {
           const key = normalized(c.templateName);
+          if (!key) return;
           map.set(key, (map.get(key) || 0) + 1);
         });
-      return Array.from(map.entries()).map(([name, count]) => ({
+      const templateItems = Array.from(map.entries()).map(([name, count]) => ({
         id: `tn:${name}`,
         name,
         count,
         _kind: 'node' as const,
-        _value: name === '(Blank)' ? '' : name
+        _value: name
       }));
+      if (templateItems.length === 0) {
+        return displayCategories
+          .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
+          .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
+          .filter((c: any) => isBlank(hierarchyPath.subGroup) || normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
+          .filter((c: any) => isBlank(hierarchyPath.artifactName) || normalized(c.artifactName) === normalized(hierarchyPath.artifactName));
+      }
+      return templateItems;
     }
 
     return displayCategories
       .filter((c: any) => normalized(c.documentCategory) === normalized(hierarchyPath.documentCategory))
       .filter((c: any) => normalized(c.group) === normalized(hierarchyPath.group))
-      .filter((c: any) => normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
-      .filter((c: any) => normalized(c.artifactName) === normalized(hierarchyPath.artifactName))
-      .filter((c: any) => normalized(c.templateName) === normalized(hierarchyPath.templateName));
+      .filter((c: any) => isBlank(hierarchyPath.subGroup) || normalized(c.subGroup) === normalized(hierarchyPath.subGroup))
+      .filter((c: any) => isBlank(hierarchyPath.artifactName) || normalized(c.artifactName) === normalized(hierarchyPath.artifactName))
+      .filter((c: any) => isBlank(hierarchyPath.templateName) || normalized(c.templateName) === normalized(hierarchyPath.templateName));
   }, [displayCategories, hierarchyLevel, hierarchyPath]);
 
   // Define onInvokeHierarchyItem BEFORE hierarchyColumns since it's used in the render
@@ -548,6 +621,23 @@ export const ManageCategories: React.FC<any> = (props) => {
         fields={messageDialog.fields}
       />
 
+      {/* Delete Confirmation Modal */}
+      <CustomModal
+        isModalOpenProps={!hideDeleteDialog}
+        setModalpopUpFalse={() => setHideDeleteDialog(true)}
+        onClose={() => setHideDeleteDialog(true)}
+        subject="Confirm Delete"
+        message={
+          <p>Are you sure you want to delete the selected <strong>{selectedIds.length > 1 ? `${selectedIds.length} categories` : 'category'}</strong>? This action cannot be undone.</p>
+        }
+        yesButtonText="Delete"
+        closeButtonText="Cancel"
+        onClickOfYes={async () => {
+          setHideDeleteDialog(true);
+          await handleBulkDelete();
+        }}
+      />
+
       {/* ===== Page Title ===== */}
       <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Categories</h1>
 
@@ -638,10 +728,16 @@ export const ManageCategories: React.FC<any> = (props) => {
           </div>
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 4 }}>
             <DefaultButton
-              text="Reset Filters"
+              text="Reset"
               onClick={() => { setStatusFilter('All'); setDocCatFilter('All'); setGroupFilter('All'); }}
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
+              styles={{
+                root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                label: { color: '#fff', fontWeight: 600 },
+                icon: { color: '#fff' }
+              }}
+              onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
             />
           </div>
         </div>
@@ -711,56 +807,56 @@ export const ManageCategories: React.FC<any> = (props) => {
               />
             </div>
           }
-        // addEDButton={
-        //   selectedIds.length > 0 && (
-        //     <div className="dflex">
-        //       {selectedIds.length === 1 && (
-        //         <>
-        //           <Link
-        //             className="actionBtn iconSize btnView"
-        //             onClick={() => {
-        //               const item = (currentItems as any[]).find((i: any) => i.id === selectedIds[0]);
-        //               if (item) {
-        //                 props.manageComponentView({
-        //                   currentComponentName: ComponentNameEnum.EditCategory,
-        //                   componentProps: { item, mode: 'view' }
-        //                 });
-        //               }
-        //             }}
-        //           >
-        //             <TooltipHost content="View">
-        //               <FontAwesomeIcon icon={faEye} />
-        //             </TooltipHost>
-        //           </Link>
-        //           <Link
-        //             className="actionBtn iconSize btnEdit ml-10"
-        //             onClick={() => {
-        //               const item = (currentItems as any[]).find((i: any) => i.id === selectedIds[0]);
-        //               if (item) {
-        //                 props.manageComponentView({
-        //                   currentComponentName: ComponentNameEnum.EditCategory,
-        //                   componentProps: { item, mode: 'edit' }
-        //                 });
-        //               }
-        //             }}
-        //           >
-        //             <TooltipHost content="Edit">
-        //               <FontAwesomeIcon icon={faPenToSquare} />
-        //             </TooltipHost>
-        //           </Link>
-        //         </>
-        //       )}
-        //       <Link
-        //         className="actionBtn iconSize btnDanger ml-10"
-        //         onClick={handleBulkDelete}
-        //       >
-        //         <TooltipHost content="Delete Selected">
-        //           <FontAwesomeIcon icon={faTrashCan} />
-        //         </TooltipHost>
-        //       </Link>
-        //     </div>
-        //   )
-        // }
+          addEDButton={
+            selectedIds.length > 0 && (
+              <div className="dflex">
+                {selectedIds.length === 1 && hierarchyLevel === 'items' && (
+                  <>
+                    <Link
+                      className="actionBtn iconSize btnView"
+                      onClick={() => {
+                        const item = (currentItems as any[]).find((i: any) => i.id === selectedIds[0]);
+                        if (item) {
+                          props.manageComponentView({
+                            currentComponentName: ComponentNameEnum.EditCategory,
+                            componentProps: { item, mode: 'view' }
+                          });
+                        }
+                      }}
+                    >
+                      <TooltipHost content="View">
+                        <FontAwesomeIcon icon={faEye} />
+                      </TooltipHost>
+                    </Link>
+                    <Link
+                      className="actionBtn iconSize btnEdit ml-10"
+                      onClick={() => {
+                        const item = (currentItems as any[]).find((i: any) => i.id === selectedIds[0]);
+                        if (item) {
+                          props.manageComponentView({
+                            currentComponentName: ComponentNameEnum.EditCategory,
+                            componentProps: { item, mode: 'edit' }
+                          });
+                        }
+                      }}
+                    >
+                      <TooltipHost content="Edit">
+                        <FontAwesomeIcon icon={faPenToSquare} />
+                      </TooltipHost>
+                    </Link>
+                  </>
+                )}
+                <Link
+                  className="actionBtn iconSize btnDanger ml-10"
+                  onClick={() => setHideDeleteDialog(false)}
+                >
+                  <TooltipHost content="Delete Selected">
+                    <FontAwesomeIcon icon={faTrashCan} />
+                  </TooltipHost>
+                </Link>
+              </div>
+            )
+          }
         />
       </div>
 

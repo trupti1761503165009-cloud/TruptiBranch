@@ -258,11 +258,21 @@ export const ManageDocuments: React.FC<any> = (props) => {
   // Folder-wise drilldown (grid + breadcrumb) after Drug selection
   const [folderTrail, setFolderTrail] = React.useState<string[]>([]);
   const [folderSearchTerm, setFolderSearchTerm] = React.useState('');
+  const [isFolderLoading, setIsFolderLoading] = React.useState(false);
+
+  const navigateToFolder = React.useCallback((folderId: string) => {
+    setIsFolderLoading(true);
+    setFolderTrail(prev => [...prev, folderId]);
+    setCurrentPage(1);
+    setFolderSearchTerm('');
+    setTimeout(() => setIsFolderLoading(false), 400);
+  }, [setCurrentPage]);
 
   React.useEffect(() => {
     // Reset folder navigation when changing drug
     setFolderTrail([]);
     setFolderSearchTerm('');
+    setIsFolderLoading(false);
   }, [selectedDrugId]);
 
   const findFolderNode = React.useCallback((nodes: CTDFolder[], id: any): CTDFolder | undefined => {
@@ -582,6 +592,20 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 />
               </div>
             )}
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4 }}>
+              <DefaultButton
+                text="Reset"
+                onClick={() => { resetFilters(); setShowDeleted(false); }}
+                styles={{
+                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  label: { color: '#fff', fontWeight: 600 },
+                  icon: { color: '#fff' }
+                }}
+                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -626,31 +650,30 @@ export const ManageDocuments: React.FC<any> = (props) => {
         </div>
       )}
 
-      {/* Folder Breadcrumb - for subfolder navigation (Only show if in Folder view or if at root folder) */}
-      {selectedDrug && folderTrail.length > 0 && subTab === 'folder' && (
-        <div className="breadcrumb-nav boxCard" style={{
-          marginBottom: 20,
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          background: '#f9f9f9',
-          borderLeft: '4px solid #1E88E5'
-        }}>
+      {/* Folder Breadcrumb - compact inline trail for subfolder navigation */}
+      {selectedDrug && subTab === 'folder' && (
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginBottom: 10, fontSize: 13 }}>
           <span
-            className="breadcrumb-item"
-            onClick={() => setFolderTrail([])}
-            style={{ cursor: 'pointer', color: '#1E88E5', display: 'flex', alignItems: 'center', fontWeight: 500 }}
+            onClick={() => { setIsFolderLoading(true); setFolderTrail([]); setTimeout(() => setIsFolderLoading(false), 300); }}
+            style={{ cursor: 'pointer', color: '#1E88E5', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            <FontAwesomeIcon icon={faFolderOpen} style={{ marginRight: 8 }} />
+            <FontAwesomeIcon icon={faFolderOpen} style={{ fontSize: 14 }} />
             {selectedDrug.name}
           </span>
           {folderTrail.map((id, idx) => (
             <React.Fragment key={id}>
-              <span className="breadcrumb-separator" style={{ margin: '0 10px', color: '#999' }}>›</span>
+              <span style={{ color: '#bbb' }}>›</span>
               <span
-                className={idx === folderTrail.length - 1 ? 'breadcrumb-current' : 'breadcrumb-item'}
-                style={idx === folderTrail.length - 1 ? { color: '#333', fontWeight: 600 } : { cursor: 'pointer', color: '#1E88E5' }}
-                onClick={() => idx < folderTrail.length - 1 && setFolderTrail(folderTrail.slice(0, idx + 1))}
+                style={idx === folderTrail.length - 1
+                  ? { color: '#333', fontWeight: 600 }
+                  : { cursor: 'pointer', color: '#1E88E5' }}
+                onClick={() => {
+                  if (idx < folderTrail.length - 1) {
+                    setIsFolderLoading(true);
+                    setFolderTrail(folderTrail.slice(0, idx + 1));
+                    setTimeout(() => setIsFolderLoading(false), 300);
+                  }
+                }}
               >
                 {folderLabelMap.get(id) || id}
               </span>
@@ -659,9 +682,15 @@ export const ManageDocuments: React.FC<any> = (props) => {
         </div>
       )}
       {/* Main Content Area: Drugs Grid or Documents/Folders Grid */}
-      <div className="boxCard" style={{ padding: 0 }}>
+      <div className="boxCard" style={{ padding: 0, position: 'relative' }}>
+        {isFolderLoading && (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 5 }}>
+            <Loader />
+          </div>
+        )}
         {selectedDrugId === null ? (
           <MemoizedDataGridComponent
+            key="drug-selection-grid"
             items={drugs}
             columns={[
               {
@@ -760,17 +789,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
           subTab === 'folder' ? (
             isShowingFolders ? (
             <MemoizedDataGridComponent
+              key={`folder-tree-${folderTrail.join('-') || 'root'}`}
               items={folderGridItems}
               columns={folderColumns}
               reRenderComponent={true}
               searchable={true}
               isPagination={true}
               onItemInvoked={(item?: any) => {
-                if (item?.id) {
-                  setFolderTrail([...folderTrail, item.id]);
-                  setCurrentPage(1);
-                  setFolderSearchTerm('');
-                }
+                if (item?.id) navigateToFolder(item.id);
               }}
               isAddNew={true}
               addNewContent={
@@ -802,6 +828,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             />
           ) : (
             <MemoizedDataGridComponent
+              key={`folder-docs-${currentFolderId || 'root'}`}
               items={folderCurrentPageData}
               columns={effectiveColumns}
               reRenderComponent={true}
@@ -888,6 +915,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             />
           )) : (
             <MemoizedDataGridComponent
+              key={`list-view-${activeTab}`}
               items={filteredDocuments}
               columns={effectiveColumns}
               reRenderComponent={true}

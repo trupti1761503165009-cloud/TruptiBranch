@@ -1,0 +1,77 @@
+ <div className="ms-Grid mt-3">
+//             <div className="ms-Grid-row ptop-5">
+//                 {!isSiteLevelComponent && <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl2 site-filter-mt-8">
+//                     <div className="formControl ims-site-pad">
+//                         <div className="formControl">
+//                             <MultipleSiteFilter
+//                                 isPermissionFiter={true}
+//                                 loginUserRoleDetails={currentUserRoleDetail}
+//                                 selectedSiteIds={selectedSiteIds}
+//                                 selectedSiteTitles={selectedSiteTitles}
+//                                 selectedSCSite={selectedSCSites}
+//                                 onSiteChange={handleSiteChange}
+//                                 provider={provider}
+//                                 isRequired={true}
+//                                 selectedState={selectedStateId || []}
+//                                 AllOption={true}
+//                             />
+//                         </div>
+//                     </div>
+//                 </div>}
+//                 {ManagerOptions &&
+//                     <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl2 site-filter-mt-8">
+//                         <div className="formControl ims-site-pad">
+//                             <div className="formControl">
+//                                 <ReactDropdown
+//                                     options={ManagerOptions} isMultiSelect={false}
+//                                     defaultOption={defaultManager || selectedManager}
+//                                     isClearable
+//                                     onChange={_onManagerChange}
+//                                     placeholder={"Select Chairperson"} />
+//                             </div>
+//                         </div>
+//                     </div>}
+//                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl2 site-filter-mt-8">
+//                     <div className="formControl ims-site-pad">
+//                         <div className="formControl">
+//                             <ReactDropdown
+//                                 options={shiftTypeOptions || []}
+//                                 isMultiSelect={false}
+//                                 defaultOption={selectedShiftType}
+//                                 isSorted={false}
+//                                 isClearable={true}
+//                                 onChange={_onShiftTypeChange}
+//                                 placeholder={"Select Shift Type"} />
+//                         </div>
+//                     </div>
+//                 </div>
+//                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl2 site-filter-mt-8">
+//                     <div className="formControl ims-site-pad">
+//                         <div className="formControl">
+//                             <IMSLocationFilter
+//                                 onChange={onChangeLocationFilter}
+//                                 provider={provider}
+//                                 selectedOptions={selectedMeetingLocation || []}
+//                                 context={context}
+//                                 SiteNameId={props.siteMasterId}
+//                                 Title={"Toolbox Talk"}
+//                                 isMultiSelect={true}
+//                                 isClearable={true}
+//                             />
+//                         </div>
+//                     </div>
+//                 </div>
+//                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl2 site-filter-mt-8">
+//                     <div className="formControl ims-site-pad">
+//                         <div className="formControl">
+//                             <IMSAttendeesFilter
+//                                 options={attendeesOptions || []}
+//                                 onChange={onChangeAttendeesFilter}
+//                                 selectedOptions={selectedAttendees?.label || []}
+//                                 isMultiSelect={false}
+
+//                                 isClearable={true}
+//                             />
+//                         </div>
+//                     </div>
+//                 </div>

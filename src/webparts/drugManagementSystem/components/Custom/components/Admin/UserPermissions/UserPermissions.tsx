@@ -319,6 +319,20 @@ export const UserPermissions: React.FC<any> = (props) => {
                 />
               </div>
             </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4, display: 'flex', alignItems: 'center' }}>
+              <DefaultButton
+                text="Reset"
+                onClick={() => { setRoleFilter('All'); setSearchTerm(''); }}
+                styles={{
+                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  label: { color: '#fff', fontWeight: 600 },
+                  icon: { color: '#fff' }
+                }}
+                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
+              />
+            </div>
           </div>
         </div>
       </div>
