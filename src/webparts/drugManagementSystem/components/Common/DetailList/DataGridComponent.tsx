@@ -73,6 +73,7 @@ export const DetaiList = (props: IDetailListProps) => {
     });
 
     const getSelectionDetails = (): any => {
+        if (typeof props.onSelectedItem !== 'function') return;
         const selectionCount = _selection.getSelectedCount();
         if (selectionCount > 0) {
             props.onSelectedItem(_selection.getSelection());
