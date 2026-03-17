@@ -66,6 +66,9 @@ export const AdminDashboard: React.FC = () => {
     handleSort,
     handleSaveChanges,
     handleDeleteDocument,
+    confirmDeleteDocument,
+    isDeleteDocModalOpen,
+    setIsDeleteDocModalOpen,
     handleUpdateDocument,
     handleOpenDocument,
     handleFinalApprove,
@@ -491,6 +494,27 @@ export const AdminDashboard: React.FC = () => {
         thirdButtonText={isEditing ? undefined : 'Delete'}
         onClickThirdButton={isEditing ? undefined : handleDeleteDocument}
         onClose={() => setIsEditing(false)}
+      />
+
+      {/* ===== Delete Document Confirmation Modal ===== */}
+      <CustomModal
+        isModalOpenProps={isDeleteDocModalOpen}
+        setModalpopUpFalse={() => setIsDeleteDocModalOpen(false)}
+        subject="Delete Document"
+        isLoading={isLoading}
+        message={
+          viewingDocument ? (
+            <div>
+              <p>Are you sure you want to permanently delete:</p>
+              <p style={{ fontWeight: 600, color: '#d32f2f' }}>{viewingDocument.name}</p>
+              <p style={{ fontSize: 12, color: '#666' }}>This action cannot be undone.</p>
+            </div>
+          ) : ''
+        }
+        yesButtonText="Delete"
+        closeButtonText="Cancel"
+        onClickOfYes={confirmDeleteDocument}
+        onClose={() => setIsDeleteDocModalOpen(false)}
       />
 
       {/* ===== eSignature Approval Modal ===== */}

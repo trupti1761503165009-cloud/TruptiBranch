@@ -12,7 +12,7 @@ import { ManageDocumentsData, type DateFilter } from './ManageDocumentsData';
 import ReactDropdown, { type IReactDropOptionProps } from '../../../../Common/ReactSelectDropdown';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faChevronRight, faClockRotateLeft, faDownload, faEye, faFileExport, faFolder, faFolderOpen, faPenToSquare, faPlus, faTrashCan, faFileLines, faClock, faCheckDouble, faFileSignature, faArrowsRotate, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faChevronRight, faClockRotateLeft, faDownload, faEye, faFileExport, faFolder, faFolderOpen, faPenToSquare, faPlus, faTrashCan, faFileLines, faClock, faCheckDouble, faFileSignature, faArrowsRotate, faArrowUpRightFromSquare, faPaperPlane, faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { CreateDocumentPage } from '../CreateDocumentPage/CreateDocumentPage';
 import { Loader } from '../../../../Common/Loader/Loader';
 import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/MessageDialog';
@@ -1183,7 +1183,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
               {/* Action Buttons */}
               <div className="ms-Grid-row" style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #E0E0E0' }}>
-                <div className="ms-Grid-col ms-sm12" style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                <div className="ms-Grid-col ms-sm12" style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   <DefaultButton
                     onClick={() => {
                       setIsDocPanelOpen(false);
@@ -1193,6 +1193,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   >
                     Close
                   </DefaultButton>
+
+                  {/* AUTHOR: Submit for Approval (Draft only) */}
                   {viewingDocument.status === 'Draft' && (
                     <PrimaryButton
                       onClick={handleSubmitForReview}
@@ -1201,41 +1203,79 @@ export const ManageDocuments: React.FC<any> = (props) => {
                         rootHovered: { background: '#1976D2', borderColor: '#1976D2' }
                       }}
                     >
-                      Submit for Review
+                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                      Submit for Approval
                     </PrimaryButton>
                   )}
-                  {canApprove && viewingDocument.status !== 'Final' && viewingDocument.status !== 'Rejected' && (
-                    <>
-                      <DefaultButton
-                        onClick={handleReject}
-                        styles={{
-                          root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' },
-                          rootHovered: { background: '#c62828', borderColor: '#c62828', color: '#fff' }
-                        }}
-                      >
-                        Reject
-                      </DefaultButton>
-                      <PrimaryButton
-                        onClick={handleApprove}
-                        styles={{
-                          root: { background: '#43A047', borderColor: '#43A047' },
-                          rootHovered: { background: '#388E3C', borderColor: '#388E3C' }
-                        }}
-                      >
-                        {viewingDocument.status === 'Approved' ? 'Move to Next Stage' : 'Approve / Move Forward'}
-                      </PrimaryButton>
-                    </>
+
+                  {/* AUTHOR: Resubmit after Rejection */}
+                  {viewingDocument.status === 'Rejected' && (
+                    <PrimaryButton
+                      onClick={handleSubmitForReview}
+                      styles={{
+                        root: { background: '#F57C00', borderColor: '#F57C00' },
+                        rootHovered: { background: '#E65100', borderColor: '#E65100' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                      Resubmit for Approval
+                    </PrimaryButton>
                   )}
+
+                  {/* APPROVER: Reject — shown ONLY when Pending Approval */}
+                  {canApprove && viewingDocument.status === 'Pending Approval' && (
+                    <DefaultButton
+                      onClick={handleReject}
+                      styles={{
+                        root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' },
+                        rootHovered: { background: '#c62828', borderColor: '#c62828', color: '#fff' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
+                      Reject
+                    </DefaultButton>
+                  )}
+
+                  {/* APPROVER: Approve — shown ONLY when Pending Approval */}
+                  {canApprove && viewingDocument.status === 'Pending Approval' && (
+                    <PrimaryButton
+                      onClick={handleApprove}
+                      styles={{
+                        root: { background: '#2e7d32', borderColor: '#2e7d32' },
+                        rootHovered: { background: '#1b5e20', borderColor: '#1b5e20' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
+                      Approve
+                    </PrimaryButton>
+                  )}
+
+                  {/* AUTHOR: Initiate Adobe Sign when Approved */}
                   {viewingDocument.status === 'Approved' && (
                     <PrimaryButton
-                      text="Initiate Adobe Sign"
-                      iconProps={{ iconName: 'PenWorkspace' }}
                       onClick={() => initiateAdobeSign(viewingDocument)}
                       styles={{
                         root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
                         rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
                       }}
-                    />
+                    >
+                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                      Initiate Adobe Sign
+                    </PrimaryButton>
+                  )}
+
+                  {/* AUTHOR: Sign Document when Pending for Signature */}
+                  {viewingDocument.status === 'Pending for Signature' && (
+                    <PrimaryButton
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      styles={{
+                        root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
+                        rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                      Sign Document
+                    </PrimaryButton>
                   )}
                 </div>
               </div>

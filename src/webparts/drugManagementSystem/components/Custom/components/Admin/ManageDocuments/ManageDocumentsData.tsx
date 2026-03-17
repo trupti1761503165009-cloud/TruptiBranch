@@ -924,33 +924,31 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
 
   const handleReinitializeSignature = async (doc: Document) => {
     if (!provider || !doc) return;
-    // eslint-disable-next-line no-alert
-    if (confirm(`Are you sure you want to re-initialize signature for "${doc.name}"? This will move it back to Approved status.`)) {
-      setIsLoading(true);
-      try {
-        const auditLog = {
-          id: (doc.comments?.length || 0) + 1,
-          author: 'System',
-          text: `Document re-initialized for signature by ${currentUser?.displayName || 'Unknown'}`,
-          timestamp: new Date().toISOString()
-        };
-        const nextComments = [...(doc.comments || []), auditLog];
-        await provider.updateItem(
-          { 
-            Status: 'Approved',
-            Comments: JSON.stringify(nextComments)
-          },
-          ListNames.DMSDocuments,
-          doc.id
-        );
-        await loadData();
-        setSuccessMessage('Document re-initialized for signature.');
-      } catch (error) {
-        console.error('Failed to re-initialize signature:', error);
-        setErrorMessage('Unable to re-initialize document.');
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    try {
+      const auditLog = {
+        id: (doc.comments?.length || 0) + 1,
+        author: 'System',
+        text: `Document re-initialized for signature by ${currentUser?.displayName || 'Unknown'}`,
+        timestamp: new Date().toISOString()
+      };
+      const nextComments = [...(doc.comments || []), auditLog];
+      await provider.updateItem(
+        { 
+          Status: 'Approved',
+          IsEmailSend: true,
+          Comments: JSON.stringify(nextComments)
+        },
+        ListNames.DMSDocuments,
+        doc.id
+      );
+      await loadData();
+      setSuccessMessage('Document re-initialized for signature.');
+    } catch (error) {
+      console.error('Failed to re-initialize signature:', error);
+      setErrorMessage('Unable to re-initialize document.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

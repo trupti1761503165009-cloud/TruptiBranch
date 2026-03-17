@@ -1,75 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-DUMMY DATA FOR VISUALIZATION - Shows how documents connect to all other lists:
+  DMS Documents Library
+  Workflow Status Flow: Draft → Pending Approval → Approved → Pending for Signature → Signed → Final
+  Rejected → (Author edits) → Pending Approval (re-submitted)
 
-DOCUMENT 1: Quality Policy.pdf (eCTD Mapped Document)
-- Title: Quality Policy.pdf
-- Category: Governance Document (lookup to Categories list)
-- Drug: Aspirin 100mg (lookup to DrugsDatabase list)
-- Country: United States (lookup to Countries list)
-- Status: Approved
-- Author: John Doe (lookup to Employees list)
-- Reviewer: Jane Smith (lookup to Employees list)
-- Approver: Admin User (lookup to Employees list)
-- Comments: JSON array of comments
-- CTDFolder: Module 1 (lookup to CTDFolders list)
-- CTDModule: Module 1
-- Submodule: Administrative Information
-- Template: Quality Policy Template (lookup to Templates list)
-- Content: Document content text
-- Version: 1
-- Created: 2024-01-15
-- Modified: 2024-01-15
-- SentBy: John Doe (lookup to Employees list)
-- SharePointURL: https://site.sharepoint.com/documents/quality-policy.pdf
-
-DOCUMENT 2: Stability Report.docx (eCTD Mapped Document)
-- Title: Stability Report.docx
-- Category: Manufacturing and Product Quality (lookup to Categories list)
-- Drug: Metformin XR 500mg (lookup to DrugsDatabase list)
-- Country: European Union (lookup to Countries list)
-- Status: Under Review
-- Author: Jane Smith (lookup to Employees list)
-- Reviewer: Bob Johnson (lookup to Employees list)
-- Approver: (pending)
-- Comments: JSON array with review comments
-- CTDFolder: Module 3 (lookup to CTDFolders list)
-- CTDModule: Module 3
-- Submodule: Quality
-- Template: Stability Study Report Template (lookup to Templates list)
-- Content: Stability study data
-- Version: 2
-- Created: 2024-01-20
-- Modified: 2024-01-25
-- SentBy: Jane Smith (lookup to Employees list)
-
-DOCUMENT 3: General Memo.docx (Non-eCTD Document)
-- Title: General Memo.docx
-- Category: Governance Document (lookup to Categories list)
-- Drug: (empty - not drug-specific)
-- Country: (empty - not country-specific)
-- Status: Draft
-- Author: Admin User (lookup to Employees list)
-- Reviewer: (pending)
-- Approver: (pending)
-- Comments: (empty)
-- CTDFolder: (empty - not CTD mapped)
-- CTDModule: (empty)
-- Submodule: (empty)
-- Template: General Document Template (lookup to Templates list)
-- Content: General memo content
-- Version: 1
-- Created: 2024-01-10
-- Modified: 2024-01-10
-- SentBy: (empty)
-
-CONNECTIONS CHAIN:
-Documents → Templates → Categories
-Documents → Templates → CTDFolders → eCTDSections
-Documents → DrugsDatabase
-Documents → Countries
-Documents → Employees (Author/Reviewer/Approver/SentBy)
-Documents → Templates → GMPModels
+  IsEmailSend flag:
+    - Set to TRUE by SPFx code on every status change
+    - Power Automate reads this flag, sends email, then sets it back to FALSE
+    - This prevents duplicate emails on subsequent item updates
 -->
 <List xmlns:ows="Microsoft SharePoint" Title="DMS Documents" Direction="$Resources:Direction;" Url="DMSDocuments" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
   <MetaData>
@@ -80,31 +18,71 @@ Documents → Templates → GMPModels
       <ContentTypeRef ID="0x0101009148F5A04DDD49CBA7127AADA5FB7926" />
     </ContentTypes>
     <Fields>
+      <!-- Lookup: Document Category -->
       <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Category" DisplayName="Category" List="Lists/Categories" ShowField="Title" />
+
+      <!-- Lookup: Drug -->
       <Field ID="{A4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Drug" DisplayName="Drug" List="Lists/DrugsDatabase" ShowField="Title" />
+
+      <!-- Lookup: Country -->
       <Field ID="{11936a39-6db6-493f-beb2-e1be1c8426e6}" Type="Lookup" Name="Country" DisplayName="Country" List="Lists/Countries" ShowField="Title" />
-      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status">
+
+      <!-- Workflow Status with full status flow -->
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status" Default="Draft">
         <CHOICES>
           <CHOICE>Draft</CHOICE>
           <CHOICE>Pending Approval</CHOICE>
-          <CHOICE>In Review</CHOICE>
           <CHOICE>Approved</CHOICE>
+          <CHOICE>Pending for Signature</CHOICE>
           <CHOICE>Signed</CHOICE>
           <CHOICE>Rejected</CHOICE>
           <CHOICE>Final</CHOICE>
         </CHOICES>
       </Field>
+
+      <!-- User: Reviewer -->
       <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Reviewer" DisplayName="Reviewer" />
+
+      <!-- User: Approver (assigned approver for this document) -->
       <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Approver" DisplayName="Approver" />
-      <Field ID="{ebcf7b26-9050-44c5-9dfc-2591634b5ab2}" Type="Note" Name="Comments" DisplayName="Comments" />
+
+      <!-- Audit Trail: JSON array of { id, author, text, timestamp } entries -->
+      <Field ID="{ebcf7b26-9050-44c5-9dfc-2591634b5ab2}" Type="Note" Name="Comments" DisplayName="Comments" NumLines="10" />
+
+      <!-- CTD/eCTD Mapping Fields -->
       <Field ID="{625ae34d-afbc-4d09-a947-8e013921ccc1}" Type="Text" Name="CTDFolder" DisplayName="CTD Folder" />
       <Field ID="{e90ae974-ee12-469a-98f8-212723cb3cc0}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
       <Field ID="{965afcd0-0aab-4727-a811-bfcd29d7912c}" Type="Text" Name="Submodule" DisplayName="Submodule" />
+
+      <!-- Lookup: Template used to create this document -->
       <Field ID="{d58e269f-77ba-4ea9-afc6-dbe1c16e5546}" Type="Lookup" Name="Template" DisplayName="Template" List="Templates" ShowField="Title" />
+
+      <!-- Document content (metadata only) -->
       <Field ID="{2e53bce2-d700-4442-9f04-5c036459cd7d}" Type="Note" Name="Content" DisplayName="Content" />
+
+      <!-- Version number (integer, e.g. 1, 2, 3) -->
       <Field ID="{0f004822-a5a4-4ae6-a84e-dbf99671d093}" Type="Number" Name="Version" DisplayName="Version" Decimals="0" />
+
+      <!-- User: Who sent/submitted the document -->
       <Field ID="{d4d48988-4f58-4a92-b4f5-2cb84a720d4d}" Type="User" Name="SentBy" DisplayName="Sent By" />
+
+      <!-- URL: SharePoint document URL -->
       <Field ID="{d6a6eddf-2aef-444b-b86e-3e24a15111ce}" Type="URL" Name="SharePointURL" DisplayName="SharePoint URL" />
+
+      <!-- EMAIL TRIGGER FLAG
+           Set to TRUE by SPFx whenever Status changes.
+           Power Automate triggers on item modification, reads this flag, sends email, then sets it to FALSE.
+           This prevents duplicate email sends on subsequent minor updates. -->
+      <Field ID="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" Type="Boolean" Name="IsEmailSend" DisplayName="Is Email Send" />
+
+      <!-- Adobe Sign: Agreement ID returned by Adobe Sign after initiation -->
+      <Field ID="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}" Type="Text" Name="AdobeAgreementId" DisplayName="Adobe Agreement Id" />
+
+      <!-- Rejection reason stored separately for quick reference (also in Comments) -->
+      <Field ID="{C3D4E5F6-A7B8-9012-CDEF-123456789012}" Type="Note" Name="RejectionReason" DisplayName="Rejection Reason" NumLines="4" />
+
+      <!-- Soft delete flag -->
+      <Field ID="{D4E5F6A7-B8C9-0123-DEF0-234567890123}" Type="Boolean" Name="IsDeleted" DisplayName="Is Deleted" />
     </Fields>
     <Views>
       <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">
@@ -119,7 +97,8 @@ Documents → Templates → GMPModels
           <FieldRef Name="Status"></FieldRef>
           <FieldRef Name="Reviewer"></FieldRef>
           <FieldRef Name="Approver"></FieldRef>
-          <FieldRef Name="Comments"></FieldRef>
+          <FieldRef Name="IsEmailSend"></FieldRef>
+          <FieldRef Name="AdobeAgreementId"></FieldRef>
           <FieldRef Name="CTDFolder"></FieldRef>
           <FieldRef Name="CTDModule"></FieldRef>
           <FieldRef Name="Submodule"></FieldRef>

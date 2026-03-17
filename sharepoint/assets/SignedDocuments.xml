@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Signed Documents Library
+  Stores the final signed PDF copies produced by Adobe Sign.
+  Power Automate writes the signed PDF here when Adobe Sign webhook fires (status = SIGNED).
+-->
 <List xmlns:ows="Microsoft SharePoint" Title="Signed Documents" Direction="$Resources:Direction;" Url="SignedDocuments" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
   <MetaData>
     <ContentTypes>
@@ -8,25 +13,74 @@
       <ContentTypeRef ID="0x0101009148F5A04DDD49CBA7127AADA5FB7926" />
     </ContentTypes>
     <Fields>
+      <!-- Lookup: Category -->
       <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Category" DisplayName="Category" List="Lists/Categories" ShowField="Title" />
+
+      <!-- Lookup: Drug -->
       <Field ID="{A4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Drug" DisplayName="Drug" List="Lists/DrugsDatabase" ShowField="Title" />
+
+      <!-- Lookup: Country -->
       <Field ID="{413f49fe-0f3d-444b-a59a-9dfd621fd6d3}" Type="Lookup" Name="Country" DisplayName="Country" List="Lists/Countries" ShowField="Title" />
-      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status">
+
+      <!-- Signed Document Status -->
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Choice" Name="Status" DisplayName="Status" Default="Signed">
         <CHOICES>
+          <CHOICE>Pending for Signature</CHOICE>
           <CHOICE>Signed</CHOICE>
           <CHOICE>Final</CHOICE>
         </CHOICES>
       </Field>
+
+      <!-- User: Author of the original document -->
+      <Field ID="{A5B3C9D0-4E9A-4B8A-8B8A-8B8A8B8A8BAA}" Type="User" Name="Author" DisplayName="Author" />
+
+      <!-- User: Reviewer -->
       <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Reviewer" DisplayName="Reviewer" />
+
+      <!-- User: Approver -->
       <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="User" Name="Approver" DisplayName="Approver" />
-      <Field ID="{30c98cd2-fad2-419a-8ba1-212bd06ae7a9}" Type="Note" Name="Comments" DisplayName="Comments" />
+
+      <!-- JSON audit trail of comments / status history -->
+      <Field ID="{30c98cd2-fad2-419a-8ba1-212bd06ae7a9}" Type="Note" Name="Comments" DisplayName="Comments" NumLines="10" />
+
+      <!-- CTD/eCTD mapping -->
       <Field ID="{4f02f50a-b4e2-4d99-80b9-bfdb193782d6}" Type="Text" Name="CTDFolder" DisplayName="CTD Folder" />
       <Field ID="{40bcd9d0-ab12-4499-9315-c4a73c04a2b5}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
       <Field ID="{e66dd8b1-47fc-4f1a-96de-567e085f4c1e}" Type="Text" Name="Submodule" DisplayName="Submodule" />
+
+      <!-- Lookup: Template -->
       <Field ID="{5f5ccd4e-7991-4f4f-ab8c-2b98f9b86838}" Type="Lookup" Name="Template" DisplayName="Template" List="Templates" ShowField="Title" />
+
+      <!-- Version number -->
       <Field ID="{135337a1-639a-4455-ac52-420357b4c7e4}" Type="Number" Name="Version" DisplayName="Version" Decimals="0" />
+
+      <!-- User: Sent by -->
       <Field ID="{7d247a92-70ad-4590-9874-442fbecdf54d}" Type="User" Name="SentBy" DisplayName="Sent By" />
+
+      <!-- URL: SharePoint URL of original document -->
       <Field ID="{ee5c264a-7331-4668-aa95-8185379486a2}" Type="URL" Name="SharePointURL" DisplayName="SharePoint URL" />
+
+      <!-- EMAIL TRIGGER FLAG: Set TRUE by PA when it picks this item, processes, and sends completion email.
+           On next run if still TRUE, skip. Set FALSE after processing. -->
+      <Field ID="{A1B2C3D4-E5F6-7890-ABCD-EF1234567891}" Type="Boolean" Name="IsEmailSend" DisplayName="Is Email Send" />
+
+      <!-- Adobe Sign Agreement ID — stored so we can retrieve signed PDF via Adobe Sign API -->
+      <Field ID="{B2C3D4E5-F6A7-8901-BCDE-F12345678902}" Type="Text" Name="AdobeAgreementId" DisplayName="Adobe Agreement Id" MaxLength="500" />
+
+      <!-- Adobe Sign Status (SIGNED, CANCELLED, EXPIRED, etc.) -->
+      <Field ID="{C3D4E5F6-A7B8-9012-CDEF-123456789013}" Type="Text" Name="AdobeSignStatus" DisplayName="Adobe Sign Status" MaxLength="100" />
+
+      <!-- Date/time when signing was completed -->
+      <Field ID="{D4E5F6A7-B8C9-0123-DEF0-234567890124}" Type="DateTime" Name="SignedDate" DisplayName="Signed Date" Format="DateTime" />
+
+      <!-- Signer name (from Adobe Sign) -->
+      <Field ID="{E5F6A7B8-C9D0-1234-EF01-345678901235}" Type="Text" Name="SignerName" DisplayName="Signer Name" MaxLength="255" />
+
+      <!-- Signer email (from Adobe Sign) -->
+      <Field ID="{F6A7B8C9-D0E1-2345-F012-456789012346}" Type="Text" Name="SignerEmail" DisplayName="Signer Email" MaxLength="255" />
+
+      <!-- Archival folder path where signed PDF is stored -->
+      <Field ID="{A7B8C9D0-E1F2-3456-0123-567890123457}" Type="Text" Name="ArchivalFolder" DisplayName="Archival Folder" MaxLength="500" />
     </Fields>
     <Views>
       <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">
@@ -39,15 +93,20 @@
           <FieldRef Name="Drug"></FieldRef>
           <FieldRef Name="Country"></FieldRef>
           <FieldRef Name="Status"></FieldRef>
+          <FieldRef Name="Author"></FieldRef>
           <FieldRef Name="Reviewer"></FieldRef>
           <FieldRef Name="Approver"></FieldRef>
-          <FieldRef Name="Comments"></FieldRef>
+          <FieldRef Name="AdobeAgreementId"></FieldRef>
+          <FieldRef Name="AdobeSignStatus"></FieldRef>
+          <FieldRef Name="SignedDate"></FieldRef>
+          <FieldRef Name="SignerName"></FieldRef>
+          <FieldRef Name="SignerEmail"></FieldRef>
+          <FieldRef Name="ArchivalFolder"></FieldRef>
+          <FieldRef Name="IsEmailSend"></FieldRef>
           <FieldRef Name="CTDFolder"></FieldRef>
           <FieldRef Name="CTDModule"></FieldRef>
-          <FieldRef Name="Submodule"></FieldRef>
           <FieldRef Name="Template"></FieldRef>
           <FieldRef Name="Version"></FieldRef>
-          <FieldRef Name="SentBy"></FieldRef>
           <FieldRef Name="Modified"></FieldRef>
         </ViewFields>
         <Query>

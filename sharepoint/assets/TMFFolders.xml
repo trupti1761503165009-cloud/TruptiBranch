@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  TMF Folders List - DIA TMF Reference Model 3.3.1
+  Columns sourced from: DIA_TMF_Document_List.xlsx
+  Hierarchy: Zone → Zone Name → Section → Section Name → Artifact ID → Artifact Name
+
+  Example data from DIA TMF Reference Model 3.3.1:
+    Zone: 1 | Zone Name: Trial Management | Section: 1.01 | Section Name: Trial Oversight
+    Artifact ID: 01.01.01 | Artifact Name: Trial Master File Plan
+    Description: To describe how records for the trial will be managed...
+    Reference: TMF RM 3.3.1
+-->
 <List xmlns:ows="Microsoft SharePoint" Title="TMF Folders" Direction="$Resources:Direction;" Url="Lists/TMFFolders" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
   <MetaData>
     <ContentTypes>
@@ -8,11 +19,63 @@
       <ContentTypeRef ID="0x0120" />
     </ContentTypes>
     <Fields>
-      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Text" Name="FolderId" DisplayName="Folder Id" />
-      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Text" Name="ParentFolderId" DisplayName="Parent Folder Id" />
+      <!-- Hierarchy Reference Fields (for folder tree navigation) -->
+      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Text" Name="FolderId" DisplayName="Folder Id" MaxLength="50" />
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Text" Name="ParentFolderId" DisplayName="Parent Folder Id" MaxLength="50" />
       <Field ID="{D4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Boolean" Name="IsFolder" DisplayName="Is Folder" />
       <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Number" Name="SortOrder" DisplayName="Sort Order" Decimals="0" />
+
+      <!-- DIA TMF Reference Model Fields -->
+      <!-- Zone number (1-8) per DIA TMF Reference Model 3.3.1 -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B01}" Type="Number" Name="Zone" DisplayName="Zone" Decimals="0" />
+
+      <!-- Zone name (e.g. Trial Management, Site Management, etc.) -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B02}" Type="Text" Name="ZoneName" DisplayName="Zone Name" MaxLength="255" />
+
+      <!-- Section code (e.g. 1.01, 2.03) -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B03}" Type="Text" Name="Section" DisplayName="Section" MaxLength="20" />
+
+      <!-- Section name (e.g. Trial Oversight, Regulatory, etc.) -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B04}" Type="Text" Name="SectionName" DisplayName="Section Name" MaxLength="255" />
+
+      <!-- Artifact ID (e.g. 01.01.01, 01.01.02) — unique identifier per DIA model -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B05}" Type="Text" Name="ArtifactId" DisplayName="Artifact Id" MaxLength="50" />
+
+      <!-- Artifact Name (e.g. Trial Master File Plan) -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B06}" Type="Text" Name="ArtifactName" DisplayName="Artifact Name" MaxLength="500" />
+
+      <!-- Description of the artifact's purpose -->
       <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Note" Name="Description" DisplayName="Description" NumLines="6" />
+
+      <!-- Reference standard (e.g. TMF RM 3.3.1, ICH E6, 21 CFR Part 11) -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B07}" Type="Text" Name="Reference" DisplayName="Reference" MaxLength="255" />
+
+      <!-- Optional or Mandatory artifact -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B08}" Type="Choice" Name="DocumentType" DisplayName="Document Type">
+        <CHOICES>
+          <CHOICE>Mandatory</CHOICE>
+          <CHOICE>Optional</CHOICE>
+          <CHOICE>Conditional</CHOICE>
+        </CHOICES>
+        <Default>Mandatory</Default>
+      </Field>
+
+      <!-- Document status within TMF -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B09}" Type="Choice" Name="TMFStatus" DisplayName="TMF Status">
+        <CHOICES>
+          <CHOICE>Expected</CHOICE>
+          <CHOICE>Filed</CHOICE>
+          <CHOICE>Not Applicable</CHOICE>
+          <CHOICE>Missing</CHOICE>
+        </CHOICES>
+        <Default>Expected</Default>
+      </Field>
+
+      <!-- Retention period (years) for archival compliance -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B10}" Type="Number" Name="RetentionPeriodYears" DisplayName="Retention Period (Years)" Decimals="0" />
+
+      <!-- Notes / additional context -->
+      <Field ID="{F1B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B11}" Type="Note" Name="Notes" DisplayName="Notes" NumLines="4" />
     </Fields>
     <Views>
       <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllItems;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/generic.png" Url="AllItems.aspx">
@@ -21,15 +84,24 @@
         <Toolbar Type="Standard" />
         <ViewFields>
           <FieldRef Name="LinkTitle"></FieldRef>
-          <FieldRef Name="FolderId"></FieldRef>
-          <FieldRef Name="ParentFolderId"></FieldRef>
+          <FieldRef Name="Zone"></FieldRef>
+          <FieldRef Name="ZoneName"></FieldRef>
+          <FieldRef Name="Section"></FieldRef>
+          <FieldRef Name="SectionName"></FieldRef>
+          <FieldRef Name="ArtifactId"></FieldRef>
+          <FieldRef Name="ArtifactName"></FieldRef>
+          <FieldRef Name="DocumentType"></FieldRef>
+          <FieldRef Name="TMFStatus"></FieldRef>
+          <FieldRef Name="Reference"></FieldRef>
+          <FieldRef Name="RetentionPeriodYears"></FieldRef>
           <FieldRef Name="IsFolder"></FieldRef>
           <FieldRef Name="SortOrder"></FieldRef>
-          <FieldRef Name="Description"></FieldRef>
         </ViewFields>
         <Query>
           <OrderBy>
-            <FieldRef Name="ID" />
+            <FieldRef Name="Zone" />
+            <FieldRef Name="Section" />
+            <FieldRef Name="SortOrder" />
           </OrderBy>
         </Query>
       </View>

@@ -222,22 +222,29 @@ export function AdminDashboardData() {
     }
   };
 
-  const handleDeleteDocument = async () => {
-    if (viewingDocument && confirm(`Delete document "${viewingDocument.name}"?`)) {
-      if (!provider) return;
-      setIsLoading(true);
-      try {
-        await provider.deleteItem(ListNames.DMSDocuments, viewingDocument.id);
-        setIsViewModalOpen(false);
-        setViewingDocument(null);
-        await loadData();
-        setSuccessMessage('Document deleted successfully.');
-      } catch (error) {
-        console.error('Failed to delete document:', error);
-        setErrorMessage('Unable to delete document.');
-      } finally {
-        setIsLoading(false);
-      }
+  const [isDeleteDocModalOpen, setIsDeleteDocModalOpen] = useState(false);
+
+  const handleDeleteDocument = () => {
+    if (viewingDocument) {
+      setIsDeleteDocModalOpen(true);
+    }
+  };
+
+  const confirmDeleteDocument = async () => {
+    if (!viewingDocument || !provider) return;
+    setIsLoading(true);
+    try {
+      await provider.deleteItem(ListNames.DMSDocuments, viewingDocument.id);
+      setIsDeleteDocModalOpen(false);
+      setIsViewModalOpen(false);
+      setViewingDocument(null);
+      await loadData();
+      setSuccessMessage('Document deleted successfully.');
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+      setErrorMessage('Unable to delete document.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -320,6 +327,9 @@ export function AdminDashboardData() {
     handleSort,
     handleSaveChanges,
     handleDeleteDocument,
+    confirmDeleteDocument,
+    isDeleteDocModalOpen,
+    setIsDeleteDocModalOpen,
     handleUpdateDocument,
     handleOpenDocument,
     handleFinalApprove,
