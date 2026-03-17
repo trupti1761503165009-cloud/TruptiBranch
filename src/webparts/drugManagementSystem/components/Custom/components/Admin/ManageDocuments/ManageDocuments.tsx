@@ -107,13 +107,21 @@ export const ManageDocuments: React.FC<any> = (props) => {
     setIsRejectModalOpen,
   } = ManageDocumentsData(props);
 
+  const hideFolderSidebar: boolean = !!(props.hideFolderSidebar);
+  const hideAddButton: boolean = !!(props.hideAddButton);
+
   const isVisibleCrud = React.useRef(true);
   const [isDisplayEDbtn, setisDisplayEDbtn] = React.useState(false);
   const [isDisplayEditButtonview, setIsDisplayEditButtonview] = React.useState(false);
   const [isSelectedData, setisSelectedData] = React.useState(false);
   const [updateItem, setUpdateItem] = React.useState<any[]>([]);
   // Inner view-mode for myDocuments / assignedToMe — does NOT change activeTab
-  const [innerMode, setInnerMode] = React.useState<'folder' | 'document'>('folder');
+  const [innerMode, setInnerMode] = React.useState<'folder' | 'document'>(hideFolderSidebar ? 'document' : 'folder');
+
+  // If hideFolderSidebar toggled on, force document inner mode
+  React.useEffect(() => {
+    if (hideFolderSidebar) setInnerMode('document');
+  }, [hideFolderSidebar]);
 
   const _onItemSelected = (item: any): void => {
     setSelectedIds(item.map((i: any) => i.id));
@@ -506,7 +514,9 @@ export const ManageDocuments: React.FC<any> = (props) => {
       />
 
       {/* ===== Page Title ===== */}
-      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Documents</h1>
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>
+        {activeTab === 'myDocuments' ? 'My Documents' : activeTab === 'assignedToMe' ? 'Assigned to Me' : 'Manage Documents'}
+      </h1>
 
       {/* ===== SECTION 1: Summary Cards ===== */}
       <div style={{
@@ -614,8 +624,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
         />
       </div>
 
-      {/* Primary Tabs: Drugs Folder | Document Folder — hidden when inside a drug */}
-      {selectedDrugId === null && (activeTab === 'all' || activeTab === 'workspace') && (
+      {/* Primary Tabs: Drugs Folder | Document Folder — hidden when inside a drug or hideFolderSidebar */}
+      {!hideFolderSidebar && selectedDrugId === null && (activeTab === 'all' || activeTab === 'workspace') && (
         <div style={{ marginBottom: 15 }}>
           <Pivot
             aria-label="Document Views"
@@ -628,8 +638,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
         </div>
       )}
 
-      {/* Sub-view selector for My Documents / Assigned to Me */}
-      {selectedDrugId === null && (activeTab === 'myDocuments' || activeTab === 'assignedToMe') && (
+      {/* Sub-view selector for My Documents / Assigned to Me — hidden when hideFolderSidebar */}
+      {!hideFolderSidebar && selectedDrugId === null && (activeTab === 'myDocuments' || activeTab === 'assignedToMe') && (
         <div style={{ marginBottom: 15 }}>
           <Pivot
             aria-label="View Mode"
@@ -708,7 +718,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             isAddNew={true}
             addNewContent={
               <div className="dflex pb-1">
-                {canCreate && (
+                {canCreate && !hideAddButton && (
                   <PrimaryButton
                     className="btn btn-primary"
                     text="Add Document"
@@ -863,19 +873,21 @@ export const ManageDocuments: React.FC<any> = (props) => {
                       <FontAwesomeIcon icon={faArrowsRotate} />
                     </TooltipHost>
                   </Link>
-                  <Link
-                    className="actionBtn iconSize btnEdit ml-10"
-                    onClick={() => {
-                      props.manageComponentView({
-                        currentComponentName: ComponentNameEnum.AddDocument,
-                        componentProps: { drugId: selectedDrugId }
-                      });
-                    }}
-                  >
-                    <TooltipHost content="Add Document">
-                      <FontAwesomeIcon icon={faPlus} />
-                    </TooltipHost>
-                  </Link>
+                  {canCreate && !hideAddButton && (
+                    <Link
+                      className="actionBtn iconSize btnEdit ml-10"
+                      onClick={() => {
+                        props.manageComponentView({
+                          currentComponentName: ComponentNameEnum.AddDocument,
+                          componentProps: { drugId: selectedDrugId }
+                        });
+                      }}
+                    >
+                      <TooltipHost content="Add Document">
+                        <FontAwesomeIcon icon={faPlus} />
+                      </TooltipHost>
+                    </Link>
+                  )}
                 </div>
               }
               onSelectedItem={() => {}}
@@ -901,7 +913,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                       <FontAwesomeIcon icon={faArrowsRotate} />
                     </TooltipHost>
                   </Link>
-                  {canCreate && (
+                  {canCreate && !hideAddButton && (
                     <Link
                         className="actionBtn iconSize btnEdit ml-10"
                         onClick={() => {
@@ -980,7 +992,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
               isAddNew={true}
               addNewContent={
                 <div className="dflex pb-1">
-                  {canCreate && (
+                  {canCreate && !hideAddButton && (
                     <Link
                       className="actionBtn iconSize btnEdit ml-10"
                       onClick={() => {

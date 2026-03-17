@@ -23,7 +23,7 @@ import { appGlobalStateAtom } from '../jotai/appGlobalStateAtom';
 import { appDescriptionAtom, currentUserAtom, roleMappingAtom, sharePointGroupsAtom, siteAdminAtom } from '../jotai/adminAtoms';
 import ReactDropdown, { type IReactDropOptionProps } from './Common/ReactSelectDropdown';
 import { ComponentNameEnum } from '../models/ComponentNameEnum';
-import { CategoriesViewRouter, TemplatesViewRouter, DrugsViewRouter, UsersViewRouter, DocumentsViewRouter } from './AdminRouters';
+import { CategoriesViewRouter, TemplatesViewRouter, DrugsViewRouter, UsersViewRouter, DocumentsViewRouter, GMPViewRouter, TMFViewRouter } from './AdminRouters';
 import { ToastHost } from './Common/Toast/ToastHost';
 require('../assets/css/styles.css')
 require('./Custom/styles/app.css')
@@ -39,6 +39,8 @@ type View =
   | 'reports'
   | 'drugsDatabase'
   | 'createCTDFolder'
+  | 'gmpMaster'
+  | 'tmfMaster'
   | 'approvals'
   | 'authorDocs'
   | 'myDocuments'
@@ -181,33 +183,30 @@ const DmsShell: React.FC = () => {
           { id: 'categories', label: 'Categories', icon: '📁' },
           { id: 'templates', label: 'Templates', icon: '📋' },
           { id: 'createCTDFolder', label: 'CTD Folder Structure', icon: '📂' },
+          { id: 'gmpMaster', label: 'GMP Models', icon: '🧪' },
+          { id: 'tmfMaster', label: 'TMF Folder Structure', icon: '🗂' },
           { id: 'drugsDatabase', label: 'Drugs', icon: '💊' },
           { id: '_documents', label: 'DOCUMENTS', isSection: true },
           { id: 'documents', label: 'All Documents', icon: '📄' },
           { id: 'myDocuments', label: 'My Documents', icon: '📝' },
           { id: 'pendingApproval', label: 'Assigned to Me', icon: '⏳' },
           { id: 'ctdView', label: 'CTD View', icon: '🗂' },
-          // { id: '_reports', label: 'REPORTS', isSection: true },
           { id: 'reports', label: 'Document Reports', icon: '📈' },
           { id: 'workflowReports', label: 'Workflow Reports', icon: '📊' },
-          // { id: 'usageReport', label: 'System Usage', icon: '📉' },
           { id: '_users', label: 'USERS', isSection: true },
           { id: 'users', label: 'Manage Users', icon: '👥' },
-          // { id: 'rolesPermissions', label: 'Roles & Permissions', icon: '🔐' },
         ];
       case 'HR':
         return [
-          { id: '_users', label: 'USERS', isSection: true },
-          { id: 'rolesPermissions', label: 'Roles & Permissions', icon: '🔐' },
+          { id: '_documents', label: 'DOCUMENTS', isSection: true },
+          { id: 'myDocuments', label: 'My Documents', icon: '📝' },
+          { id: 'pendingApproval', label: 'Assigned to Me', icon: '⏳' },
         ];
       case 'Author':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: '📊' },
           { id: '_documents', label: 'DOCUMENTS', isSection: true },
           { id: 'myDocuments', label: 'My Documents', icon: '📝' },
-          { id: 'documents', label: 'Assigned to Me', icon: '📄' },
-          { id: '_reports', label: 'REPORTS', isSection: true },
-          { id: 'reports', label: 'Reports', icon: '📈' },
+          { id: 'pendingApproval', label: 'Assigned to Me', icon: '⏳' },
         ];
       case 'Reviewer':
         return [
@@ -261,27 +260,25 @@ const DmsShell: React.FC = () => {
           return <DrugsViewRouter />;
         case 'createCTDFolder':
           return <CreateCTDFolder />;
+        case 'gmpMaster':
+          return <GMPViewRouter />;
+        case 'tmfMaster':
+          return <TMFViewRouter />;
         default:
           return <AdminDashboard />;
       }
     } else if (effectiveRole === 'Author') {
-      return currentView === 'approvals' ? <ApproverDashboard /> : <AuthorDashboard />;
+      return <DocumentsViewRouter filterByCurrentUser={currentView === 'myDocuments' || currentView === 'dashboard'} filterByPending={currentView === 'pendingApproval'} hideAddButton={false} hideFolderSidebar={true} />;
     } else if (effectiveRole === 'Reviewer') {
       return <ReviewerDashboard />;
     } else if (effectiveRole === 'Approver') {
-      return currentView === 'authorDocs' ? <AuthorDashboard /> : <ApproverDashboard />;
+      return currentView === 'authorDocs' ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} /> : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
     } else if (effectiveRole === 'HR') {
       switch (currentView) {
-        case 'documents':
-          return <DocumentsViewRouter />;
-        case 'templates':
-          return <TemplatesViewRouter />;
-        case 'categories':
-          return <CategoriesViewRouter />;
-        case 'reports':
-          return <Reports />;
+        case 'pendingApproval':
+          return <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
         default:
-          return <AdminDashboard />;
+          return <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;
       }
     }
     return <AdminDashboard />;

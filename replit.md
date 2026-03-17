@@ -47,10 +47,24 @@ server.js             - Replit standalone preview server (port 5000)
 ```
 
 ## User Roles
-- **Admin** — full access: dashboard, all documents, categories, templates, drugs, reports, user management
-- **Author** — create and submit drug documentation, view own documents
+- **Admin** — full access: dashboard, all documents, categories, templates, drugs, GMP models, TMF folder structure, reports, user management
+- **Author** — My Documents (filtered by author) + Assigned to Me (filtered by approver); folder sidebar hidden; Add Document button visible
+- **HR** — My Documents + Assigned to Me; folder sidebar hidden; no Add Document
 - **Reviewer** — review queue; approve for forwarding or return to author
 - **Approver** — pending approval queue; approve or reject documents
+
+## Document Mapping Types
+- **eCTD** — Module (CTDFolder) → SubFolder → eCTDSection hierarchy
+- **GMP** — flat GMPModel group (1-level folder by model name)
+- **TMF** — Zone → Section → Artifact hierarchy (4 zones via TMF_ZONE_CHOICES)
+
+## Master Data (Admin-only CRUD)
+- **GMP Models** — ManageGMP.tsx + ManageGMPData.tsx; fields: Name, Category, SubGroup, SortOrder
+- **TMF Folder Structure** — ManageTMF.tsx + ManageTMFData.tsx; hierarchical Zone/Section/Artifact tree
+
+## Navigation
+- Admin: MASTER (Categories, Templates, CTD Folder Structure, GMP Models, TMF Folder Structure, Drugs), DOCUMENTS (All, My, Assigned to Me, CTD View, Reports, Workflow Reports), USERS
+- Author/HR: DOCUMENTS section only (My Documents, Assigned to Me); hideFolderSidebar=true
 
 ## Key Dependencies
 - `@microsoft/sp-webpart-base` 1.20.0 - SPFx base

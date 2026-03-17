@@ -20,7 +20,6 @@ export interface AddDocumentModalDataParams {
 export interface AddDocumentWizardFormData {
   drugId: number;
   countryId: number;
-  // Derived from Template selection (Templates.Category lookup)
   categoryId: number;
   templateId: number;
   moduleId: string;
@@ -50,9 +49,14 @@ interface TemplateItem {
   mappedFolderId?: string;
   fileRef?: string;
   fileLeafRef?: string;
+  mappingType?: 'eCTD' | 'GMP' | 'TMF' | 'None';
+  mappedGMPModelId?: number;
+  mappedGMPModel?: string;
+  mappedTMFFolderId?: number;
+  mappedTMFFolder?: string;
 }
 
-interface ModuleItem {
+interface FolderItem {
   id: string;
   name: string;
   parentId?: string;
@@ -63,7 +67,7 @@ interface ApproverItem {
   name: string;
 }
 
-type ValidationErrors = Partial<Record<keyof AddDocumentWizardFormData, string>>;
+type ValidationErrors = Partial<Record<keyof AddDocumentWizardFormData | string, string>>;
 
 export function AddDocumentModalData(params: AddDocumentModalDataParams) {
   const { onClose, onSuccess } = params;
@@ -88,7 +92,9 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
   const [drugs, setDrugs] = React.useState<DrugItem[]>([]);
   const [countries, setCountries] = React.useState<CountryItem[]>([]);
   const [templates, setTemplates] = React.useState<TemplateItem[]>([]);
-  const [modules, setModules] = React.useState<ModuleItem[]>([]);
+  const [modules, setModules] = React.useState<FolderItem[]>([]);          // eCTD CTD folders
+  const [gmpModels, setGmpModels] = React.useState<FolderItem[]>([]);      // GMP models flat list
+  const [tmfFolders, setTmfFolders] = React.useState<FolderItem[]>([]);    // TMF folders hierarchy
   const [approvers, setApprovers] = React.useState<ApproverItem[]>([]);
 
   const sanitizeFolderName = React.useCallback(
@@ -104,11 +110,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         const cleaned = sanitizeFolderName(segment);
         if (!cleaned) continue;
         currentPath = `${currentPath}/${cleaned}`;
-        try {
-          await provider.createFolder(currentPath);
-        } catch {
-          // ignore if folder already exists or cannot be created
-        }
+        try { await provider.createFolder(currentPath); } catch { /* folder exists */ }
       }
       return currentPath;
     },
@@ -126,7 +128,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
   const loadLookupData = React.useCallback(async () => {
     if (!provider) return;
 
-    const [drugItems, countryItems, templateItems, folderItems, approverItems] = await Promise.all([
+    const [drugItems, countryItems, templateItems, folderItems, gmpItems, tmfItems, approverItems] = await Promise.all([
+      // Drugs
       provider.getItemsByQuery({
         listName: ListNames.DrugsDatabase,
         select: ['ID', 'Title'],
@@ -135,6 +138,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         isSortOrderAsc: true
       }).catch(() => []),
 
+      // Countries
       provider.getItemsByQuery({
         listName: ListNames.Countries,
         select: ['ID', 'Title'],
@@ -143,11 +147,15 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         isSortOrderAsc: true
       }).catch(() => []),
 
+      // Templates — include MappingType + all mapping fields
       (async () => {
         try {
           const q = new CamlBuilder()
             .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status',
-                   'Category', 'CategoryId', 'Country', 'CountryId'])
+                   'Category', 'CategoryId', 'Country', 'CountryId',
+                   'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
+                   'MappedGMPModel', 'MappedGMPModelId',
+                   'MappedTMFFolder', 'MappedTMFFolderId'])
             .RowLimit(5000, true)
             .Query();
           return await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
@@ -157,6 +165,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         }
       })(),
 
+      // CTD Folders (eCTD path)
       provider.getItemsByQuery({
         listName: ListNames.CTDFolders,
         select: ['ID', 'Title', 'FolderId', 'ParentFolderId'],
@@ -165,6 +174,25 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         isSortOrderAsc: true
       }).catch(() => []),
 
+      // GMP Models (flat list)
+      provider.getItemsByQuery({
+        listName: ListNames.GmpModels,
+        select: ['ID', 'Title', 'Category', 'SortOrder'],
+        top: 500,
+        orderBy: 'SortOrder',
+        isSortOrderAsc: true
+      }).catch(() => []),
+
+      // TMF Folders (hierarchy)
+      provider.getItemsByQuery({
+        listName: ListNames.TMFFolders,
+        select: ['ID', 'Title', 'FolderId', 'ParentFolderId', 'ZoneName', 'SectionName', 'IsFolder'],
+        top: 2000,
+        orderBy: 'SortOrder',
+        isSortOrderAsc: true
+      }).catch(() => []),
+
+      // Approvers: HR + Admin + Author groups
       Promise.all([
         provider.getUsersFromGroup('HR').catch(() => []),
         provider.getUsersFromGroup('Admin').catch(() => []),
@@ -180,29 +208,45 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       }).catch(() => [])
     ]);
 
-    setDrugs(
-      (drugItems || []).map((item: any) => ({
-        id: item.ID,
-        name: item.Title
-      }))
-    );
-    setCountries(
-      (countryItems || []).map((item: any) => ({
-        id: item.ID,
-        name: item.Title
-      }))
-    );
+    setDrugs((drugItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
+    setCountries((countryItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
+
     setTemplates(
-      (templateItems || []).map((item: any) => ({
-        id: item.ID,
-        name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
-        categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,
-        countryId: Number(item.CountryId || parseLookupId(item.Country)) || 0,
-        status: item.Status || '',
-        fileRef: item.FileRef || '',
-        fileLeafRef: item.FileLeafRef || item.LinkFilename || ''
-      }))
+      (templateItems || []).map((item: any) => {
+        const mappingType: 'eCTD' | 'GMP' | 'TMF' | 'None' = item.MappingType || 'None';
+        const mappedCTDFolderId = item.MappedCTDFolderId || parseLookupId(item.MappedCTDFolder);
+        const mappedGMPModelId = item.MappedGMPModelId || parseLookupId(item.MappedGMPModel);
+        const mappedTMFFolderId = item.MappedTMFFolderId || parseLookupId(item.MappedTMFFolder);
+
+        // Resolve mappedFolderId based on mappingType
+        let mappedFolderId: string | undefined;
+        if (mappingType === 'eCTD' && mappedCTDFolderId) {
+          mappedFolderId = String(mappedCTDFolderId);
+        } else if (mappingType === 'GMP' && mappedGMPModelId) {
+          mappedFolderId = String(mappedGMPModelId);
+        } else if (mappingType === 'TMF' && mappedTMFFolderId) {
+          mappedFolderId = String(mappedTMFFolderId);
+        }
+
+        return {
+          id: item.ID,
+          name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
+          categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,
+          countryId: Number(item.CountryId || parseLookupId(item.Country)) || 0,
+          status: item.Status || '',
+          fileRef: item.FileRef || '',
+          fileLeafRef: item.FileLeafRef || item.LinkFilename || '',
+          mappingType,
+          mappedFolderId,
+          mappedGMPModelId: mappedGMPModelId || undefined,
+          mappedGMPModel: item.MappedGMPModel?.[0]?.lookupValue || '',
+          mappedTMFFolderId: mappedTMFFolderId || undefined,
+          mappedTMFFolder: item.MappedTMFFolder?.[0]?.lookupValue || ''
+        };
+      })
     );
+
+    // eCTD CTD folders keyed by FolderId
     setModules(
       (folderItems || []).map((item: any) => ({
         id: item.FolderId || String(item.ID),
@@ -210,11 +254,27 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         parentId: item.ParentFolderId || undefined
       }))
     );
-    setApprovers(
-      (approverItems || []).map((item: any) => ({
-        id: item.value,
-        name: item.label
+
+    // GMP models keyed by ID (numeric string)
+    setGmpModels(
+      (gmpItems || []).map((item: any) => ({
+        id: String(item.ID),
+        name: item.Title,
+        parentId: undefined
       }))
+    );
+
+    // TMF folders keyed by FolderId
+    setTmfFolders(
+      (tmfItems || []).map((item: any) => ({
+        id: item.FolderId || String(item.ID),
+        name: item.Title,
+        parentId: item.ParentFolderId || undefined
+      }))
+    );
+
+    setApprovers(
+      (approverItems || []).map((item: any) => ({ id: item.value, name: item.label }))
     );
   }, [provider]);
 
@@ -222,12 +282,10 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     void loadLookupData();
   }, [loadLookupData]);
 
-  // Auto-bind CTD placement from the selected Template mapping (optional).
+  // Auto-bind folder placement from selected Template mapping type
   React.useEffect(() => {
     const selectedTemplate = templates.find(t => t.id === formData.templateId);
-    const mappedFolderId = selectedTemplate?.mappedFolderId;
-    if (!mappedFolderId) {
-      // If template is not mapped, keep CTD fields empty.
+    if (!selectedTemplate || !selectedTemplate.mappedFolderId) {
       setFormData(prev => {
         if (!prev.moduleId && !prev.submoduleId) return prev;
         return { ...prev, moduleId: '', submoduleId: '' };
@@ -235,32 +293,51 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       return;
     }
 
-    const byId = new Map(modules.map(m => [m.id, m]));
-    const leaf = byId.get(mappedFolderId);
-    if (!leaf) {
+    const mappingType = selectedTemplate.mappingType || 'None';
+    const mappedId = selectedTemplate.mappedFolderId;
+
+    if (mappingType === 'eCTD') {
+      const byId = new Map(modules.map(m => [m.id, m]));
+      const leaf = byId.get(mappedId);
+      if (!leaf) return;
+      let root = leaf;
+      while (root.parentId && byId.get(root.parentId)) {
+        root = byId.get(root.parentId)!;
+      }
+      const nextModuleId = root.id;
+      const nextSubmoduleId = mappedId === root.id ? '' : mappedId;
       setFormData(prev => {
-        if (!prev.moduleId && !prev.submoduleId) return prev;
-        return { ...prev, moduleId: '', submoduleId: '' };
+        if (prev.moduleId === nextModuleId && prev.submoduleId === nextSubmoduleId) return prev;
+        return { ...prev, moduleId: nextModuleId, submoduleId: nextSubmoduleId };
       });
-      return;
-    }
 
-    // Walk up to root module (top-level folder).
-    let root = leaf;
-    while (root.parentId && byId.get(root.parentId)) {
-      root = byId.get(root.parentId)!;
-    }
+    } else if (mappingType === 'GMP') {
+      // GMP: moduleId = GMP model numeric ID string, submoduleId = ''
+      setFormData(prev => {
+        if (prev.moduleId === mappedId && !prev.submoduleId) return prev;
+        return { ...prev, moduleId: mappedId, submoduleId: '' };
+      });
 
-    const nextModuleId = root.id;
-    const nextSubmoduleId = mappedFolderId === root.id ? '' : mappedFolderId;
-    setFormData(prev => {
-      if (prev.moduleId === nextModuleId && prev.submoduleId === nextSubmoduleId) return prev;
-      return { ...prev, moduleId: nextModuleId, submoduleId: nextSubmoduleId };
-    });
+    } else if (mappingType === 'TMF') {
+      // TMF: mappedId is FolderId of artifact, walk up to Zone → Section
+      const byId = new Map(tmfFolders.map(m => [m.id, m]));
+      const leaf = byId.get(mappedId);
+      if (!leaf) return;
+      let root = leaf;
+      while (root.parentId && byId.get(root.parentId)) {
+        root = byId.get(root.parentId)!;
+      }
+      const nextModuleId = root.id;      // Zone folderId
+      const nextSubmoduleId = mappedId === root.id ? '' : mappedId;
+      setFormData(prev => {
+        if (prev.moduleId === nextModuleId && prev.submoduleId === nextSubmoduleId) return prev;
+        return { ...prev, moduleId: nextModuleId, submoduleId: nextSubmoduleId };
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.templateId, templates, modules]);
+  }, [formData.templateId, templates, modules, gmpModels, tmfFolders]);
 
-  // Auto-bind Category from selected Template (required metadata).
+  // Auto-bind Category from selected Template
   React.useEffect(() => {
     const selectedTemplate = templates.find(t => t.id === formData.templateId);
     const nextCategoryId = selectedTemplate?.categoryId ?? 0;
@@ -270,10 +347,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     });
   }, [formData.templateId, templates]);
 
-  const filteredTemplates = React.useMemo(
-    () => templates,
-    [templates]
-  );
+  const filteredTemplates = React.useMemo(() => templates, [templates]);
 
   const selectedTemplate = React.useMemo(
     () => templates.find(t => t.id === formData.templateId),
@@ -302,17 +376,20 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
   const validateStep = (currentStep: number): boolean => {
     const nextErrors: ValidationErrors = {};
-    if (currentStep >= 1 && !formData.drugId) nextErrors.drugId = 'Drug is required.';
-    if (currentStep >= 1 && !formData.countryId) nextErrors.countryId = 'Country is required.';
-    if (currentStep >= 2 && !formData.templateId) nextErrors.templateId = 'Template is required.';
-    if (currentStep >= 3 && !formData.approverId) nextErrors.approverId = 'Approver is required.';
+    if (currentStep >= 1 && !formData.drugId) nextErrors.drugId = 'Please select a drug.';
+    if (currentStep >= 1 && !formData.countryId) nextErrors.countryId = 'Please select a country.';
+    if (currentStep >= 2) {
+      if (!formData.templateId) nextErrors.templateId = 'Please select a template.';
+    }
+    if (currentStep >= 3) {
+      if (!formData.approverId) nextErrors.approverId = 'Please select an approver.';
+    }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
   const isStepComplete = (currentStep: number): boolean => {
-    if (currentStep >= 1 && !formData.drugId) return false;
-    if (currentStep >= 1 && !formData.countryId) return false;
+    if (currentStep >= 1 && (!formData.drugId || !formData.countryId)) return false;
     if (currentStep >= 2 && !formData.templateId) return false;
     if (currentStep >= 3 && !formData.approverId) return false;
     return true;
@@ -351,75 +428,104 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
     setIsSubmitting(true);
     try {
-      // Duplicate prevention check
+      // Duplicate prevention
       const duplicate = await provider.getItemsByQuery({
         listName: ListNames.DMSDocuments,
         select: ['ID'],
         filter: `DrugId eq ${formData.drugId} and CountryId eq ${formData.countryId} and TemplateId eq ${formData.templateId}`,
         top: 1
       });
-
       if (duplicate && duplicate.length > 0) {
         setErrors({ templateId: 'A document with this Drug, Country, and Template already exists.' } as any);
         setIsSubmitting(false);
         return;
       }
 
-      const selectedTemplate = templates.find(t => t.id === formData.templateId);
-      if (!selectedTemplate?.fileRef) {
+      const selTemplate = templates.find(t => t.id === formData.templateId);
+      if (!selTemplate?.fileRef) {
         setErrors({ templateId: 'Template file not found. Please re-upload the template.' });
+        setIsSubmitting(false);
         return;
       }
 
-      const libraryUrl = getLibraryUrl(ListNames.DMSDocumentsPath); // server relative library root
-
+      const libraryUrl = getLibraryUrl(ListNames.DMSDocumentsPath);
       const commentsPayload = formData.comments
-        .filter(comment => comment.trim())
-        .map((comment, idx) => ({
+        .filter(c => c.trim())
+        .map((c, idx) => ({
           id: idx + 1,
           author: currentUser.displayName,
-          text: comment.trim(),
+          text: c.trim(),
           timestamp: new Date().toISOString()
         }));
 
-      // Create document by COPYING template content into DMS Documents,
-      // but naming the new file by Artifact Name.
       const sanitize = (value: string) =>
-        String(value || 'Document')
-          .trim()
+        String(value || 'Document').trim()
           .replace(/[\\/:*?"<>|#%&{}~]+/g, '_')
-          .replace(/\s+/g, '_')
-          .replace(/_+/g, '_')
-          .replace(/^_+|_+$/g, '')
-          .slice(0, 80) || 'Document';
+          .replace(/\s+/g, '_').replace(/_+/g, '_')
+          .replace(/^_+|_+$/g, '').slice(0, 80) || 'Document';
 
-      const artifactNameRaw = selectedTemplate.artifactName || selectedTemplate.name || 'Document';
-      // Strip extension from artifactName so it doesn't appear twice in the final filename
+      const artifactNameRaw = selTemplate.artifactName || selTemplate.name || 'Document';
       const artifactName = artifactNameRaw.replace(/\.[^/.]+$/, '') || artifactNameRaw;
-      const templateLeaf = selectedTemplate.fileLeafRef || 'Template.docx';
+      const templateLeaf = selTemplate.fileLeafRef || 'Template.docx';
       const extMatch = templateLeaf.match(/\.[0-9a-z]+$/i);
       const ext = extMatch ? extMatch[0] : '.docx';
       const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
       const targetFileName = `${sanitize(artifactName)}_${stamp}${ext}`;
       const drugName = drugs.find(d => d.id === formData.drugId)?.name || 'Drug';
 
-      // Build CTD folder chain (root module -> leaf) using CTD folder lookup list.
-      const byId = new Map(modules.map(m => [m.id, m]));
-      const leafId = formData.submoduleId || formData.moduleId;
-      const chain: ModuleItem[] = [];
-      let node = leafId ? byId.get(leafId) : undefined;
-      while (node) {
-        chain.push(node);
-        if (!node.parentId) break;
-        node = byId.get(node.parentId);
-      }
-      const ctdSegments = chain.reverse().map(n => n.name).filter(Boolean);
+      const mappingType = selTemplate.mappingType || 'None';
+      let ctdSegments: string[] = [];
+      let ctdFolderValue = '';
+      let ctdModuleValue = '';
+      let submoduleValue = '';
 
-      // Ensure folder path exists then copy file there.
+      if (mappingType === 'GMP') {
+        // GMP: 1-level folder = GMP model name
+        const gmpModel = gmpModels.find(g => g.id === formData.moduleId);
+        const modelName = gmpModel?.name || formData.moduleId || 'GMP';
+        ctdSegments = [modelName];
+        ctdFolderValue = modelName;
+        ctdModuleValue = modelName;
+        submoduleValue = '';
+
+      } else if (mappingType === 'TMF') {
+        // TMF: Zone → Section (walk up from leaf to root)
+        const byId = new Map(tmfFolders.map(m => [m.id, m]));
+        const leafId = formData.submoduleId || formData.moduleId;
+        const chain: FolderItem[] = [];
+        let node = leafId ? byId.get(leafId) : undefined;
+        while (node) {
+          chain.push(node);
+          if (!node.parentId) break;
+          node = byId.get(node.parentId);
+        }
+        ctdSegments = chain.reverse().map(n => n.name).filter(Boolean);
+        const zoneNode = chain[0];
+        const sectionNode = chain.length > 1 ? chain[chain.length - 1] : undefined;
+        ctdFolderValue = formData.submoduleId || formData.moduleId;
+        ctdModuleValue = zoneNode?.id || formData.moduleId;
+        submoduleValue = sectionNode?.id || formData.submoduleId || '';
+
+      } else {
+        // eCTD: Module → Subfolder
+        const byId = new Map(modules.map(m => [m.id, m]));
+        const leafId = formData.submoduleId || formData.moduleId;
+        const chain: FolderItem[] = [];
+        let node = leafId ? byId.get(leafId) : undefined;
+        while (node) {
+          chain.push(node);
+          if (!node.parentId) break;
+          node = byId.get(node.parentId);
+        }
+        ctdSegments = chain.reverse().map(n => n.name).filter(Boolean);
+        ctdFolderValue = formData.submoduleId || formData.moduleId;
+        ctdModuleValue = formData.moduleId;
+        submoduleValue = formData.submoduleId;
+      }
+
       const targetFolder = await ensureFolderPath(libraryUrl, [drugName, ...ctdSegments]);
       const targetUrl = `${targetFolder}/${targetFileName}`;
-
-      await provider.copyFile(selectedTemplate.fileRef, targetUrl);
+      await provider.copyFile(selTemplate.fileRef, targetUrl);
 
       const created = await provider.getItemsByQuery({
         listName: ListNames.DMSDocuments,
@@ -429,7 +535,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       });
       const createdId = created?.[0]?.ID;
       if (!createdId) {
-        setErrors({ templateId: 'Document created, but metadata update failed. Please refresh and try again.' } as any);
+        setErrors({ templateId: 'Document created but metadata update failed. Please refresh.' } as any);
+        setIsSubmitting(false);
         return;
       }
 
@@ -440,9 +547,9 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           TemplateId: formData.templateId || null,
           DrugId: formData.drugId || null,
           CountryId: formData.countryId || null,
-          CTDFolder: formData.submoduleId || formData.moduleId || '',
-          CTDModule: formData.moduleId || '',
-          Submodule: formData.submoduleId || '',
+          CTDFolder: ctdFolderValue,
+          CTDModule: ctdModuleValue,
+          Submodule: submoduleValue,
           Status: 'Draft',
           IsEmailSend: true,
           Version: 1,
@@ -475,6 +582,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     filteredTemplates,
     selectedTemplate,
     modules,
+    gmpModels,
+    tmfFolders,
     approvers,
     errors,
     isSubmitting,
@@ -489,4 +598,3 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     closeAndReset
   };
 }
-

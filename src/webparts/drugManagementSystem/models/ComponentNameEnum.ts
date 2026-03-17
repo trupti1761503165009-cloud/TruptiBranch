@@ -33,5 +33,15 @@ export enum ComponentNameEnum {
 
   // CTD Folder Structure
   AddCTDFolder = 'AddCTDFolder',
-  EditCTDFolder = 'EditCTDFolder'
+  EditCTDFolder = 'EditCTDFolder',
+
+  // GMP Models Master
+  ManageGMP = 'ManageGMP',
+  AddGMP = 'AddGMP',
+  EditGMP = 'EditGMP',
+
+  // TMF Folders Master
+  ManageTMF = 'ManageTMF',
+  AddTMF = 'AddTMF',
+  EditTMF = 'EditTMF'
 }

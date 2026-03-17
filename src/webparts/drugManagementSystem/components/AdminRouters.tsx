@@ -17,6 +17,8 @@ import { AddUser } from './Custom/components/Admin/UserPermissions/AddUser';
 import { EditUser } from './Custom/components/Admin/UserPermissions/EditUser';
 import { CreateDocumentPage } from './Custom/components/Admin/CreateDocumentPage/CreateDocumentPage';
 import { ManageDocuments } from './Custom/components/Admin/ManageDocuments';
+import { ManageGMP } from './Custom/components/Admin/ManageGMP/ManageGMP';
+import { ManageTMF } from './Custom/components/Admin/ManageTMF/ManageTMF';
 
 type ManageArgs = { currentComponentName: ComponentNameEnum | ''; componentProps?: any };
 
@@ -143,7 +145,15 @@ export const UsersViewRouter: React.FC = () => {
   }
 };
 
-export const DocumentsViewRouter: React.FC<{ filterByCurrentUser?: boolean; filterByPending?: boolean }> = (props) => {
+export const GMPViewRouter: React.FC = () => {
+  return <ManageGMP />;
+};
+
+export const TMFViewRouter: React.FC = () => {
+  return <ManageTMF />;
+};
+
+export const DocumentsViewRouter: React.FC<{ filterByCurrentUser?: boolean; filterByPending?: boolean; hideAddButton?: boolean; hideFolderSidebar?: boolean }> = (props) => {
   const [state, setState] = React.useState<{ name: ComponentNameEnum; componentProps?: any }>({
     name: ComponentNameEnum.ManageDocuments,
     componentProps: {}

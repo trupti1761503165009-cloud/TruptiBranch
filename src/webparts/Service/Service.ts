@@ -1750,6 +1750,123 @@ export default class Service implements IDataProvider {
     public async getCountriesMaster(): Promise<string[]> {
         return this.getUniqueRecordsByColumnName(ListNames.Countries, 'Title');
     }
+
+    // ==================== GMP MODELS OPERATIONS ====================
+
+    public async getGMPModels(): Promise<any[]> {
+        try {
+            const items = await this.getAllItems({
+                listName: ListNames.GmpModels,
+                select: ['ID', 'Title', 'Category', 'SubGroup', 'SortOrder'],
+                orderBy: 'SortOrder',
+                isSortOrderAsc: true
+            });
+            return (items || []).map((item: any) => ({
+                id: item.ID,
+                name: item.Title,
+                category: item.Category || '',
+                subGroup: item.SubGroup || '',
+                sortOrder: item.SortOrder || 0
+            }));
+        } catch (error) {
+            console.error('Error fetching GMP Models:', error);
+            return [];
+        }
+    }
+
+    public async createGMPModel(data: { name: string; category: string; subGroup?: string; sortOrder?: number }): Promise<any> {
+        const result = await this.createItem({
+            Title: data.name,
+            Category: data.category,
+            SubGroup: data.subGroup || '',
+            SortOrder: data.sortOrder || 0
+        }, ListNames.GmpModels);
+        return { id: result.data.ID, ...data };
+    }
+
+    public async updateGMPModel(id: number, data: Partial<{ name: string; category: string; subGroup: string; sortOrder: number }>): Promise<void> {
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.Title = data.name;
+        if (data.category !== undefined) updateData.Category = data.category;
+        if (data.subGroup !== undefined) updateData.SubGroup = data.subGroup;
+        if (data.sortOrder !== undefined) updateData.SortOrder = data.sortOrder;
+        await this.updateItem(updateData, ListNames.GmpModels, id);
+    }
+
+    public async deleteGMPModel(id: number): Promise<void> {
+        await this.deleteItem(ListNames.GmpModels, id);
+    }
+
+    // ==================== TMF FOLDERS OPERATIONS ====================
+
+    public async getTMFFolders(): Promise<any[]> {
+        try {
+            const items = await this.getAllItems({
+                listName: ListNames.TMFFolders,
+                select: ['ID', 'Title', 'FolderId', 'ParentFolderId', 'IsFolder', 'SortOrder',
+                         'Zone', 'ZoneName', 'Section', 'SectionName', 'ArtifactId', 'ArtifactName', 'Reference'],
+                orderBy: 'SortOrder',
+                isSortOrderAsc: true
+            });
+            return (items || []).map((item: any) => ({
+                id: item.ID,
+                name: item.Title,
+                folderId: item.FolderId || String(item.ID),
+                parentFolderId: item.ParentFolderId || undefined,
+                isFolder: item.IsFolder !== false && item.IsFolder !== 0,
+                sortOrder: item.SortOrder || 0,
+                zone: item.Zone || 0,
+                zoneName: item.ZoneName || '',
+                section: item.Section || '',
+                sectionName: item.SectionName || '',
+                artifactId: item.ArtifactId || '',
+                artifactName: item.ArtifactName || '',
+                reference: item.Reference || ''
+            }));
+        } catch (error) {
+            console.error('Error fetching TMF Folders:', error);
+            return [];
+        }
+    }
+
+    public async createTMFFolder(data: { name: string; folderId: string; parentFolderId?: string; isFolder: boolean; sortOrder?: number; zone?: number; zoneName?: string; section?: string; sectionName?: string; artifactId?: string; artifactName?: string; reference?: string }): Promise<any> {
+        const result = await this.createItem({
+            Title: data.name,
+            FolderId: data.folderId,
+            ParentFolderId: data.parentFolderId || '',
+            IsFolder: data.isFolder ? 1 : 0,
+            SortOrder: data.sortOrder || 0,
+            Zone: data.zone || 0,
+            ZoneName: data.zoneName || '',
+            Section: data.section || '',
+            SectionName: data.sectionName || '',
+            ArtifactId: data.artifactId || '',
+            ArtifactName: data.artifactName || '',
+            Reference: data.reference || ''
+        }, ListNames.TMFFolders);
+        return { id: result.data.ID, ...data };
+    }
+
+    public async updateTMFFolder(id: number, data: Partial<{ name: string; folderId: string; parentFolderId: string; isFolder: boolean; sortOrder: number; zone: number; zoneName: string; section: string; sectionName: string; artifactId: string; artifactName: string; reference: string }>): Promise<void> {
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.Title = data.name;
+        if (data.folderId !== undefined) updateData.FolderId = data.folderId;
+        if (data.parentFolderId !== undefined) updateData.ParentFolderId = data.parentFolderId;
+        if (data.isFolder !== undefined) updateData.IsFolder = data.isFolder ? 1 : 0;
+        if (data.sortOrder !== undefined) updateData.SortOrder = data.sortOrder;
+        if (data.zone !== undefined) updateData.Zone = data.zone;
+        if (data.zoneName !== undefined) updateData.ZoneName = data.zoneName;
+        if (data.section !== undefined) updateData.Section = data.section;
+        if (data.sectionName !== undefined) updateData.SectionName = data.sectionName;
+        if (data.artifactId !== undefined) updateData.ArtifactId = data.artifactId;
+        if (data.artifactName !== undefined) updateData.ArtifactName = data.artifactName;
+        if (data.reference !== undefined) updateData.Reference = data.reference;
+        await this.updateItem(updateData, ListNames.TMFFolders, id);
+    }
+
+    public async deleteTMFFolder(id: number): Promise<void> {
+        await this.deleteItem(ListNames.TMFFolders, id);
+    }
 }
 
 
