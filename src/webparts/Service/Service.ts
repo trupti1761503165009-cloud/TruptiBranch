@@ -1051,14 +1051,34 @@ export default class Service implements IDataProvider {
         };
     }
     public getUsersFromGroup = async (groupName: string): Promise<{ value: number; label: string; email: string; loginName: string }[]> => {
+        const mapUsers = (users: any[]) => users.map(user => ({
+            value: user.Id,
+            label: user.Title,
+            email: user.Email,
+            loginName: user.LoginName
+        }));
         try {
-            const users = await this._sp.web.siteGroups.getByName(groupName).users();
-            return users.map(user => ({
-                value: user.Id,
-                label: user.Title,
-                email: user.Email,
-                loginName: user.LoginName
-            }));
+            // 1. Try exact name match first
+            try {
+                const users = await this._sp.web.siteGroups.getByName(groupName).users();
+                return mapUsers(users);
+            } catch {
+                // Exact match failed — fall back to case-insensitive partial search
+            }
+            // 2. Get all site groups and find best match (case-insensitive contains)
+            const allGroups = await this._sp.web.siteGroups();
+            const lc = groupName.toLowerCase();
+            const matchingGroup = allGroups.find((g: any) =>
+                g.Title.toLowerCase() === lc ||
+                g.Title.toLowerCase().includes(lc) ||
+                lc.includes(g.Title.toLowerCase())
+            );
+            if (!matchingGroup) {
+                console.warn(`DMS: No site group found matching "${groupName}"`);
+                return [];
+            }
+            const users = await this._sp.web.siteGroups.getById(matchingGroup.Id).users();
+            return mapUsers(users);
         } catch (error) {
             console.error(`Error fetching users from group ${groupName}:`, error);
             return [];

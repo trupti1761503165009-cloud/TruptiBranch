@@ -144,11 +144,9 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           'FileLeafRef',
           'Status',
           'Category/Id',
-          'Category/Title',
-          'Country/Id',
-          'MappedCTDFolder/FolderId'
+          'Category/Title'
         ],
-        expand: ['Category', 'Country', 'MappedCTDFolder'],
+        expand: ['Category'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
