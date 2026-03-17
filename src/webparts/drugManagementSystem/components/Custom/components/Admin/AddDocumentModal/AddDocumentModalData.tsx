@@ -146,7 +146,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       (async () => {
         try {
           const q = new CamlBuilder()
-            .View(['ID', 'LinkFilename', 'FileLeafRef', 'Status',
+            .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status',
                    'Category', 'CategoryId', 'Country', 'CountryId'])
             .RowLimit(5000, true)
             .Query();
@@ -199,6 +199,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,
         countryId: Number(item.CountryId || parseLookupId(item.Country)) || 0,
         status: item.Status || '',
+        fileRef: item.FileRef || '',
         fileLeafRef: item.FileLeafRef || item.LinkFilename || ''
       }))
     );
