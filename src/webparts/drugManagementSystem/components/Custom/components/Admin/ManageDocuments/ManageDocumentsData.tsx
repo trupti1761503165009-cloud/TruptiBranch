@@ -43,18 +43,23 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   // Filter based on activeTab
   const docsByTab = React.useMemo(() => {
     let list = documents;
-    const currentUserId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || 0) || 0;
-    const userEmail = String(currentUser?.email || '').toLowerCase();
-    
+    const currentUserId = Number(
+      (currentUser as any)?.userId ||
+      (currentUser as any)?.Id ||
+      (currentUser as any)?.id ||
+      0
+    ) || 0;
+    const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+
     if (activeTab === 'myDocuments') {
-      list = list.filter(d => 
-        (d.authorId && d.authorId === currentUserId) || 
-        String(d.author || '').toLowerCase().includes(userEmail)
+      list = list.filter(d =>
+        (currentUserId > 0 && d.authorId === currentUserId) ||
+        (userEmail !== '' && String(d.author || '').toLowerCase().includes(userEmail))
       );
     } else if (activeTab === 'assignedToMe') {
-      list = list.filter(d => 
-        (d.approverId && d.approverId === currentUserId) || 
-        String(d.approver || '').toLowerCase().includes(userEmail)
+      list = list.filter(d =>
+        (currentUserId > 0 && d.approverId === currentUserId) ||
+        (userEmail !== '' && String(d.approver || '').toLowerCase().includes(userEmail))
       );
     }
     return list;
@@ -154,7 +159,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   const parseLookupId = (value: any): number | undefined => {
     if (!value) return undefined;
     if (Array.isArray(value) && value.length > 0) {
-      const id = value[0]?.lookupId ?? value[0]?.Id ?? value[0]?.id;
+      const id = value[0]?.lookupId ?? value[0]?.ID ?? value[0]?.Id ?? value[0]?.id;
       const parsed = Number(id);
       return Number.isNaN(parsed) ? undefined : parsed;
     }
@@ -165,7 +170,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       return Number.isNaN(parsed) ? undefined : parsed;
     }
     if (typeof value === 'object') {
-      const id = value.lookupId ?? value.Id ?? value.id;
+      const id = value.lookupId ?? value.ID ?? value.Id ?? value.id;
       const parsed = Number(id);
       return Number.isNaN(parsed) ? undefined : parsed;
     }
@@ -232,9 +237,11 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     return currentPath;
   };
 
+  const stripExt = (s: string) => s.replace(/\.[^/.]+$/, '') || s;
+
   const mapDocumentItem = (item: any): Document => ({
     id: item.ID,
-    name: item.FileLeafRef || item.Title || 'Untitled',
+    name: stripExt(item.FileLeafRef || item.Title || 'Untitled'),
     fileName: item.FileLeafRef || '',
     fileRef: item.FileRef || '',
     category: parseLookupText(item.Category),

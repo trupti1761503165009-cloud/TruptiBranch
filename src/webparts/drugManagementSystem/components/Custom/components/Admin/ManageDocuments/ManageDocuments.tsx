@@ -112,6 +112,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
   const [isDisplayEditButtonview, setIsDisplayEditButtonview] = React.useState(false);
   const [isSelectedData, setisSelectedData] = React.useState(false);
   const [updateItem, setUpdateItem] = React.useState<any[]>([]);
+  // Inner view-mode for myDocuments / assignedToMe — does NOT change activeTab
+  const [innerMode, setInnerMode] = React.useState<'folder' | 'document'>('folder');
 
   const _onItemSelected = (item: any): void => {
     setSelectedIds(item.map((i: any) => i.id));
@@ -613,7 +615,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
       </div>
 
       {/* Primary Tabs: Drugs Folder | Document Folder — hidden when inside a drug */}
-      {selectedDrugId === null && (
+      {selectedDrugId === null && (activeTab === 'all' || activeTab === 'workspace') && (
         <div style={{ marginBottom: 15 }}>
           <Pivot
             aria-label="Document Views"
@@ -622,6 +624,20 @@ export const ManageDocuments: React.FC<any> = (props) => {
           >
             <PivotItem headerText="Drugs Folder" itemKey="all" />
             <PivotItem headerText="Document Folder" itemKey="workspace" />
+          </Pivot>
+        </div>
+      )}
+
+      {/* Sub-view selector for My Documents / Assigned to Me */}
+      {selectedDrugId === null && (activeTab === 'myDocuments' || activeTab === 'assignedToMe') && (
+        <div style={{ marginBottom: 15 }}>
+          <Pivot
+            aria-label="View Mode"
+            selectedKey={innerMode}
+            onLinkClick={(item) => item?.props.itemKey && setInnerMode(item.props.itemKey as any)}
+          >
+            <PivotItem headerText="Drugs Folder" itemKey="folder" />
+            <PivotItem headerText="Document Folder" itemKey="document" />
           </Pivot>
         </div>
       )}
@@ -679,7 +695,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <Loader />
           </div>
         )}
-        {activeTab === 'workspace' ? (
+        {(activeTab === 'workspace' || ((activeTab === 'myDocuments' || activeTab === 'assignedToMe') && innerMode === 'document')) ? (
           <MemoizedDataGridComponent
             key="doc-folder-flat-list"
             items={filteredDocuments}
@@ -738,7 +754,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 minWidth: 350,
                 isSortingRequired: true,
                 onRender: (drug: any) => {
-                  const drugDocs = documents.filter(d => d.drugId === drug.id);
+                  const drugDocs = filteredDocuments.filter(d => d.drugId === drug.id);
                   return (
                     <div
                       className="folder-row-clickable"
@@ -761,7 +777,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 fieldName: 'folderCount',
                 minWidth: 160,
                 onRender: (drug: any) => {
-                  const drugDocs = documents.filter(d => d.drugId === drug.id);
+                  const drugDocs = filteredDocuments.filter(d => d.drugId === drug.id);
                   const folderCount = new Set(drugDocs.map(d => d.ctdFolder || d.ctdModule).filter(Boolean)).size;
                   return <span>{folderCount} Folders</span>;
                 }
@@ -1056,7 +1072,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
                     <div className="detail-label">CTD Folder</div>
-                    <div className="detail-value">{viewingDocument.ctdFolder || 'N/A'}</div>
+                    <div className="detail-value">{folderLabelMap.get(viewingDocument.ctdFolder || '') || viewingDocument.ctdFolder || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
@@ -1189,6 +1205,19 @@ export const ManageDocuments: React.FC<any> = (props) => {
               {/* Action Buttons */}
               <div className="ms-Grid-row" style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #E0E0E0' }}>
                 <div className="ms-Grid-col ms-sm12" style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  {viewingDocument.sharePointUrl && (
+                    <DefaultButton
+                      href={viewingDocument.sharePointUrl}
+                      target="_blank"
+                      styles={{
+                        root: { borderColor: '#1E88E5', color: '#1E88E5' },
+                        rootHovered: { background: '#E3F2FD', borderColor: '#1565C0', color: '#1565C0' }
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
+                      View Document
+                    </DefaultButton>
+                  )}
                   <DefaultButton
                     onClick={() => {
                       setIsDocPanelOpen(false);

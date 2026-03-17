@@ -393,7 +393,9 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           .replace(/^_+|_+$/g, '')
           .slice(0, 80) || 'Document';
 
-      const artifactName = selectedTemplate.artifactName || selectedTemplate.name || 'Document';
+      const artifactNameRaw = selectedTemplate.artifactName || selectedTemplate.name || 'Document';
+      // Strip extension from artifactName so it doesn't appear twice in the final filename
+      const artifactName = artifactNameRaw.replace(/\.[^/.]+$/, '') || artifactNameRaw;
       const templateLeaf = selectedTemplate.fileLeafRef || 'Template.docx';
       const extMatch = templateLeaf.match(/\.[0-9a-z]+$/i);
       const ext = extMatch ? extMatch[0] : '.docx';
