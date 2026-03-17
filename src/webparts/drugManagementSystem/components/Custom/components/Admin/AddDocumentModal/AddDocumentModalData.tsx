@@ -137,16 +137,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
       provider.getItemsByQuery({
         listName: ListNames.Templates,
-        select: [
-          'ID',
-          'Title',
-          'FileRef',
-          'FileLeafRef',
-          'Status',
-          'Category/Id',
-          'Category/Title'
-        ],
-        expand: ['Category'],
+        select: ['ID', 'Title'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
@@ -269,11 +260,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
   }, [formData.templateId, templates]);
 
   const filteredTemplates = React.useMemo(
-    () =>
-      templates
-        .filter(t => (t.status ? String(t.status).toLowerCase() === 'active' : true))
-        .filter(t => (!formData.countryId ? true : t.countryId === formData.countryId)),
-    [templates, formData.countryId]
+    () => templates,
+    [templates]
   );
 
   const selectedTemplate = React.useMemo(
