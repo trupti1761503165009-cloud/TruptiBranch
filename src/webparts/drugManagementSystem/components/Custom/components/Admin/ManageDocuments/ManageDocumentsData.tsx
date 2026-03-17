@@ -645,6 +645,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     await provider.updateItem(
       {
         Status: status,
+        IsEmailSend: true,
         Comments: JSON.stringify(nextComments)
       },
       ListNames.DMSDocuments,
@@ -698,6 +699,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
             Submodule: doc.submodule,
             Status: status,
             ApproverId: doc.approverId,
+            IsEmailSend: true,
             Comments: JSON.stringify(doc.comments || []),
             SharePointURL: { Url: fileUrl, Description: fileName }
           },
