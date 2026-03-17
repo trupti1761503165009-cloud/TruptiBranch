@@ -1,0 +1,137 @@
+sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102 TypeError: props.onSelectedItem is not a function
+    at getSelectionDetails (DataGridComponent.tsx:80:19)
+    at Selection.onSelectionChanged [as _onSelectionChanged] (DataGridComponent.tsx:72:35)
+    at __webpack_modules__.57350.Selection._change (drug-management-system-web-part.js:53074:22)
+    at __webpack_modules__.57350.Selection.setChangeEvents (drug-management-system-web-part.js:52714:22)
+    at __webpack_modules__.57350.Selection.setItems (drug-management-system-web-part.js:52819:14)
+    at DetailsListBase._this._getDerivedStateFromProps [as getDerivedStateFromProps] (drug-management-system-web-part.js:99571:34)
+    at __webpack_modules__.53314.DetailsListBase.getDerivedStateFromProps (drug-management-system-web-part.js:99735:30)
+    at _r (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102:48412)
+    at Go (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102:70333)
+    at Ks (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102:111991)
+ss @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+n.callback @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+pr @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+ms @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Lc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ac @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+hc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+uc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Lo @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+eval @ AuthorDashboard.tsx:51
+step @ 86525:48
+eval @ 86525:29
+fulfilled @ 86525:20
+Promise.then
+step @ 86525:22
+eval @ 86525:23
+__awaiter @ 86525:19
+eval @ AuthorDashboard.tsx:24
+eval @ AuthorDashboard.tsx:56
+Uc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Mc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+F @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100Understand this error
+sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:249 Uncaught (in promise) Error: Old FRE behavior is disabled
+    at get _deferLoadingFeatureHostControl (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:249:6961)
+    at i.attachTeachingBubble (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:249:5948)
+    at sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:652:1185
+    at u (sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:652:1227)
+    at chunk.sp-command-bar_en-us_e30ae7dbd9daa124af38.js:22:93098
+get _deferLoadingFeatureHostControl @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:249
+attachTeachingBubble @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:249
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:652
+u @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:652
+(anonymous) @ chunk.sp-command-bar_en-us_e30ae7dbd9daa124af38.js:22
+setTimeout
+componentDidMount @ chunk.sp-command-bar_en-us_e30ae7dbd9daa124af38.js:22
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:174
+ms @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Lc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ac @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+hc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+uc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+enqueueSetState @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:10
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:174
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:174
+Promise.then
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:174
+setTimeout
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:174
+ms @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Lc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ac @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+hc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+qi @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+uc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+enqueueSetState @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:10
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:480
+Promise.then
+getLoadOperations @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:480
+onLoad @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:480
+initialize @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:480
+initialize @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:610
+componentDidMount @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:610
+componentDidMount @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:611
+ms @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Lc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ac @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+hc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+uc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Xc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+gc @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+ad @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+onRender @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:480
+_renderCoreRouter @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:712
+onRender @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:712
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+Promise.then
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:417
+c @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:234
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:234
+s @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:234
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:227
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:225
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:227
+Promise.then
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:227
+(anonymous) @ Page.aspx?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/manifests.js:159
+Promise.then
+(anonymous) @ Page.aspx?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/manifests.js:135
+(anonymous) @ Page.aspx?debug=true&noredir=true&debugManifestsFile=https://localhost:4321/temp/manifests.js:159Understand this error
+86525:20 Uncaught (in promise) TypeError: props.onSelectedItem is not a function
