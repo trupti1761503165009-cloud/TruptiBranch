@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 import { TextField } from '@fluentui/react/lib/TextField';
-import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrashCan, faArrowsRotate, faEye } from '@fortawesome/free-solid-svg-icons';
 import { Link, TooltipHost } from '@fluentui/react';
@@ -23,7 +22,6 @@ export const ManageGMP: React.FC = () => {
     isLoading,
     errorMessage,
     successMessage,
-    searchTerm,
     panelMode,
     isPanelOpen,
     formData,
@@ -52,6 +50,10 @@ export const ManageGMP: React.FC = () => {
 
   const isReadOnly = panelMode === 'view';
 
+  const formTitle = panelMode === 'add' ? 'Add GMP Model'
+    : panelMode === 'edit' ? 'Edit GMP Model'
+    : 'View GMP Model';
+
   const columns: any[] = [
     {
       key: 'name', name: 'MODEL NAME', fieldName: 'name', minWidth: 200, isSortingRequired: true,
@@ -59,23 +61,22 @@ export const ManageGMP: React.FC = () => {
     },
     { key: 'category', name: 'CATEGORY', fieldName: 'category', minWidth: 200, isSortingRequired: true },
     { key: 'subGroup', name: 'SUB GROUP', fieldName: 'subGroup', minWidth: 180, isSortingRequired: true },
-    { key: 'sortOrder', name: 'SORT ORDER', fieldName: 'sortOrder', minWidth: 100 },
     {
       key: 'actions', name: 'ACTIONS', minWidth: 120,
       onRender: (item: IGMPModel) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <TooltipHost content="View">
-            <Link className="actionBtn iconSize" onClick={() => openViewPanel(item)}>
+            <Link className="actionBtn iconSize btnView" onClick={() => openViewPanel(item)}>
               <FontAwesomeIcon icon={faEye} />
             </Link>
           </TooltipHost>
           <TooltipHost content="Edit">
-            <Link className="actionBtn iconSize" onClick={() => openEditPanel(item)}>
+            <Link className="actionBtn iconSize btnEdit" onClick={() => openEditPanel(item)}>
               <FontAwesomeIcon icon={faPenToSquare} />
             </Link>
           </TooltipHost>
           <TooltipHost content="Delete">
-            <Link className="actionBtn iconSize" style={{ color: '#d13438' }} onClick={() => openDeleteDialog(item)}>
+            <Link className="actionBtn iconSize btnDanger" onClick={() => openDeleteDialog(item)}>
               <FontAwesomeIcon icon={faTrashCan} />
             </Link>
           </TooltipHost>
@@ -84,28 +85,149 @@ export const ManageGMP: React.FC = () => {
     }
   ];
 
-  const panelTitle = panelMode === 'add' ? 'Add GMP Model'
-    : panelMode === 'edit' ? 'Edit GMP Model'
-    : 'View GMP Model';
+  if (isPanelOpen) {
+    return (
+      <div className="pageContainer" data-testid="gmp-form-page">
+        {isLoading && <Loader />}
+
+        <div className="boxCard">
+          <div className="ms-Grid">
+            <div className="ms-Grid-row">
+              <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
+                <h1 className="mainTitle">{formTitle}</h1>
+                <DefaultButton onClick={closePanel} styles={{ root: { borderColor: '#d13438', color: '#d13438' } }}>
+                  Close
+                </DefaultButton>
+              </div>
+            </div>
+
+            <div className="ms-Grid-row">
+              <div className="ms-Grid-col ms-sm12">
+                <div className="customebreadcrumb">
+                  <Breadcrumb items={[
+                    { label: 'Home', onClick: () => {} },
+                    { label: 'GMP Models', onClick: closePanel },
+                    { label: formTitle, isActive: true }
+                  ]} />
+                </div>
+              </div>
+            </div>
+
+            <div className="ms-Grid-row" style={{ marginTop: 20 }}>
+              <div className="ms-Grid-col ms-sm12">
+                <div className="boxCard" style={{ background: '#fff', padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                  <div className="ms-Grid">
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl">
+                          <TextField
+                            label="Model Name"
+                            required={!isReadOnly}
+                            readOnly={isReadOnly}
+                            value={formData.name}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, name: v || '' }))}
+                            errorMessage={fieldErrors.name}
+                            placeholder="Enter GMP model name"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl">
+                          <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 4 }}>
+                            Category {!isReadOnly && <span style={{ color: 'red' }}>*</span>}
+                          </label>
+                          {isReadOnly ? (
+                            <div style={{ padding: '8px 0', color: '#333', fontSize: 14 }}>{formData.category || '-'}</div>
+                          ) : (
+                            <ReactDropdown
+                              name="category"
+                              options={CATEGORY_OPTIONS}
+                              defaultOption={formData.category ? { value: formData.category, label: formData.category } : undefined}
+                              onChange={(opt: any) => setFormData(prev => ({ ...prev, category: opt?.value || '' }))}
+                              isCloseMenuOnSelect
+                              isSorted={false}
+                              isClearable={false}
+                              placeholder="Select Category"
+                            />
+                          )}
+                          {fieldErrors.category && <div style={{ color: '#d13438', fontSize: 12, marginTop: 4 }}>{fieldErrors.category}</div>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl">
+                          <TextField
+                            label="Sub Group"
+                            readOnly={isReadOnly}
+                            value={formData.subGroup}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, subGroup: v || '' }))}
+                            placeholder="e.g. Directive, Guideline, Policy..."
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isReadOnly && (
+                    <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #E0E0E0' }}>
+                      <PrimaryButton
+                        onClick={handleSave}
+                        disabled={isLoading}
+                        styles={{ root: { background: 'var(--primry)', border: 'none' } }}
+                      >
+                        {panelMode === 'add' ? 'Add GMP Model' : 'Update GMP Model'}
+                      </PrimaryButton>
+                      <DefaultButton onClick={closePanel}>Cancel</DefaultButton>
+                    </div>
+                  )}
+                  {isReadOnly && (
+                    <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #E0E0E0' }}>
+                      <DefaultButton onClick={closePanel}>Close</DefaultButton>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <CustomModal
+          isModalOpenProps={!!successMessage}
+          setModalpopUpFalse={() => setSuccessMessage('')}
+          subject="Success"
+          message={successMessage}
+          closeButtonText="Close"
+          onClose={() => setSuccessMessage('')}
+        />
+        <CustomModal
+          isModalOpenProps={!!errorMessage}
+          setModalpopUpFalse={() => setErrorMessage('')}
+          subject="Error"
+          message={errorMessage}
+          closeButtonText="Close"
+          onClose={() => setErrorMessage('')}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="manage-gmp-page">
+    <div className="pageContainer" data-testid="manage-gmp-page">
       {isLoading && <Loader />}
 
-      <Breadcrumb items={[
-        { label: 'Home', onClick: () => {} },
-        { label: 'GMP Models', isActive: true }
-      ]} />
+      <h1 className="mainTitle" style={{ marginBottom: 8 }}>GMP Models Master</h1>
 
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 className="mainTitle" style={{ margin: 0 }}>GMP Models Master</h1>
-        <PrimaryButton
-          onClick={openAddPanel}
-          styles={{ root: { background: 'var(--primry)', border: 'none' } }}
-        >
-          <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-          Add GMP Model
-        </PrimaryButton>
+      <div className="customebreadcrumb" style={{ marginBottom: 16 }}>
+        <Breadcrumb items={[
+          { label: 'Home', onClick: () => {} },
+          { label: 'GMP Models', isActive: true }
+        ]} />
       </div>
 
       <div className="boxCard" style={{ padding: 0 }}>
@@ -120,87 +242,25 @@ export const ManageGMP: React.FC = () => {
           isAddNew={true}
           addNewContent={
             <div className="dflex pb-1">
-              <Link className="actionBtn iconSize btnRefresh icon-mr" onClick={loadItems}>
+              <PrimaryButton
+                className="btn btn-primary"
+                onClick={openAddPanel}
+                styles={{ root: { background: 'var(--primry)', border: 'none' } }}
+              >
+                <FontAwesomeIcon icon={faPlus} style={{ marginRight: 6 }} />
+                Add GMP Model
+              </PrimaryButton>
+              <Link className="actionBtn iconSize btnRefresh ml-10" onClick={loadItems}>
                 <TooltipHost content="Refresh">
                   <FontAwesomeIcon icon={faArrowsRotate} />
                 </TooltipHost>
               </Link>
             </div>
           }
+          addEDButton={undefined}
         />
       </div>
 
-      {/* Add / Edit / View Panel */}
-      <Panel
-        isOpen={isPanelOpen}
-        onDismiss={closePanel}
-        type={PanelType.medium}
-        headerText={panelTitle}
-        isFooterAtBottom={true}
-        onRenderFooterContent={() => (
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            {!isReadOnly && (
-              <PrimaryButton
-                onClick={handleSave}
-                disabled={isLoading}
-                styles={{ root: { background: 'var(--primry)', border: 'none' } }}
-              >
-                {panelMode === 'add' ? 'Add' : 'Update'}
-              </PrimaryButton>
-            )}
-            <DefaultButton onClick={closePanel}>
-              {isReadOnly ? 'Close' : 'Cancel'}
-            </DefaultButton>
-          </div>
-        )}
-      >
-        <div style={{ padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <TextField
-            label="Model Name"
-            required={!isReadOnly}
-            readOnly={isReadOnly}
-            value={formData.name}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, name: v || '' }))}
-            errorMessage={fieldErrors.name}
-          />
-          <div>
-            <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 4 }}>
-              Category <span style={{ color: 'red' }}>*</span>
-            </label>
-            {isReadOnly ? (
-              <div style={{ padding: '6px 0', color: '#333' }}>{formData.category || '-'}</div>
-            ) : (
-              <ReactDropdown
-                name="category"
-                options={CATEGORY_OPTIONS}
-                defaultOption={formData.category ? { value: formData.category, label: formData.category } : undefined}
-                onChange={(opt: any) => setFormData(prev => ({ ...prev, category: opt?.value || '' }))}
-                isCloseMenuOnSelect
-                isSorted={false}
-                isClearable={false}
-                placeholder="Select Category"
-              />
-            )}
-            {fieldErrors.category && <div style={{ color: '#d13438', fontSize: 12, marginTop: 4 }}>{fieldErrors.category}</div>}
-          </div>
-          <TextField
-            label="Sub Group"
-            readOnly={isReadOnly}
-            value={formData.subGroup}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, subGroup: v || '' }))}
-            placeholder="e.g. Directive, Guideline, Policy..."
-          />
-          <TextField
-            label="Sort Order"
-            type="number"
-            readOnly={isReadOnly}
-            value={String(formData.sortOrder)}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, sortOrder: Number(v) || 0 }))}
-          />
-        </div>
-      </Panel>
-
-      {/* Delete Confirmation */}
       <CustomModal
         isModalOpenProps={isDeleteDialogOpen}
         setModalpopUpFalse={setIsDeleteDialogOpen}
@@ -216,8 +276,6 @@ export const ManageGMP: React.FC = () => {
         onClickOfYes={handleDeleteConfirm}
         onClose={() => setIsDeleteDialogOpen(false)}
       />
-
-      {/* Success Modal */}
       <CustomModal
         isModalOpenProps={!!successMessage}
         setModalpopUpFalse={() => setSuccessMessage('')}
@@ -226,8 +284,6 @@ export const ManageGMP: React.FC = () => {
         closeButtonText="Close"
         onClose={() => setSuccessMessage('')}
       />
-
-      {/* Error Modal */}
       <CustomModal
         isModalOpenProps={!!errorMessage}
         setModalpopUpFalse={() => setErrorMessage('')}

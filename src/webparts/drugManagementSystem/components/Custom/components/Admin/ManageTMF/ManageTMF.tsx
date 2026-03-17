@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 import { TextField } from '@fluentui/react/lib/TextField';
-import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrashCan, faArrowsRotate, faEye, faFolder, faFolderOpen, faFileLines, faArrowLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
@@ -59,7 +58,7 @@ export const ManageTMF: React.FC = () => {
 
   const isReadOnly = panelMode === 'view';
 
-  const panelTitle = panelMode === 'add' ? 'Add TMF Folder'
+  const formTitle = panelMode === 'add' ? 'Add TMF Folder'
     : panelMode === 'edit' ? 'Edit TMF Folder'
     : 'View TMF Folder';
 
@@ -71,34 +70,269 @@ export const ManageTMF: React.FC = () => {
     : folderTrail.length === 1 ? 'Add Section'
     : 'Add Artifact';
 
+  if (isPanelOpen) {
+    return (
+      <div className="pageContainer" data-testid="tmf-form-page">
+        {isLoading && <Loader />}
+
+        <div className="boxCard">
+          <div className="ms-Grid">
+            <div className="ms-Grid-row">
+              <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
+                <h1 className="mainTitle">{formTitle}</h1>
+                <DefaultButton onClick={closePanel} styles={{ root: { borderColor: '#d13438', color: '#d13438' } }}>
+                  Close
+                </DefaultButton>
+              </div>
+            </div>
+
+            <div className="ms-Grid-row">
+              <div className="ms-Grid-col ms-sm12">
+                <div className="customebreadcrumb">
+                  <Breadcrumb items={[
+                    { label: 'Home', onClick: () => {} },
+                    { label: 'TMF Folder Structure', onClick: closePanel },
+                    { label: formTitle, isActive: true }
+                  ]} />
+                </div>
+              </div>
+            </div>
+
+            <div className="ms-Grid-row" style={{ marginTop: 20 }}>
+              <div className="ms-Grid-col ms-sm12">
+                <div className="boxCard" style={{ background: '#fff', padding: '24px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+                  <div className="ms-Grid">
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 4 }}>
+                            Zone {!isReadOnly && <span style={{ color: 'red' }}>*</span>}
+                          </label>
+                          {isReadOnly ? (
+                            <div style={{ padding: '8px 0', color: '#333', fontSize: 14 }}>{formData.zoneName || '-'}</div>
+                          ) : (
+                            <ReactDropdown
+                              name="zoneName"
+                              options={ZONE_OPTIONS}
+                              defaultOption={formData.zoneName ? { value: formData.zoneName, label: formData.zoneName } : undefined}
+                              onChange={(opt: any) => {
+                                const choice = TMF_ZONE_CHOICES.find(z => z.value === opt?.value);
+                                setFormData(prev => ({ ...prev, zoneName: opt?.value || '', zone: choice?.zone || 0 }));
+                              }}
+                              isCloseMenuOnSelect
+                              isSorted={false}
+                              isClearable={false}
+                              placeholder="Select Zone"
+                            />
+                          )}
+                          {fieldErrors.zoneName && <div style={{ color: '#d13438', fontSize: 12, marginTop: 4 }}>{fieldErrors.zoneName}</div>}
+                        </div>
+                      </div>
+
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Title / Name"
+                            required={!isReadOnly}
+                            readOnly={isReadOnly}
+                            value={formData.name}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, name: v || '' }))}
+                            errorMessage={fieldErrors.name}
+                            placeholder="e.g. Trial Master File"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Folder ID"
+                            required={!isReadOnly}
+                            readOnly={isReadOnly}
+                            value={formData.folderId}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, folderId: v || '' }))}
+                            placeholder="e.g. Z1, Z1.S1.01, 01.01.01"
+                            errorMessage={fieldErrors.folderId}
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Parent Folder ID"
+                            readOnly={isReadOnly}
+                            value={formData.parentFolderId || ''}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, parentFolderId: v || '' }))}
+                            placeholder="Leave empty for root zones"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Section Code"
+                            readOnly={isReadOnly}
+                            value={formData.section}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, section: v || '' }))}
+                            placeholder="e.g. 1.01"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Section Name"
+                            readOnly={isReadOnly}
+                            value={formData.sectionName}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, sectionName: v || '' }))}
+                            placeholder="e.g. Trial Oversight"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Artifact ID"
+                            readOnly={isReadOnly}
+                            value={formData.artifactId}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, artifactId: v || '' }))}
+                            placeholder="e.g. 01.01.01"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Artifact Name"
+                            readOnly={isReadOnly}
+                            value={formData.artifactName}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, artifactName: v || '' }))}
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Reference"
+                            readOnly={isReadOnly}
+                            value={formData.reference}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, reference: v || '' }))}
+                            placeholder="e.g. TMF RM 3.3.1"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          <TextField
+                            label="Sort Order"
+                            type="number"
+                            readOnly={isReadOnly}
+                            value={String(formData.sortOrder)}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, sortOrder: Number(v) || 0 }))}
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ms-Grid-row">
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ marginBottom: 16 }}>
+                          {!isReadOnly ? (
+                            <Toggle
+                              label="Is Folder / Section (not artifact)"
+                              checked={formData.isFolder}
+                              onChange={(_e, checked) => setFormData(prev => ({ ...prev, isFolder: !!checked }))}
+                            />
+                          ) : (
+                            <div>
+                              <label style={{ fontWeight: 600, fontSize: 14 }}>Type</label>
+                              <div style={{ padding: '6px 0', color: '#333' }}>{formData.isFolder ? 'Folder / Section' : 'Artifact'}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isReadOnly && (
+                    <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #E0E0E0', marginTop: 8 }}>
+                      <PrimaryButton
+                        onClick={handleSave}
+                        disabled={isLoading}
+                        styles={{ root: { background: 'var(--primry)', border: 'none' } }}
+                      >
+                        {panelMode === 'add' ? 'Add TMF Folder' : 'Update TMF Folder'}
+                      </PrimaryButton>
+                      <DefaultButton onClick={closePanel}>Cancel</DefaultButton>
+                    </div>
+                  )}
+                  {isReadOnly && (
+                    <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #E0E0E0', marginTop: 8 }}>
+                      <DefaultButton onClick={closePanel}>Close</DefaultButton>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <CustomModal
+          isModalOpenProps={!!successMessage}
+          setModalpopUpFalse={() => setSuccessMessage('')}
+          subject="Success"
+          message={successMessage}
+          closeButtonText="Close"
+          onClose={() => setSuccessMessage('')}
+        />
+        <CustomModal
+          isModalOpenProps={!!errorMessage}
+          setModalpopUpFalse={() => setErrorMessage('')}
+          subject="Error"
+          message={errorMessage}
+          closeButtonText="Close"
+          onClose={() => setErrorMessage('')}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="manage-tmf-page">
+    <div className="pageContainer" data-testid="manage-tmf-page">
       {isLoading && <Loader />}
 
-      <Breadcrumb items={[
-        { label: 'Home', onClick: () => {} },
-        { label: 'TMF Folder Structure', isActive: true }
-      ]} />
+      <h1 className="mainTitle" style={{ marginBottom: 8 }}>TMF Folder Structure</h1>
 
-      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 className="mainTitle" style={{ margin: 0 }}>TMF Folder Structure</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Link className="actionBtn iconSize btnRefresh" onClick={loadItems}>
-            <TooltipHost content="Refresh">
-              <FontAwesomeIcon icon={faArrowsRotate} />
-            </TooltipHost>
-          </Link>
-          <PrimaryButton
-            onClick={() => openAddPanel(currentParentId || undefined)}
-            styles={{ root: { background: 'var(--primry)', border: 'none' } }}
-          >
-            <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-            {addButtonLabel}
-          </PrimaryButton>
-        </div>
+      <div className="customebreadcrumb" style={{ marginBottom: 16 }}>
+        <Breadcrumb items={[
+          { label: 'Home', onClick: () => {} },
+          { label: 'TMF Folder Structure', isActive: true }
+        ]} />
       </div>
 
-      {/* Drill-down breadcrumb trail */}
+      {/* Folder drill-down trail */}
       {folderTrail.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
           <Link onClick={navigateToRoot} style={{ color: 'var(--primry)', fontWeight: 600 }}>
@@ -118,28 +352,40 @@ export const ManageTMF: React.FC = () => {
         </div>
       )}
 
-      {/* Search */}
-      <div style={{ marginBottom: 12 }}>
-        <TextField
-          placeholder="Search by name, folder ID, zone..."
-          value={searchTerm}
-          onChange={(_e, v) => setSearchTerm(v || '')}
-          styles={{ root: { maxWidth: 400 } }}
-        />
-      </div>
+      {/* Search + level label */}
+      <div style={{ fontWeight: 600, color: '#555', marginBottom: 8, fontSize: 13 }}>{levelLabel}</div>
 
-      {/* Level label */}
-      <div style={{ fontWeight: 600, color: '#555', marginBottom: 8, fontSize: 13 }}>
-        {levelLabel}
-      </div>
+      <div className="boxCard" style={{ padding: 0 }}>
+        {/* Toolbar row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+          <TextField
+            placeholder="Search by name, folder ID, zone..."
+            value={searchTerm}
+            onChange={(_e, v) => setSearchTerm(v || '')}
+            styles={{ root: { width: 300 } }}
+          />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link className="actionBtn iconSize btnRefresh" onClick={loadItems}>
+              <TooltipHost content="Refresh">
+                <FontAwesomeIcon icon={faArrowsRotate} />
+              </TooltipHost>
+            </Link>
+            <PrimaryButton
+              onClick={() => openAddPanel(currentParentId || undefined)}
+              styles={{ root: { background: 'var(--primry)', border: 'none' } }}
+            >
+              <FontAwesomeIcon icon={faPlus} style={{ marginRight: 6 }} />
+              {addButtonLabel}
+            </PrimaryButton>
+          </div>
+        </div>
 
-      {/* Folder/Item rows */}
-      <div className="boxCard" style={{ padding: '8px 0' }}>
+        {/* Items */}
         {currentLevelItems.length === 0 && !isLoading && (
           <div style={{ padding: 32, textAlign: 'center', color: '#888' }}>
             No items found.{' '}
             <Link onClick={() => openAddPanel(currentParentId || undefined)} style={{ color: 'var(--primry)' }}>
-              Add {addButtonLabel.split(' ')[1]}
+              {addButtonLabel}
             </Link>
           </div>
         )}
@@ -181,17 +427,17 @@ export const ManageTMF: React.FC = () => {
                 </TooltipHost>
               )}
               <TooltipHost content="View">
-                <Link className="actionBtn iconSize" onClick={() => openViewPanel(item)}>
+                <Link className="actionBtn iconSize btnView" onClick={() => openViewPanel(item)}>
                   <FontAwesomeIcon icon={faEye} />
                 </Link>
               </TooltipHost>
               <TooltipHost content="Edit">
-                <Link className="actionBtn iconSize" onClick={() => openEditPanel(item)}>
+                <Link className="actionBtn iconSize btnEdit" onClick={() => openEditPanel(item)}>
                   <FontAwesomeIcon icon={faPenToSquare} />
                 </Link>
               </TooltipHost>
               <TooltipHost content="Delete">
-                <Link className="actionBtn iconSize" style={{ color: '#d13438' }} onClick={() => openDeleteDialog(item)}>
+                <Link className="actionBtn iconSize btnDanger" onClick={() => openDeleteDialog(item)}>
                   <FontAwesomeIcon icon={faTrashCan} />
                 </Link>
               </TooltipHost>
@@ -200,148 +446,6 @@ export const ManageTMF: React.FC = () => {
         ))}
       </div>
 
-      {/* Add / Edit / View Panel */}
-      <Panel
-        isOpen={isPanelOpen}
-        onDismiss={closePanel}
-        type={PanelType.medium}
-        headerText={panelTitle}
-        isFooterAtBottom={true}
-        onRenderFooterContent={() => (
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            {!isReadOnly && (
-              <PrimaryButton
-                onClick={handleSave}
-                disabled={isLoading}
-                styles={{ root: { background: 'var(--primry)', border: 'none' } }}
-              >
-                {panelMode === 'add' ? 'Add' : 'Update'}
-              </PrimaryButton>
-            )}
-            <DefaultButton onClick={closePanel}>
-              {isReadOnly ? 'Close' : 'Cancel'}
-            </DefaultButton>
-          </div>
-        )}
-      >
-        <div style={{ padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Zone Name — CHOICE dropdown */}
-          <div>
-            <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 4 }}>
-              Zone <span style={{ color: 'red' }}>*</span>
-            </label>
-            {isReadOnly ? (
-              <div style={{ padding: '6px 0', color: '#333' }}>{formData.zoneName || '-'}</div>
-            ) : (
-              <ReactDropdown
-                name="zoneName"
-                options={ZONE_OPTIONS}
-                defaultOption={formData.zoneName ? { value: formData.zoneName, label: formData.zoneName } : undefined}
-                onChange={(opt: any) => {
-                  const choice = TMF_ZONE_CHOICES.find(z => z.value === opt?.value);
-                  setFormData(prev => ({ ...prev, zoneName: opt?.value || '', zone: choice?.zone || 0 }));
-                }}
-                isCloseMenuOnSelect
-                isSorted={false}
-                isClearable={false}
-                placeholder="Select Zone"
-              />
-            )}
-            {fieldErrors.zoneName && <div style={{ color: '#d13438', fontSize: 12, marginTop: 4 }}>{fieldErrors.zoneName}</div>}
-          </div>
-
-          <TextField
-            label="Title / Name"
-            required={!isReadOnly}
-            readOnly={isReadOnly}
-            value={formData.name}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, name: v || '' }))}
-            errorMessage={fieldErrors.name}
-          />
-
-          <TextField
-            label="Folder ID"
-            required={!isReadOnly}
-            readOnly={isReadOnly}
-            value={formData.folderId}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, folderId: v || '' }))}
-            placeholder="e.g. Z1, Z1.S1.01, 01.01.01"
-            errorMessage={fieldErrors.folderId}
-          />
-
-          <TextField
-            label="Parent Folder ID"
-            readOnly={isReadOnly}
-            value={formData.parentFolderId || ''}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, parentFolderId: v || '' }))}
-            placeholder="Leave empty for root zones"
-          />
-
-          {!isReadOnly && (
-            <Toggle
-              label="Is Folder / Section (not artifact)"
-              checked={formData.isFolder}
-              onChange={(_e, checked) => setFormData(prev => ({ ...prev, isFolder: !!checked }))}
-            />
-          )}
-          {isReadOnly && (
-            <div>
-              <label style={{ fontWeight: 600, fontSize: 14 }}>Type</label>
-              <div style={{ padding: '6px 0', color: '#333' }}>{formData.isFolder ? 'Folder / Section' : 'Artifact'}</div>
-            </div>
-          )}
-
-          <TextField
-            label="Section Code"
-            readOnly={isReadOnly}
-            value={formData.section}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, section: v || '' }))}
-            placeholder="e.g. 1.01"
-          />
-
-          <TextField
-            label="Section Name"
-            readOnly={isReadOnly}
-            value={formData.sectionName}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, sectionName: v || '' }))}
-            placeholder="e.g. Trial Oversight"
-          />
-
-          <TextField
-            label="Artifact ID"
-            readOnly={isReadOnly}
-            value={formData.artifactId}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, artifactId: v || '' }))}
-            placeholder="e.g. 01.01.01"
-          />
-
-          <TextField
-            label="Artifact Name"
-            readOnly={isReadOnly}
-            value={formData.artifactName}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, artifactName: v || '' }))}
-          />
-
-          <TextField
-            label="Reference"
-            readOnly={isReadOnly}
-            value={formData.reference}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, reference: v || '' }))}
-            placeholder="e.g. TMF RM 3.3.1"
-          />
-
-          <TextField
-            label="Sort Order"
-            type="number"
-            readOnly={isReadOnly}
-            value={String(formData.sortOrder)}
-            onChange={(_e, v) => setFormData(prev => ({ ...prev, sortOrder: Number(v) || 0 }))}
-          />
-        </div>
-      </Panel>
-
-      {/* Delete Confirmation */}
       <CustomModal
         isModalOpenProps={isDeleteDialogOpen}
         setModalpopUpFalse={setIsDeleteDialogOpen}
@@ -357,8 +461,6 @@ export const ManageTMF: React.FC = () => {
         onClickOfYes={handleDeleteConfirm}
         onClose={() => setIsDeleteDialogOpen(false)}
       />
-
-      {/* Success Modal */}
       <CustomModal
         isModalOpenProps={!!successMessage}
         setModalpopUpFalse={() => setSuccessMessage('')}
@@ -367,8 +469,6 @@ export const ManageTMF: React.FC = () => {
         closeButtonText="Close"
         onClose={() => setSuccessMessage('')}
       />
-
-      {/* Error Modal */}
       <CustomModal
         isModalOpenProps={!!errorMessage}
         setModalpopUpFalse={() => setErrorMessage('')}

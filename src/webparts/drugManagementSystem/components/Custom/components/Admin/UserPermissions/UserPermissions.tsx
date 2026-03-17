@@ -41,10 +41,12 @@ export const UserPermissions: React.FC<any> = (props) => {
     loadUsers
   } = UserPermissionsData();
 
+  const hrOnly: boolean = !!(props.hrOnly);
+
   // Form Page State (not Panel)
   const [formMode, setFormMode] = React.useState<'list' | 'add' | 'edit' | 'view'>('list');
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-  const [roleFilter, setRoleFilter] = React.useState<string>('All');
+  const [roleFilter, setRoleFilter] = React.useState<string>(hrOnly ? 'HR' : 'All');
 
   // Message Dialog State
   const [messageDialog, setMessageDialog] = React.useState<{
@@ -257,7 +259,9 @@ export const UserPermissions: React.FC<any> = (props) => {
       />
 
       {/* ===== Page Title ===== */}
-      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>User Permissions</h1>
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>
+        {hrOnly ? 'HR Group Members' : 'User Permissions'}
+      </h1>
 
       {/* ===== SECTION 1: Summary Cards ===== */}
       <div style={{
@@ -268,67 +272,73 @@ export const UserPermissions: React.FC<any> = (props) => {
         marginBottom: 16
       }}>
         <div className="summary-cards-container" style={{ marginBottom: 0 }}>
-          <SummaryCard
-            title="Admins"
-            value={roleSummary['Admin']}
-            icon={faUserShield}
-            color="blue"
-          />
+          {!hrOnly && (
+            <SummaryCard
+              title="Admins"
+              value={roleSummary['Admin']}
+              icon={faUserShield}
+              color="blue"
+            />
+          )}
           <SummaryCard
             title="HR"
             value={roleSummary['HR']}
             icon={faUserTie}
             color="green"
           />
-          <SummaryCard
-            title="Users"
-            value={roleSummary['Author']}
-            icon={faUsers}
-            color="orange"
-          />
+          {!hrOnly && (
+            <SummaryCard
+              title="Users"
+              value={roleSummary['Author']}
+              icon={faUsers}
+              color="orange"
+            />
+          )}
         </div>
       </div>
 
       {/* ===== SECTION 2: Filters ===== */}
-      <div style={{
-        background: '#fff',
-        borderRadius: 5,
-        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
-        padding: '12px 20px',
-        marginBottom: 16
-      }}>
-        <div className="ms-Grid">
-          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
-              <div className="formControl">
-                <ReactDropdown
-                  name="roleFilter"
-                  options={roleFilterOptions}
-                  defaultOption={roleFilterOptions.find(o => o.value === roleFilter) || roleFilterOptions[0]}
-                  onChange={(opt) => setRoleFilter(opt?.value ?? 'All')}
-                  isCloseMenuOnSelect={true}
-                  isSorted={false}
-                  isClearable={false}
+      {!hrOnly && (
+        <div style={{
+          background: '#fff',
+          borderRadius: 5,
+          boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+          padding: '12px 20px',
+          marginBottom: 16
+        }}>
+          <div className="ms-Grid">
+            <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                <div className="formControl">
+                  <ReactDropdown
+                    name="roleFilter"
+                    options={roleFilterOptions}
+                    defaultOption={roleFilterOptions.find(o => o.value === roleFilter) || roleFilterOptions[0]}
+                    onChange={(opt) => setRoleFilter(opt?.value ?? 'All')}
+                    isCloseMenuOnSelect={true}
+                    isSorted={false}
+                    isClearable={false}
+                  />
+                </div>
+              </div>
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4, display: 'flex', alignItems: 'center' }}>
+                <DefaultButton
+                  text="Reset"
+                  onClick={() => { setRoleFilter('All'); setSearchTerm(''); }}
+                  styles={{
+                    root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                    rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                    rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                    label: { color: '#fff', fontWeight: 600 },
+                    icon: { color: '#fff' }
+                  }}
+                  onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
                 />
               </div>
             </div>
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4, display: 'flex', alignItems: 'center' }}>
-              <DefaultButton
-                text="Reset"
-                onClick={() => { setRoleFilter('All'); setSearchTerm(''); }}
-                styles={{
-                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
-                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
-                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
-                  label: { color: '#fff', fontWeight: 600 },
-                  icon: { color: '#fff' }
-                }}
-                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
-              />
-            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ===== SECTION 3: Breadcrumb ===== */}
       <div style={{ marginBottom: 16 }}>

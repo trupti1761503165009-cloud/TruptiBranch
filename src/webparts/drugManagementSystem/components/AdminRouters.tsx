@@ -116,7 +116,7 @@ export const DrugsViewRouter: React.FC = () => {
   }
 };
 
-export const UsersViewRouter: React.FC = () => {
+export const UsersViewRouter: React.FC<{ hrOnly?: boolean }> = ({ hrOnly }) => {
   const [state, setState] = React.useState<{ name: ComponentNameEnum; componentProps?: any }>({
     name: ComponentNameEnum.UserPermissions,
     componentProps: {}
@@ -133,7 +133,7 @@ export const UsersViewRouter: React.FC = () => {
     state.name === ComponentNameEnum.EditUser;
   useSidebarFormEffect(isForm);
 
-  const commonProps = { manageComponentView, componentProps: state.componentProps };
+  const commonProps = { manageComponentView, componentProps: state.componentProps, hrOnly };
 
   switch (state.name) {
     case ComponentNameEnum.AddUser:

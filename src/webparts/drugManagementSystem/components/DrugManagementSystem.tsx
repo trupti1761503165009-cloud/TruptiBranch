@@ -201,6 +201,8 @@ const DmsShell: React.FC = () => {
           { id: '_documents', label: 'DOCUMENTS', isSection: true },
           { id: 'myDocuments', label: 'My Documents', icon: '📝' },
           { id: 'pendingApproval', label: 'Assigned to Me', icon: '⏳' },
+          { id: '_users', label: 'USERS', isSection: true },
+          { id: 'users', label: 'HR Group', icon: '👥' },
         ];
       case 'Author':
         return [
@@ -276,6 +278,9 @@ const DmsShell: React.FC = () => {
         ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />
         : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
     } else if (effectiveRole === 'HR') {
+      if (currentView === 'users') {
+        return <UsersViewRouter hrOnly={true} />;
+      }
       return currentView === 'pendingApproval'
         ? <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />
         : <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;

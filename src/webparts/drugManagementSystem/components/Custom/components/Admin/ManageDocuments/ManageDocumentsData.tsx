@@ -241,7 +241,9 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
 
   const mapDocumentItem = (item: any): Document => ({
     id: item.ID,
-    name: stripExt(item.FileLeafRef || item.Title || 'Untitled'),
+    name: (item.Title && item.Title !== item.FileLeafRef && item.Title !== stripExt(item.FileLeafRef || ''))
+      ? item.Title
+      : stripExt(item.FileLeafRef || item.Title || 'Untitled'),
     fileName: item.FileLeafRef || '',
     fileRef: item.FileRef || '',
     category: parseLookupText(item.Category),

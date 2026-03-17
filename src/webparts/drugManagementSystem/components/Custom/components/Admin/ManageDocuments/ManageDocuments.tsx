@@ -21,6 +21,8 @@ import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
 import { ComponentNameEnum } from '../../../../../models/ComponentNameEnum';
 import { IColumn, Panel, PanelType, Pivot, PivotItem } from '@fluentui/react';
 import { Breadcrumb as CustomBreadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
+import { useAtomValue } from 'jotai';
+import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 
 export const ManageDocuments: React.FC<any> = (props) => {
   const {
@@ -106,6 +108,18 @@ export const ManageDocuments: React.FC<any> = (props) => {
     setRejectReason,
     setIsRejectModalOpen,
   } = ManageDocumentsData(props);
+
+  const appGlobalState = useAtomValue(appGlobalStateAtom);
+  const spContext = appGlobalState?.context;
+
+  const getWordEmbedUrl = (doc: Document): string => {
+    if (!spContext || !doc.fileRef) return '';
+    const serverRelative = doc.fileRef.startsWith('http')
+      ? new URL(doc.fileRef).pathname
+      : doc.fileRef;
+    const encodedUrl = encodeURIComponent(serverRelative);
+    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=embedview`;
+  };
 
   const hideFolderSidebar: boolean = !!(props.hideFolderSidebar);
   const hideAddButton: boolean = !!(props.hideAddButton);
@@ -1036,7 +1050,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
           setReviewerComments([]);
           setReviewerCommentError('');
         }}
-        type={PanelType.large}
+        type={PanelType.extraLarge}
         headerText={viewingDocument ? `Document: ${viewingDocument.name}` : 'Document Details'}
         closeButtonAriaLabel="Close"
         data-testid="document-view-panel"
@@ -1122,6 +1136,26 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   </div>
                 </div>
               </div>
+
+              {/* Word Document Embed */}
+              {viewingDocument.fileRef && getWordEmbedUrl(viewingDocument) && (
+                <>
+                  <div className="ms-Grid-row" style={{ marginTop: 24 }}>
+                    <div className="ms-Grid-col ms-sm12">
+                      <div className="form-section-header">Document Preview</div>
+                    </div>
+                  </div>
+                  <div className="ms-Grid-row" style={{ marginTop: 12 }}>
+                    <div className="ms-Grid-col ms-sm12">
+                      <iframe
+                        src={getWordEmbedUrl(viewingDocument)}
+                        style={{ width: '100%', height: '70vh', border: '1px solid #E0E0E0', borderRadius: 4 }}
+                        title={`Preview: ${viewingDocument.name}`}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Comments Section */}
               <div className="ms-Grid-row" style={{ marginTop: 24 }}>
