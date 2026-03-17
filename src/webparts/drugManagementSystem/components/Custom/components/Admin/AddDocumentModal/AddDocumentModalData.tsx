@@ -163,7 +163,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       Promise.all([
         provider.getUsersFromGroup('HR').catch(() => []),
         provider.getUsersFromGroup('Admin').catch(() => []),
-        provider.getUsersFromGroup('Users').catch(() => [])
+        provider.getUsersFromGroup('Author').catch(() => [])
       ]).then(([hr, admin, users]) => {
         const combined = [...(hr || []), ...(admin || []), ...(users || [])];
         const seen = new Set();

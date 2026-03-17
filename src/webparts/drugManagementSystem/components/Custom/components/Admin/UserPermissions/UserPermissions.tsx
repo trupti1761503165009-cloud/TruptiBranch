@@ -67,7 +67,7 @@ export const UserPermissions: React.FC<any> = (props) => {
   const roleOptions: IReactDropOptionProps[] = React.useMemo(() => [
     { label: 'Admin', value: 'Admin' },
     { label: 'HR', value: 'HR' },
-    { label: 'Users', value: 'Users' }
+    { label: 'Author', value: 'Author' }
   ], []);
 
   const roleFilterOptions: IReactDropOptionProps[] = React.useMemo(() => [
@@ -91,7 +91,7 @@ export const UserPermissions: React.FC<any> = (props) => {
     const summary: Record<string, number> = {
       'Admin': 0,
       'HR': 0,
-      'Users': 0
+      'Author': 0
     };
     filteredUsers.forEach((user: any) => {
       const roles: string[] = Array.isArray((user as any).roles) ? (user as any).roles : [user.role];
@@ -109,13 +109,13 @@ export const UserPermissions: React.FC<any> = (props) => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'Users',
+        role: user.role || 'Author',
         status: user.status || 'Active',
         ProjectName: (user as any).ProjectName || ''
       });
     } else {
       setSelectedUser(null);
-      setFormData({ name: '', email: '', role: 'Users', status: 'Active', ProjectName: '' });
+      setFormData({ name: '', email: '', role: 'Author', status: 'Active', ProjectName: '' });
     }
   };
 
@@ -282,7 +282,7 @@ export const UserPermissions: React.FC<any> = (props) => {
           />
           <SummaryCard
             title="Users"
-            value={roleSummary['Users']}
+            value={roleSummary['Author']}
             icon={faUsers}
             color="orange"
           />

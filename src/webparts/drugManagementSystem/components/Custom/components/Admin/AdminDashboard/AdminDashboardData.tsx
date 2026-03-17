@@ -95,7 +95,7 @@ export function AdminDashboardData() {
         provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()),
         provider.getUsersFromGroup('Admin').catch(() => []),
         provider.getUsersFromGroup('HR').catch(() => []),
-        provider.getUsersFromGroup('Users').catch(() => []),
+        provider.getUsersFromGroup('Author').catch(() => []),
       ]);
 
       const mappedDocs = (docs || []).map((item: any) => ({
@@ -125,7 +125,7 @@ export function AdminDashboardData() {
 
       addUsers(adminUsers, 'Admin');
       addUsers(hrUsers, 'HR');
-      addUsers(authorUsers, 'Users');
+      addUsers(authorUsers, 'Author');
 
       const mappedUsers = Array.from(userMap.values());
 

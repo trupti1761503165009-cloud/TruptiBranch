@@ -57,7 +57,7 @@ export function UserPermissionsData() {
       totalUsers: userList.length,
       adminCount: userList.filter(u => u.roles.includes('Admin')).length,
       hrCount: userList.filter(u => u.roles.includes('HR')).length,
-      usersCount: userList.filter(u => u.roles.includes('Users')).length
+      usersCount: userList.filter(u => u.roles.includes('Author')).length
     };
     setStats(stats);
   };
@@ -68,11 +68,11 @@ export function UserPermissionsData() {
       const mockUsers: UserWithRoles[] = [
         { id: 1, name: 'John Smith', email: 'john.smith@company.com', roles: ['Admin'], groups: ['Admin'], status: 'Active' },
         { id: 2, name: 'Sarah Johnson', email: 'sarah.johnson@company.com', roles: ['HR'], groups: ['HR'], status: 'Active' },
-        { id: 3, name: 'Michael Brown', email: 'michael.brown@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
-        { id: 4, name: 'Emily Davis', email: 'emily.davis@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
-        { id: 5, name: 'Robert Wilson', email: 'robert.wilson@company.com', roles: ['HR', 'Users'], groups: ['HR', 'Users'], status: 'Active' },
-        { id: 6, name: 'Lisa Anderson', email: 'lisa.anderson@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
-        { id: 7, name: 'David Martinez', email: 'david.martinez@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
+        { id: 3, name: 'Michael Brown', email: 'michael.brown@company.com', roles: ['Author'], groups: ['Author'], status: 'Active' },
+        { id: 4, name: 'Emily Davis', email: 'emily.davis@company.com', roles: ['Author'], groups: ['Author'], status: 'Active' },
+        { id: 5, name: 'Robert Wilson', email: 'robert.wilson@company.com', roles: ['HR', 'Author'], groups: ['HR', 'Author'], status: 'Active' },
+        { id: 6, name: 'Lisa Anderson', email: 'lisa.anderson@company.com', roles: ['Author'], groups: ['Author'], status: 'Active' },
+        { id: 7, name: 'David Martinez', email: 'david.martinez@company.com', roles: ['Author'], groups: ['Author'], status: 'Active' },
         { id: 8, name: 'Jennifer Taylor', email: 'jennifer.taylor@company.com', roles: ['Admin'], groups: ['Admin'], status: 'Active' }
       ];
       setUsers(mockUsers);
@@ -86,7 +86,7 @@ export function UserPermissionsData() {
       const [adminUsers, hrUsers, usersGroup] = await Promise.all([
         provider.getUsersFromGroup('Admin').catch(() => [] as any[]),
         provider.getUsersFromGroup('HR').catch(() => [] as any[]),
-        provider.getUsersFromGroup('Users').catch(() => [] as any[])
+        provider.getUsersFromGroup('Author').catch(() => [] as any[])
       ]);
 
       // Merge users and their roles
@@ -116,7 +116,7 @@ export function UserPermissionsData() {
 
       addUsers(adminUsers, 'Admin', 'Admin');
       addUsers(hrUsers, 'HR', 'HR');
-      addUsers(usersGroup, 'Users', 'Users');
+      addUsers(usersGroup, 'Author', 'Author');
 
       const userList = Array.from(userMap.values()).map(u => ({
         ...u,
@@ -220,9 +220,9 @@ export function UserPermissionsData() {
     try {
       if (panelMode === 'add') {
         const groupMapping: Record<string, string> = {
-          'Admin': 'DMS Admins',
-          'HR': 'DMS HR',
-          'Author': 'DMS Members',
+          'Admin': 'Admin',
+          'HR': 'HR',
+          'Author': 'Author',
           'Approver': 'DMS Approvers'
         };
         const groupName = groupMapping[formData.role || 'Author'];
@@ -234,9 +234,9 @@ export function UserPermissionsData() {
         // Logic for changing roles could involve removing from old groups and adding to new ones
         // For now, let's just re-add to ensure they are in the selected group
         const groupMapping: Record<string, string> = {
-          'Admin': 'DMS Admins',
-          'HR': 'DMS HR',
-          'Author': 'DMS Members',
+          'Admin': 'Admin',
+          'HR': 'HR',
+          'Author': 'Author',
           'Approver': 'DMS Approvers'
         };
         const groupName = groupMapping[formData.role || 'Author'];
@@ -294,9 +294,9 @@ export function UserPermissionsData() {
     setIsLoading(true);
     try {
       const groupMapping: Record<string, string> = {
-        'Admin': 'DMS Admins',
-        'HR': 'DMS HR',
-        'Author': 'DMS Members',
+        'Admin': 'Admin',
+        'HR': 'HR',
+        'Author': 'Author',
         'Approver': 'DMS Approvers'
       };
 
