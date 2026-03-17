@@ -117,6 +117,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
   const loadLookupData = React.useCallback(async () => {
     if (!provider) return;
+
     const [drugItems, countryItems, templateItems, folderItems, approverItems] = await Promise.all([
       provider.getItemsByQuery({
         listName: ListNames.DrugsDatabase,
@@ -124,14 +125,16 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
-      }),
+      }).catch(() => []),
+
       provider.getItemsByQuery({
         listName: ListNames.Countries,
         select: ['ID', 'Title'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
-      }),
+      }).catch(() => []),
+
       provider.getItemsByQuery({
         listName: ListNames.Templates,
         select: [
@@ -142,7 +145,6 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           'Status',
           'Category/Id',
           'Category/Title',
-          // 'Category/ArtifactName',
           'Country/Id',
           'MappedCTDFolder/FolderId'
         ],
@@ -150,27 +152,29 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
-      }),
+      }).catch(() => []),
+
       provider.getItemsByQuery({
         listName: ListNames.CTDFolders,
         select: ['ID', 'Title', 'FolderId', 'ParentFolderId'],
         top: 5000,
         orderBy: 'SortOrder',
         isSortOrderAsc: true
-      }),
+      }).catch(() => []),
+
       Promise.all([
         provider.getUsersFromGroup('HR').catch(() => []),
         provider.getUsersFromGroup('Admin').catch(() => []),
         provider.getUsersFromGroup('Users').catch(() => [])
       ]).then(([hr, admin, users]) => {
-        const combined = [...hr, ...admin, ...users];
+        const combined = [...(hr || []), ...(admin || []), ...(users || [])];
         const seen = new Set();
         return combined.filter(u => {
           if (!u.value || seen.has(u.value)) return false;
           seen.add(u.value);
           return true;
         });
-      })
+      }).catch(() => [])
     ]);
 
     setDrugs(

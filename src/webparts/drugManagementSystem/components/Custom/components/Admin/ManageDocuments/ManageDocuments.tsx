@@ -19,7 +19,8 @@ import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/Mess
 import { FileIconHelper } from '../../../utils/fileIconHelper';
 import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
 import { ComponentNameEnum } from '../../../../../models/ComponentNameEnum';
-import { Breadcrumb, IColumn, Panel, PanelType, Pivot, PivotItem } from '@fluentui/react';
+import { IColumn, Panel, PanelType, Pivot, PivotItem } from '@fluentui/react';
+import { Breadcrumb as CustomBreadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 
 export const ManageDocuments: React.FC<any> = (props) => {
   const {
@@ -598,28 +599,32 @@ export const ManageDocuments: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 3: Breadcrumb ===== */}
-      <div style={{ marginBottom: 16 }}>
-        <Breadcrumb
+      <div className="customebreadcrumb" style={{ marginBottom: 16 }}>
+        <CustomBreadcrumb
           items={[
-            { text: 'Documents', key: 'documents', onClick: () => setSelectedDrugId(null) },
-            ...(selectedDrugId !== null
-              ? [{ text: selectedDrug?.name || 'Drug Folder', key: 'drug', isCurrentItem: true }]
-              : [{ text: 'All Drugs', key: 'alldrugs', isCurrentItem: true }])
+            { label: 'Manage Documents', onClick: () => setSelectedDrugId(null), isActive: selectedDrugId === null && activeTab !== 'workspace' },
+            ...(activeTab === 'workspace'
+              ? [{ label: 'Document Folder', isActive: true }]
+              : selectedDrugId !== null
+                ? [{ label: selectedDrug?.name || 'Drug Folder', isActive: true }]
+                : [])
           ]}
         />
       </div>
 
-      {/* Primary Tabs: Drugs Folder | Document Folder */}
-      <div style={{ marginBottom: 15 }}>
-        <Pivot
-          aria-label="Document Views"
-          selectedKey={activeTab}
-          onLinkClick={(item) => item?.props.itemKey && setActiveTab(item.props.itemKey as any)}
-        >
-          <PivotItem headerText="Drugs Folder" itemKey="all" />
-          <PivotItem headerText="Document Folder" itemKey="workspace" />
-        </Pivot>
-      </div>
+      {/* Primary Tabs: Drugs Folder | Document Folder — hidden when inside a drug */}
+      {selectedDrugId === null && (
+        <div style={{ marginBottom: 15 }}>
+          <Pivot
+            aria-label="Document Views"
+            selectedKey={activeTab}
+            onLinkClick={(item) => item?.props.itemKey && setActiveTab(item.props.itemKey as any)}
+          >
+            <PivotItem headerText="Drugs Folder" itemKey="all" />
+            <PivotItem headerText="Document Folder" itemKey="workspace" />
+          </Pivot>
+        </div>
+      )}
 
       {/* Sub-Tabs: Folder Structure vs List View */}
       {selectedDrugId !== null && (
