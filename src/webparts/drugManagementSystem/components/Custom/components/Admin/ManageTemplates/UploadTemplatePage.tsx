@@ -195,6 +195,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 className="formControl"
                 placeholder="e.g., Clinical Trial Protocol v3.0"
                 value={formData.name}
+                disabled={editMode}
                 onChange={(_e, v) => setFormData((prev) => ({ ...prev, name: v ?? '' }))}
               />
             </div>

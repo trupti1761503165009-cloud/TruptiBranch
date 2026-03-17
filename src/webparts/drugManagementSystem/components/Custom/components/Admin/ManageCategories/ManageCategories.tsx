@@ -490,7 +490,7 @@ export const ManageCategories: React.FC<any> = (props) => {
               : hierarchyLevel === 'subGroup'
                 ? 'SUB-GROUP'
                 : hierarchyLevel === 'artifactName'
-                  ? 'ARTIFACT NAME'
+                  ? 'ARTIFACT NAME / DOCUMENT NAME'
                   : 'TEMPLATE NAME',
         fieldName: 'name',
         minWidth: 350,
