@@ -257,50 +257,56 @@ export const UserPermissions: React.FC<any> = (props) => {
         fields={messageDialog.fields}
       />
 
-      <div className="page-header" style={{ marginBottom: 12 }}>
-        <h1 className="mainTitle">User Permissions</h1>
-      </div>
-      <div style={{ marginBottom: 20 }}>
-        <Breadcrumb
-          items={[
-            { label: 'Roles & Permissions', isActive: true }
-          ]}
-        />
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>User Permissions</h1>
+
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          <SummaryCard
+            title="Admins"
+            value={roleSummary['Admin']}
+            icon={faUserShield}
+            color="blue"
+          />
+          <SummaryCard
+            title="HR"
+            value={roleSummary['HR']}
+            icon={faUserTie}
+            color="green"
+          />
+          <SummaryCard
+            title="Authors (Members)"
+            value={roleSummary['Author']}
+            icon={faUsers}
+            color="orange"
+          />
+          <SummaryCard
+            title="Approvers"
+            value={roleSummary['Approver']}
+            icon={faUserCheck}
+            color="purple"
+          />
+        </div>
       </div>
 
-      {/* Role Summary Cards */}
-      <div className="summary-cards-container">
-        <SummaryCard
-          title="Admins"
-          value={roleSummary['Admin']}
-          icon={faUserShield}
-          color="blue"
-        />
-        <SummaryCard
-          title="HR"
-          value={roleSummary['HR']}
-          icon={faUserTie}
-          color="green"
-        />
-        <SummaryCard
-          title="Authors (Members)"
-          value={roleSummary['Author']}
-          icon={faUsers}
-          color="orange"
-        />
-        <SummaryCard
-          title="Approvers"
-          value={roleSummary['Approver']}
-          icon={faUserCheck}
-          color="purple"
-        />
-      </div>
-
-      {/* Filters row (below cards, above grid) */}
-      <div className="ms-Grid mt-3">
-        <div className="ms-Grid-row ptop-5">
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4 ms-xl3">
-            <div className="formControl ims-site-pad">
+      {/* ===== SECTION 2: Filters ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+        <div className="ms-Grid">
+          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <div className="formControl">
                 <ReactDropdown
                   name="roleFilter"
@@ -317,7 +323,13 @@ export const UserPermissions: React.FC<any> = (props) => {
         </div>
       </div>
 
-      <div className="table-card" style={{ padding: 0 }}>
+      {/* ===== SECTION 3: Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb items={[{ label: 'Roles & Permissions', isActive: true }]} />
+      </div>
+
+      {/* ===== SECTION 4: Grid ===== */}
+      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           items={displayedUsers}
           columns={columns}

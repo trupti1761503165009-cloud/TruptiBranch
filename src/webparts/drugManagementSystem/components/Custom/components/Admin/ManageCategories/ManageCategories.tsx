@@ -535,7 +535,7 @@ export const ManageCategories: React.FC<any> = (props) => {
 
   // Render Grid View
   return (
-    <div data-testid="" className=''>
+    <div className="pageContainer" style={{ paddingTop: 0 }}>
       {isLoading && <Loader />}
 
       {/* Message Dialog */}
@@ -547,61 +547,55 @@ export const ManageCategories: React.FC<any> = (props) => {
         message={messageDialog.message}
         fields={messageDialog.fields}
       />
-      {/* 
-      <Breadcrumb
-        items={[
-          { label: 'Home', onClick: () => { } },
-          { label: 'Manage Categories', isActive: true }
-        ]}
-      /> */}
 
-      <div className="page-header" style={{ marginBottom: 12 }}>
-        <div>
-          <h1 className="mainTitle">Manage Categories</h1>
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Categories</h1>
+
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          <SummaryCard
+            title="Total Categories"
+            value={totalCategories}
+            icon={faList}
+            color="blue"
+          />
+          <SummaryCard
+            title="Active Categories"
+            value={filteredCategories.filter((c: any) => c.status === 'Active').length}
+            icon={faCheckCircle}
+            color="green"
+          />
+          <SummaryCard
+            title="Inactive"
+            value={filteredCategories.filter((c: any) => c.status === 'Inactive').length}
+            icon={faFolderTree}
+            color="orange"
+          />
+          <SummaryCard
+            title="Total Groups"
+            value={new Set(filteredCategories.map((c: any) => c.group)).size}
+            icon={faLayerGroup}
+            color="purple"
+          />
         </div>
       </div>
 
-      {/* Breadcrumbs under header (single row) */}
-      <div style={{ marginBottom: 20 }}>
-        <Breadcrumb
-          items={renderBreadcrumb().map(crumb => ({
-            label: crumb.label,
-            onClick: crumb.onClick,
-            isActive: crumb.isActive
-          }))}
-        />
-      </div>
-
-      {/* Summary Cards */}
-      <div className="summary-cards-container ">
-        <SummaryCard
-          title="Total Categories"
-          value={totalCategories}
-          icon={faList}
-          color="blue"
-        />
-        <SummaryCard
-          title="Active Categories"
-          value={filteredCategories.filter((c: any) => c.status === 'Active').length}
-          icon={faCheckCircle}
-          color="green"
-        />
-        <SummaryCard
-          title="Inactive"
-          value={filteredCategories.filter((c: any) => c.status === 'Inactive').length}
-          icon={faFolderTree}
-          color="orange"
-        />
-        <SummaryCard
-          title="Total Groups"
-          value={new Set(filteredCategories.map((c: any) => c.group)).size}
-          icon={faLayerGroup}
-          color="purple"
-        />
-      </div>
-
-      {/* Filters row — 4-column layout */}
-      <div className="ms-Grid mt-3">
+      {/* ===== SECTION 2: Filters ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+      <div className="ms-Grid">
         <div className="ms-Grid-row ptop-5">
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
             <div className="formControl ims-site-pad">
@@ -652,18 +646,30 @@ export const ManageCategories: React.FC<any> = (props) => {
           </div>
         </div>
       </div>
+      </div>
 
-      <div className="boxCard">
+      {/* ===== SECTION 3: Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb
+          items={renderBreadcrumb().map(crumb => ({
+            label: crumb.label,
+            onClick: crumb.onClick,
+            isActive: crumb.isActive
+          }))}
+        />
+      </div>
+
+      {/* ===== SECTION 4: Grid ===== */}
+      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           columns={hierarchyColumns}
           items={currentItems}
           onItemInvoked={onInvokeHierarchyItem}
           searchable={true}
+          isPagination={true}
           reRenderComponent={true}
           onSelectedItem={(items: any[]) => setSelectedIds(items.map((i: any) => i.id))}
-          CustomselectionMode={true}
-          // selectionMode={hierarchyLevel === 'items' ? 1 : 0} 
-          // onSelectionChange={(items: any[]) => setSelectedIds(items.map((i: any) => i.id))}
+          CustomselectionMode={2}
           isAddNew={true}
           addNewContent={
             <div className="dflex">

@@ -481,7 +481,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   // DRUG SELECTED VIEW (inside a specific drug folder)
   return (
-    <div className="documents-page" data-testid="manage-documents-inner-view">
+    <div className="documents-page pageContainer" data-testid="manage-documents-inner-view" style={{ paddingTop: 0 }}>
       {isLoading && <Loader />}
 
       {/* Message Dialog */}
@@ -494,20 +494,18 @@ export const ManageDocuments: React.FC<any> = (props) => {
         fields={messageDialog.fields}
       />
 
-      {/* Breadcrumbs at the top */}
-      <div style={{ marginBottom: 20 }}>
-        <Breadcrumb
-          items={[
-            { text: 'Home', key: 'home', onClick: () => { } },
-            { text: 'Documents', key: 'documents', onClick: () => setSelectedDrugId(null) },
-            selectedDrugId !== null ? { text: selectedDrug?.name || 'Drug Folder', key: 'drug', isCurrentItem: true } : { text: 'Explore Documents', key: 'explore', isCurrentItem: true }
-          ]}
-        />
-      </div>
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Manage Documents</h1>
 
-      {/* FIXED TOP SECTION: CARDS & FILTERS */}
-      <div className="fixed-top-section" style={{ position: 'sticky', top: 0, zIndex: 10, background: '#fff', padding: '10px 0' }}>
-        <div className="summary-cards-container">
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
           <SummaryCard
             title="Total Documents"
             value={totalDocCount}
@@ -533,74 +531,72 @@ export const ManageDocuments: React.FC<any> = (props) => {
             color="green"
           />
         </div>
-
-        <div className="filters-container" style={{ display: 'flex', flexWrap: 'wrap', gap: 15, margin: '15px 0', borderBottom: '1px solid #eee', paddingBottom: 15 }}>
-          <div key="structureFilter" style={{ minWidth: 150 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4, display: 'block' }}>View Type</label>
-            <ReactDropdown name="ctdStructure" options={structureOptions} defaultOption={structureDefault}
-              onChange={(opt) => handleStructureChange((opt?.value as 'ectd' | 'dossier') ?? 'ectd')}
-              isCloseMenuOnSelect={true} isSorted={false} isClearable={false} isDisabled={isStructureDisabled} />
-          </div>
-          <div key="categoryFilter" style={{ minWidth: 150 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4, display: 'block' }}>Category</label>
-            <ReactDropdown name="category" options={categoryOptions} defaultOption={categoryDefault}
-              onChange={(opt) => setFilters({ ...filters, category: opt?.value ?? '' })}
-              isCloseMenuOnSelect={true} isSorted={true} isClearable={false} />
-          </div>
-          <div key="statusFilter" style={{ minWidth: 150 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4, display: 'block' }}>Status</label>
-            <ReactDropdown name="status" options={statusOptions} defaultOption={statusDefault}
-              onChange={(opt) => setFilters({ ...filters, status: opt?.value ?? 'All' })}
-              isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
-          </div>
-          <div key="dateFilter" style={{ minWidth: 150 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4, display: 'block' }}>Date Range</label>
-            <ReactDropdown name="dateFilter" options={dateOptions} defaultOption={dateDefault}
-              onChange={(opt) => setFilters({ ...filters, dateFilter: (opt?.value as DateFilter) ?? 'all', dateFrom: '', dateTo: '' })}
-              isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
-          </div>
-          {isAdmin && (
-            <div style={{ alignSelf: 'center', marginTop: 20 }}>
-              <DefaultButton
-                toggle
-                checked={showDeleted}
-                text={showDeleted ? "Hide Deleted" : "Show Deleted"}
-                onClick={() => setShowDeleted(!showDeleted)}
-                iconProps={{ iconName: 'Delete' }}
-              />
-            </div>
-          )}
-          {canCreate && (
-            <div style={{ alignSelf: 'center', marginTop: 20, marginLeft: 'auto' }}>
-              <PrimaryButton
-                text="Add Document"
-                iconProps={{ iconName: 'Add' }}
-                onClick={() => {
-                  props.manageComponentView({
-                    currentComponentName: ComponentNameEnum.AddDocument,
-                    componentProps: { drugId: selectedDrugId }
-                  });
-                }}
-              />
-            </div>
-          )}
-        </div>
-
       </div>
 
-      {/* Filters row (below cards) */}
-      {/* <div className="ms-Grid mb-3">
-        <div className="ms-Grid-row">
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            <PreDateRangeFilterQuaySafe
-              siteMasterId={undefined}
-              handleApply={(startDate: any, endDate: any, _dateRangeValue: any) => {
-                console.log("Applying Date Filter", startDate, endDate);
-              }}
-            />
+      {/* ===== SECTION 2: Filters ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+        <div className="ms-Grid">
+          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="ctdStructure" options={structureOptions} defaultOption={structureDefault}
+                  onChange={(opt) => handleStructureChange((opt?.value as 'ectd' | 'dossier') ?? 'ectd')}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} isDisabled={isStructureDisabled} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="category" options={categoryOptions} defaultOption={categoryDefault}
+                  onChange={(opt) => setFilters({ ...filters, category: opt?.value ?? '' })}
+                  isCloseMenuOnSelect={true} isSorted={true} isClearable={false} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="status" options={statusOptions} defaultOption={statusDefault}
+                  onChange={(opt) => setFilters({ ...filters, status: opt?.value ?? 'All' })}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
+              </div>
+            </div>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+              <div className="formControl">
+                <ReactDropdown name="dateFilter" options={dateOptions} defaultOption={dateDefault}
+                  onChange={(opt) => setFilters({ ...filters, dateFilter: (opt?.value as DateFilter) ?? 'all', dateFrom: '', dateTo: '' })}
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
+              </div>
+            </div>
+            {isAdmin && (
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4 }}>
+                <DefaultButton
+                  toggle
+                  checked={showDeleted}
+                  text={showDeleted ? 'Hide Deleted' : 'Show Deleted'}
+                  onClick={() => setShowDeleted(!showDeleted)}
+                  iconProps={{ iconName: 'Delete' }}
+                />
+              </div>
+            )}
           </div>
         </div>
-      </div> */}
+      </div>
+
+      {/* ===== SECTION 3: Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb
+          items={[
+            { text: 'Documents', key: 'documents', onClick: () => setSelectedDrugId(null) },
+            ...(selectedDrugId !== null
+              ? [{ text: selectedDrug?.name || 'Drug Folder', key: 'drug', isCurrentItem: true }]
+              : [{ text: 'All Drugs', key: 'alldrugs', isCurrentItem: true }])
+          ]}
+        />
+      </div>
 
       {/* Primary Tabs */}
       <div style={{ marginBottom: 15 }}>

@@ -160,73 +160,79 @@ export const DrugsDatabase: React.FC<any> = (props) => {
         fields={messageDialog.fields}
       />
 
-      <div className="page-header" style={{ marginBottom: 12 }}>
-        <h1 className="mainTitle">Drugs Database</h1>
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Drugs Database</h1>
+
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          <SummaryCard
+            title="Total Drugs"
+            value={totalDrugs}
+            icon={faCapsules}
+            color="blue"
+          />
+          <SummaryCard
+            title="Active"
+            value={activeDrugs}
+            icon={faCheckCircle}
+            color="green"
+          />
+          <SummaryCard
+            title="In Development"
+            value={inDevelopmentDrugs}
+            icon={faFlask}
+            color="purple"
+          />
+          <SummaryCard
+            title="Inactive"
+            value={inactiveDrugs}
+            icon={faClock}
+            color="orange"
+          />
+        </div>
       </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <Breadcrumb
-          items={[
-            { label: 'Drugs', isActive: true }
-          ]}
-        />
-      </div>
-
-      <div className="summary-cards-container">
-        <SummaryCard
-          title="Total Drugs"
-          value={totalDrugs}
-          icon={faCapsules}
-          color="blue"
-        />
-        <SummaryCard
-          title="Active"
-          value={activeDrugs}
-          icon={faCheckCircle}
-          color="green"
-        />
-        <SummaryCard
-          title="In Development"
-          value={inDevelopmentDrugs}
-          icon={faFlask}
-          color="purple"
-        />
-        <SummaryCard
-          title="Inactive"
-          value={inactiveDrugs}
-          icon={faClock}
-          color="orange"
-        />
-      </div>
-
-      {/* Filters row (below cards, above grid) */}
-      <div className="ms-Grid mt-3 mb-3">
-        <div className="ms-Grid-row ptop-5">
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            <div className="formControl ims-site-pad">
-              <ReactDropdown
-                name="statusFilter"
-                options={statusOptionsList}
-                defaultOption={statusDefault}
-                onChange={(opt) => setStatusFilter(opt?.value ?? 'All')}
-                isCloseMenuOnSelect={true}
-                isSorted={false}
-                isClearable={false}
-              />
+      {/* ===== SECTION 2: Filters ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '12px 20px',
+        marginBottom: 16
+      }}>
+        <div className="ms-Grid">
+          <div className="ms-Grid-row" style={{ alignItems: 'flex-end' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
+              <div className="formControl">
+                <ReactDropdown
+                  name="statusFilter"
+                  options={statusOptionsList}
+                  defaultOption={statusDefault}
+                  onChange={(opt) => setStatusFilter(opt?.value ?? 'All')}
+                  isCloseMenuOnSelect={true}
+                  isSorted={false}
+                  isClearable={false}
+                />
+              </div>
             </div>
-          </div>
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-            {/* <PreDateRangeFilterQuaySafe
-              // siteMasterId={undefined}
-              handleApply={(startDate: any, endDate: any, _dateRangeValue: any) => {
-                console.log("Applying Date Filter", startDate, endDate);
-              }}
-            /> */}
           </div>
         </div>
       </div>
 
-      <div className="table-card" style={{ padding: 0 }}>
+      {/* ===== SECTION 3: Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb items={[{ label: 'Drugs Database', isActive: true }]} />
+      </div>
+
+      {/* ===== SECTION 4: Grid ===== */}
+      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           items={filteredDrugs}
           columns={columns}

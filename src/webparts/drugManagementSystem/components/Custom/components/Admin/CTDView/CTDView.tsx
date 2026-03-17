@@ -135,13 +135,15 @@ export const CTDView: React.FC = () => {
   };
 
   return (
-    <div className="ctd-view-page" data-testid="ctd-view-page">
+    <div className="ctd-view-page pageContainer" data-testid="ctd-view-page" style={{ paddingTop: 0 }}>
       {isLoading && <Loader />}
 
-      <Breadcrumb items={getBreadcrumbItems()} />
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>CTD View</h1>
 
-      <div className="page-header" style={{ marginBottom: 20 }}>
-        <h1 className="mainTitle">CTD View</h1>
+      {/* ===== Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb items={getBreadcrumbItems()} />
       </div>
 
       {/* View Mode Buttons */}
@@ -244,6 +246,8 @@ export const CTDView: React.FC = () => {
             reRenderComponent={true}
             searchable={true}
             isPagination={true}
+            CustomselectionMode={0}
+            onSelectedItem={() => {}}
             isAddNew={true}
             addNewContent={
               <div className="dflex">
@@ -315,6 +319,8 @@ export const CTDView: React.FC = () => {
             reRenderComponent={true}
             searchable={false}
             isPagination={true}
+            CustomselectionMode={0}
+            onSelectedItem={() => {}}
             onItemInvoked={(item?: any) => item?.id && setSelectedSection(item.id)}
           />
         </div>
@@ -329,6 +335,8 @@ export const CTDView: React.FC = () => {
             reRenderComponent={true}
             searchable={true}
             isPagination={true}
+            CustomselectionMode={0}
+            onSelectedItem={() => {}}
           />
         </div>
       )}
@@ -358,6 +366,8 @@ export const CTDView: React.FC = () => {
             reRenderComponent={true}
             searchable={true}
             isPagination={true}
+            CustomselectionMode={0}
+            onSelectedItem={() => {}}
           />
         </div>
       )}

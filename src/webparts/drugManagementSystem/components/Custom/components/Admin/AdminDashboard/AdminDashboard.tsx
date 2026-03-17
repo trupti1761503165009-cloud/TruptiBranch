@@ -19,8 +19,10 @@ import {
   faFileArrowUp,
   faUserPen,
   faChartPie,
-  faGear
+  faGear,
+  faArrowsRotate
 } from '@fortawesome/free-solid-svg-icons';
+import { Link, TooltipHost } from '@fluentui/react';
 import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { CreateDocumentPage } from '../CreateDocumentPage/CreateDocumentPage';
@@ -84,6 +86,23 @@ export const AdminDashboard: React.FC = () => {
       />
     );
   }
+
+  const tooltipId = React.useRef('admin-dash-tooltip').current;
+  const [isDisplayEDbtn, setIsDisplayEDbtn] = React.useState(false);
+  const [isDisplayEditButtonview, setIsDisplayEditButtonview] = React.useState(false);
+  const [localUpdateItem, setLocalUpdateItem] = React.useState<any[]>([]);
+
+  const _onItemSelectedDocs = (item: any[]): void => {
+    if (item.length > 0) {
+      setIsDisplayEditButtonview(item.length === 1);
+      setLocalUpdateItem(item);
+      setIsDisplayEDbtn(true);
+    } else {
+      setIsDisplayEditButtonview(false);
+      setLocalUpdateItem([]);
+      setIsDisplayEDbtn(false);
+    }
+  };
 
   const statCards = [
     {
@@ -272,99 +291,109 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div>
+    <div className="pageContainer" style={{ paddingTop: 0 }}>
       {isLoading && <Loader />}
-      <Breadcrumb
-        items={[
-          { label: 'Home', onClick: () => { } },
-          { label: 'Admin Dashboard', isActive: true }
-        ]}
-      />
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Admin Dashboarddddd</h1>
+
+      {/* ===== Page Title ===== */}
+      <h1 className="mainTitle" style={{ marginTop: 0, marginBottom: 16 }}>Admin Dashboard</h1>
+
+      {/* ===== SECTION 1: Summary Cards ===== */}
+      <div style={{
+        background: '#fff',
+        borderRadius: 5,
+        boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
+        padding: '16px 20px',
+        marginBottom: 16
+      }}>
+        <div className="summary-cards-container" style={{ marginBottom: 0 }}>
+          {statCards.map((card, index) => (
+            <SummaryCard
+              key={index}
+              title={card.title}
+              value={card.count}
+              icon={card.icon}
+              color={card.color}
+              subtitle={card.subtitle}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="enhanced-stats-grid">
-        {statCards.map((card, index) => (
-          <SummaryCard
-            key={index}
-            title={card.title}
-            value={card.count}
-            icon={card.icon}
-            color={card.color}
-            subtitle={card.subtitle}
-          />
-        ))}
+      {/* ===== SECTION 2: Breadcrumb ===== */}
+      <div style={{ marginBottom: 16 }}>
+        <Breadcrumb items={[{ label: 'Admin Dashboard', isActive: true }]} />
       </div>
 
-      {/* <div style={{ marginTop: '24px', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#333', marginBottom: '12px' }}>Quick Actions</h3>
-        <div className="dms-quick-actions">
-          <button className="dms-quick-action-btn dms-quick-action-btn--primary" onClick={() => setIsWizardOpen(true)}>
-            <FontAwesomeIcon icon={faFileArrowUp} />
-            Create Document
-          </button>
-          <button className="dms-quick-action-btn" onClick={() => window.location.href = '#/manage-documents'}>
-            <FontAwesomeIcon icon={faFolderOpen} />
-            Browse Documents
-          </button>
-          <button className="dms-quick-action-btn" onClick={() => window.location.href = '#/manage-categories'}>
-            <FontAwesomeIcon icon={faList} />
-            Manage Categories
-          </button>
-          <button className="dms-quick-action-btn" onClick={() => window.location.href = '#/user-permissions'}>
-            <FontAwesomeIcon icon={faUserPen} />
-            Add User
-          </button>
-          <button className="dms-quick-action-btn" onClick={() => window.location.href = '#/reports'}>
-            <FontAwesomeIcon icon={faChartPie} />
-            View Reports
-          </button>
-          <button className="dms-quick-action-btn" onClick={() => window.location.href = '#/manage-templates'}>
-            <FontAwesomeIcon icon={faGear} />
-            Manage Templates
-          </button>
-        </div>
-      </div> */}
-
-      <div className="table-card">
-        <div className="table-header">
-          <div>
-            <h3 className="table-title">Recent Documents</h3>
-            <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Latest 5 documents added to the system</p>
-          </div>
-          <PrimaryButton
-            onClick={() => setIsWizardOpen(true)}
-            styles={{
-              root: { background: '#1E88E5', borderColor: '#1E88E5' },
-              rootHovered: { background: '#1565C0', borderColor: '#1565C0' },
-              rootPressed: { background: '#0D47A1', borderColor: '#0D47A1' }
-            }}
-          >
-            <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-            Create New Document
-          </PrimaryButton>
-        </div>
+      {/* ===== SECTION 3: Recent Documents Grid ===== */}
+      <div className="boxCard" style={{ padding: 0, margin: '0 0 16px 0', minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           items={sortedDocuments}
           columns={recentDocumentsColumns}
           reRenderComponent={true}
-          onSelectedItem={() => {}}
+          isPagination={true}
+          searchable={true}
+          CustomselectionMode={2}
+          onSelectedItem={_onItemSelectedDocs}
+          isAddNew={true}
+          addEDButton={
+            isDisplayEDbtn
+              ? (
+                <div className="dflex">
+                  {isDisplayEditButtonview && (
+                    <Link
+                      className="actionBtn iconSize btnEdit"
+                      onClick={() => localUpdateItem[0] && handleOpenDocument(localUpdateItem[0])}
+                    >
+                      <TooltipHost content="View Document" id={tooltipId}>
+                        <FontAwesomeIcon icon={faEye} />
+                      </TooltipHost>
+                    </Link>
+                  )}
+                  <Link
+                    className="actionBtn iconSize btnDanger ml-10"
+                    onClick={() => localUpdateItem[0] && handleOpenDocument(localUpdateItem[0])}
+                  >
+                    <TooltipHost content="Delete" id={tooltipId}>
+                      <FontAwesomeIcon icon={faTrashCan} />
+                    </TooltipHost>
+                  </Link>
+                </div>
+              )
+              : false
+          }
+          addNewContent={
+            <div className="dflex pb-1">
+              <TooltipHost content="Create New Document" id={tooltipId}>
+                <PrimaryButton
+                  className="btn btn-primary"
+                  onClick={() => setIsWizardOpen(true)}
+                  text="Create New Document"
+                />
+              </TooltipHost>
+              <Link
+                className="actionBtn iconSize btnRefresh ml-10"
+                onClick={() => { void loadData(); }}
+              >
+                <TooltipHost content="Refresh Grid">
+                  <FontAwesomeIcon icon={faArrowsRotate} />
+                </TooltipHost>
+              </Link>
+            </div>
+          }
         />
       </div>
 
-      <div className="table-card" style={{ marginTop: '24px' }}>
-        <div className="table-header">
-          <div>
-            <h3 className="table-title">Recent Users</h3>
-            <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0 0' }}>Latest 5 active users in the system</p>
-          </div>
-        </div>
+      {/* ===== SECTION 4: Recent Users Grid ===== */}
+      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
         <MemoizedDataGridComponent
           items={recentUsers}
           columns={recentUsersColumns}
           reRenderComponent={true}
+          isPagination={true}
+          searchable={true}
+          CustomselectionMode={0}
           onSelectedItem={() => {}}
+          isAddNew={false}
         />
       </div>
 
