@@ -49,9 +49,9 @@ export function ManageGMPData() {
     try {
       const data = await provider.getItemsByQuery({
         listName: ListNames.GmpModels,
-        select: ['ID', 'Title', 'Category', 'SubGroup', 'SortOrder'],
+        select: ['ID', 'Title', 'Category', 'SubGroup'],
         top: 1000,
-        orderBy: 'SortOrder',
+        orderBy: 'Title',
         isSortOrderAsc: true
       });
       const mapped: IGMPModel[] = (data || []).map((item: any) => ({
@@ -59,7 +59,7 @@ export function ManageGMPData() {
         name: item.Title || '',
         category: item.Category || '',
         subGroup: item.SubGroup || '',
-        sortOrder: item.SortOrder || 0
+        sortOrder: 0
       }));
       setItems(mapped);
       setErrorMessage('');
@@ -129,13 +129,13 @@ export function ManageGMPData() {
     try {
       if (panelMode === 'add') {
         if (provider) await provider.createItem(
-          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '', SortOrder: formData.sortOrder || 0 },
+          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '' },
           ListNames.GmpModels
         );
         setSuccessMessage('GMP Model added successfully.');
       } else if (panelMode === 'edit' && editingItem) {
         if (provider) await provider.updateItem(
-          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '', SortOrder: formData.sortOrder || 0 },
+          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '' },
           ListNames.GmpModels,
           editingItem.id
         );

@@ -9,7 +9,8 @@
     - Power Automate reads this flag, sends email, then sets it back to FALSE
     - This prevents duplicate emails on subsequent item updates
 -->
-<List xmlns:ows="Microsoft SharePoint" Title="DMS Documents" Direction="$Resources:Direction;" Url="Sam" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
+<List xmlns:ows="Microsoft SharePoint" Title="DMS Documents" Direction="$Resources:Directio
+  n;" Url="Sam" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
   <MetaData>
     <ContentTypes>
       <ContentTypeRef ID="0x0101">
