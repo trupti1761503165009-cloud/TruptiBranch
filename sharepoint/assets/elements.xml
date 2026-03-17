@@ -1330,13 +1330,74 @@
     </Data>
   </ListInstance>
 
+  <!-- GMP Models — sourced from DIA GMP QA Document Reference Model List -->
   <ListInstance Title="GMP Models"
                 OnQuickLaunch="TRUE"
                 TemplateType="100"
                 FeatureId="00bfea71-de22-43b2-a848-c05709900100"
                 CustomSchema="GMPModels.xml"
                 Url="Lists/GMPModels"
-                Description="GMP model master list" />
+                Description="GMP model master list">
+    <Data>
+      <Rows>
+        <!-- Category: Governance and Procedures -->
+        <Row>
+          <Field Name="Title">Governance Document</Field>
+          <Field Name="Category">Governance and Procedures</Field>
+          <Field Name="Description">Covers governance documents including Directives, Guidelines, Policies and Quality Manuals that govern facility operations, IT, purchasing, QA, QC, safety, and validation.</Field>
+        </Row>
+
+        <!-- Category: Manufacturing and Product Quality -->
+        <Row>
+          <Field Name="Title">Master Manufacturing Record - Product</Field>
+          <Field Name="Category">Manufacturing and Product Quality</Field>
+          <Field Name="Description">Master Batch Records (MBR) containing master production instructions for each product. Defines the manufacturing process, materials, equipment, and controls.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Method</Field>
+          <Field Name="Category">Manufacturing and Product Quality</Field>
+          <Field Name="Description">Method documents for General Methods (calibration, engineering, equipment, test), Material Methods (excipient, packaging, raw material), Product Methods (cleaning, labeling, packaging), and Substance Methods.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Quality</Field>
+          <Field Name="Category">Manufacturing and Product Quality</Field>
+          <Field Name="Description">Quality documents covering Product Quality (analytical development, annual product review, formulation) and Substance Quality records.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Specification</Field>
+          <Field Name="Category">Manufacturing and Product Quality</Field>
+          <Field Name="Description">Specification documents for General, Material (excipient, packaging, raw material, reference standard), Product (cleaning, intermediate, labeling, packaging), and Substance specifications.</Field>
+        </Row>
+
+        <!-- Category: Validation -->
+        <Row>
+          <Field Name="Title">Equipment Validation</Field>
+          <Field Name="Category">Validation</Field>
+          <Field Name="Description">Equipment Validation documents including Master Validation Plans (MVPs) and Executed Validation Protocols (EVPs) for all manufacturing equipment.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Material Validation</Field>
+          <Field Name="Category">Validation</Field>
+          <Field Name="Description">Material Validation documents including Master Validation Plans and Executed Validation Protocols for materials used in manufacturing.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Product Validation</Field>
+          <Field Name="Category">Validation</Field>
+          <Field Name="Description">Product Validation documents including Master Validation Plans and Executed Validation Protocols for finished dosage form products.</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Substance Validation</Field>
+          <Field Name="Category">Validation</Field>
+          <Field Name="Description">Substance Validation documents including Master Validation Plans and Executed Validation Protocols for drug substances (APIs).</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">System Validation</Field>
+          <Field Name="Category">Validation</Field>
+          <Field Name="Description">System Validation documents including Master Validation Plans and Executed Validation Protocols for computerised systems (CSV), LIMS, ERP, and manufacturing software.</Field>
+        </Row>
+      </Rows>
+    </Data>
+  </ListInstance>
 
   <ListInstance Title="Mappings"
                 OnQuickLaunch="TRUE"
@@ -1387,4 +1448,732 @@
                 CustomSchema="AuditLogs.xml"
                 Url="Lists/AuditLogs"
                 Description="Audit trail for document actions" />
+
+  <!-- TMF Folders — sourced from DIA TMF Reference Model 3.3.1 (DIA_TMF_Document_List.xlsx) -->
+  <!-- Hierarchy: Zone (IsFolder=1, no parent) → Section (IsFolder=1, ParentFolderId=ZoneId)
+                 → Artifact (IsFolder=0, ParentFolderId=SectionId)                          -->
+  <ListInstance Title="TMF Folders"
+                OnQuickLaunch="TRUE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="TMFFolders.xml"
+                Url="Lists/TMFFolders"
+                Description="TMF folder hierarchy based on DIA TMF Reference Model 3.3.1">
+    <Data>
+      <Rows>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ZONE 1 — Trial Management                              -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Row>
+          <Field Name="Title">Zone 1 - Trial Management</Field>
+          <Field Name="FolderId">Z1</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">100</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section"></Field>
+          <Field Name="SectionName"></Field>
+          <Field Name="ArtifactId"></Field>
+          <Field Name="ArtifactName"></Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 1.01 Trial Oversight -->
+        <Row>
+          <Field Name="Title">1.01 - Trial Oversight</Field>
+          <Field Name="FolderId">Z1.S1.01</Field>
+          <Field Name="ParentFolderId">Z1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">101</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId"></Field>
+          <Field Name="ArtifactName"></Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Trial Master File Plan</Field>
+          <Field Name="FolderId">01.01.01</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10101</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.01</Field>
+          <Field Name="ArtifactName">Trial Master File Plan</Field>
+          <Field Name="Description">To describe how records for the trial will be managed and stored during and after the trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Trial Management Plan</Field>
+          <Field Name="FolderId">01.01.02</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10102</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.02</Field>
+          <Field Name="ArtifactName">Trial Management Plan</Field>
+          <Field Name="Description">To describe overall strategy for timelines, management and conduct of the trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Quality Plan</Field>
+          <Field Name="FolderId">01.01.03</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10103</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.03</Field>
+          <Field Name="ArtifactName">Quality Plan</Field>
+          <Field Name="Description">To describe operational techniques and activities undertaken within the quality management system</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">List of SOPs Current During Trial</Field>
+          <Field Name="FolderId">01.01.04</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10104</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.04</Field>
+          <Field Name="ArtifactName">List of SOPs Current During Trial</Field>
+          <Field Name="Description">To document which standard operating procedures were in effect for the trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Monitoring Plan</Field>
+          <Field Name="FolderId">01.01.08</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10108</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.08</Field>
+          <Field Name="ArtifactName">Monitoring Plan</Field>
+          <Field Name="Description">To describe how monitoring will be implemented during the trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Risk Management Plan</Field>
+          <Field Name="FolderId">01.01.16</Field>
+          <Field Name="ParentFolderId">Z1.S1.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10116</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.01</Field>
+          <Field Name="SectionName">Trial Oversight</Field>
+          <Field Name="ArtifactId">01.01.16</Field>
+          <Field Name="ArtifactName">Risk Management Plan</Field>
+          <Field Name="Description">To describe potential hazards associated with the trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 1.02 Trial Team -->
+        <Row>
+          <Field Name="Title">1.02 - Trial Team</Field>
+          <Field Name="FolderId">Z1.S1.02</Field>
+          <Field Name="ParentFolderId">Z1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">102</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.02</Field>
+          <Field Name="SectionName">Trial Team</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Trial Team Details</Field>
+          <Field Name="FolderId">01.02.01</Field>
+          <Field Name="ParentFolderId">Z1.S1.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10201</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.02</Field>
+          <Field Name="SectionName">Trial Team</Field>
+          <Field Name="ArtifactId">01.02.01</Field>
+          <Field Name="ArtifactName">Trial Team Details</Field>
+          <Field Name="Description">To define trial roles, contact details and structure of trial team</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Trial Team Curriculum Vitae</Field>
+          <Field Name="FolderId">01.02.02</Field>
+          <Field Name="ParentFolderId">Z1.S1.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10202</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.02</Field>
+          <Field Name="SectionName">Trial Team</Field>
+          <Field Name="ArtifactId">01.02.02</Field>
+          <Field Name="ArtifactName">Trial Team Curriculum Vitae</Field>
+          <Field Name="Description">To document qualifications and eligibility of sponsor trial team members</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 1.03 Trial Committee -->
+        <Row>
+          <Field Name="Title">1.03 - Trial Committee</Field>
+          <Field Name="FolderId">Z1.S1.03</Field>
+          <Field Name="ParentFolderId">Z1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">103</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.03</Field>
+          <Field Name="SectionName">Trial Committee</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Committee Process</Field>
+          <Field Name="FolderId">01.03.01</Field>
+          <Field Name="ParentFolderId">Z1.S1.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10301</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.03</Field>
+          <Field Name="SectionName">Trial Committee</Field>
+          <Field Name="ArtifactId">01.03.01</Field>
+          <Field Name="ArtifactName">Committee Process</Field>
+          <Field Name="Description">To describe purpose and mode of operation of Independent Trial Committee</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Committee Member Contract</Field>
+          <Field Name="FolderId">01.03.06</Field>
+          <Field Name="ParentFolderId">Z1.S1.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10306</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.03</Field>
+          <Field Name="SectionName">Trial Committee</Field>
+          <Field Name="ArtifactId">01.03.06</Field>
+          <Field Name="ArtifactName">Committee Member Contract</Field>
+          <Field Name="Description">To document agreement of trial requirements with Committee Member</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 1.04 Meetings -->
+        <Row>
+          <Field Name="Title">1.04 - Meetings</Field>
+          <Field Name="FolderId">Z1.S1.04</Field>
+          <Field Name="ParentFolderId">Z1</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">104</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.04</Field>
+          <Field Name="SectionName">Meetings</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Kick-off Meeting Material</Field>
+          <Field Name="FolderId">01.04.01</Field>
+          <Field Name="ParentFolderId">Z1.S1.04</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10401</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.04</Field>
+          <Field Name="SectionName">Meetings</Field>
+          <Field Name="ArtifactId">01.04.01</Field>
+          <Field Name="ArtifactName">Kick-off Meeting Material</Field>
+          <Field Name="Description">Agenda, presentation materials for trial kick-off meeting</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Investigators Meeting Material</Field>
+          <Field Name="FolderId">01.04.03</Field>
+          <Field Name="ParentFolderId">Z1.S1.04</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">10403</Field>
+          <Field Name="Zone">1</Field>
+          <Field Name="ZoneName">Trial Management</Field>
+          <Field Name="Section">1.04</Field>
+          <Field Name="SectionName">Meetings</Field>
+          <Field Name="ArtifactId">01.04.03</Field>
+          <Field Name="ArtifactName">Investigators Meeting Material</Field>
+          <Field Name="Description">Agenda, presentation materials for investigator meetings</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ZONE 2 — Central Trial Documents                       -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Row>
+          <Field Name="Title">Zone 2 - Central Trial Documents</Field>
+          <Field Name="FolderId">Z2</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">200</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 2.01 Product and Trial Documentation -->
+        <Row>
+          <Field Name="Title">2.01 - Product and Trial Documentation</Field>
+          <Field Name="FolderId">Z2.S2.01</Field>
+          <Field Name="ParentFolderId">Z2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">201</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.01</Field>
+          <Field Name="SectionName">Product and Trial Documentation</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Investigator's Brochure</Field>
+          <Field Name="FolderId">02.01.01</Field>
+          <Field Name="ParentFolderId">Z2.S2.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20101</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.01</Field>
+          <Field Name="SectionName">Product and Trial Documentation</Field>
+          <Field Name="ArtifactId">02.01.01</Field>
+          <Field Name="ArtifactName">Investigator's Brochure</Field>
+          <Field Name="Description">To provide relevant clinical and non-clinical data on investigational product</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Protocol</Field>
+          <Field Name="FolderId">02.01.02</Field>
+          <Field Name="ParentFolderId">Z2.S2.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20102</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.01</Field>
+          <Field Name="SectionName">Product and Trial Documentation</Field>
+          <Field Name="ArtifactId">02.01.02</Field>
+          <Field Name="ArtifactName">Protocol</Field>
+          <Field Name="Description">To describe objective, design, methodology, statistical considerations</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Protocol Amendment</Field>
+          <Field Name="FolderId">02.01.04</Field>
+          <Field Name="ParentFolderId">Z2.S2.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20104</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.01</Field>
+          <Field Name="SectionName">Product and Trial Documentation</Field>
+          <Field Name="ArtifactId">02.01.04</Field>
+          <Field Name="ArtifactName">Protocol Amendment</Field>
+          <Field Name="Description">Subsequent versions of original protocol or formal clarification</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Sample Case Report Form</Field>
+          <Field Name="FolderId">02.01.07</Field>
+          <Field Name="ParentFolderId">Z2.S2.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20107</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.01</Field>
+          <Field Name="SectionName">Product and Trial Documentation</Field>
+          <Field Name="ArtifactId">02.01.07</Field>
+          <Field Name="ArtifactName">Sample Case Report Form</Field>
+          <Field Name="Description">Blank forms/templates to capture data points of protocol</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 2.02 Subject Documentation -->
+        <Row>
+          <Field Name="Title">2.02 - Subject Documentation</Field>
+          <Field Name="FolderId">Z2.S2.02</Field>
+          <Field Name="ParentFolderId">Z2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">202</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.02</Field>
+          <Field Name="SectionName">Subject Documentation</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Informed Consent Form</Field>
+          <Field Name="FolderId">02.02.03</Field>
+          <Field Name="ParentFolderId">Z2.S2.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20203</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.02</Field>
+          <Field Name="SectionName">Subject Documentation</Field>
+          <Field Name="ArtifactId">02.02.03</Field>
+          <Field Name="ArtifactName">Informed Consent Form</Field>
+          <Field Name="Description">To document appropriate written information given to subjects</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Advertisements for Subject Recruitment</Field>
+          <Field Name="FolderId">02.02.06</Field>
+          <Field Name="ParentFolderId">Z2.S2.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20206</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.02</Field>
+          <Field Name="SectionName">Subject Documentation</Field>
+          <Field Name="ArtifactId">02.02.06</Field>
+          <Field Name="ArtifactName">Advertisements for Subject Recruitment</Field>
+          <Field Name="Description">Materials used in clinical trial recruitment campaigns</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 2.03 Reports -->
+        <Row>
+          <Field Name="Title">2.03 - Reports</Field>
+          <Field Name="FolderId">Z2.S2.03</Field>
+          <Field Name="ParentFolderId">Z2</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">203</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.03</Field>
+          <Field Name="SectionName">Reports</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Clinical Study Report</Field>
+          <Field Name="FolderId">02.03.01</Field>
+          <Field Name="ParentFolderId">Z2.S2.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20301</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.03</Field>
+          <Field Name="SectionName">Reports</Field>
+          <Field Name="ArtifactId">02.03.01</Field>
+          <Field Name="ArtifactName">Clinical Study Report</Field>
+          <Field Name="Description">To describe final or interim results and interpretation of trial</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Bioanalytical Report</Field>
+          <Field Name="FolderId">02.03.02</Field>
+          <Field Name="ParentFolderId">Z2.S2.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">20302</Field>
+          <Field Name="Zone">2</Field>
+          <Field Name="ZoneName">Central Trial Documents</Field>
+          <Field Name="Section">2.03</Field>
+          <Field Name="SectionName">Reports</Field>
+          <Field Name="ArtifactId">02.03.02</Field>
+          <Field Name="ArtifactName">Bioanalytical Report</Field>
+          <Field Name="Description">To present relevant top line findings of bioanalytical aspects</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ZONE 3 — Regulatory                                    -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Row>
+          <Field Name="Title">Zone 3 - Regulatory</Field>
+          <Field Name="FolderId">Z3</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">300</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 3.01 Trial Approval -->
+        <Row>
+          <Field Name="Title">3.01 - Trial Approval</Field>
+          <Field Name="FolderId">Z3.S3.01</Field>
+          <Field Name="ParentFolderId">Z3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">301</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.01</Field>
+          <Field Name="SectionName">Trial Approval</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Regulatory Submission</Field>
+          <Field Name="FolderId">03.01.01</Field>
+          <Field Name="ParentFolderId">Z3.S3.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30101</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.01</Field>
+          <Field Name="SectionName">Trial Approval</Field>
+          <Field Name="ArtifactId">03.01.01</Field>
+          <Field Name="ArtifactName">Regulatory Submission</Field>
+          <Field Name="Description">Set of documents submitted to regulatory agencies requesting approval</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Regulatory Authority Decision</Field>
+          <Field Name="FolderId">03.01.02</Field>
+          <Field Name="ParentFolderId">Z3.S3.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30102</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.01</Field>
+          <Field Name="SectionName">Trial Approval</Field>
+          <Field Name="ArtifactId">03.01.02</Field>
+          <Field Name="ArtifactName">Regulatory Authority Decision</Field>
+          <Field Name="Description">Documented notification received from regulatory authority</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Public Registration</Field>
+          <Field Name="FolderId">03.01.04</Field>
+          <Field Name="ParentFolderId">Z3.S3.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30104</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.01</Field>
+          <Field Name="SectionName">Trial Approval</Field>
+          <Field Name="ArtifactId">03.01.04</Field>
+          <Field Name="ArtifactName">Public Registration</Field>
+          <Field Name="Description">Documentation related to registration in public registries</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 3.02 Investigational Medicinal Product -->
+        <Row>
+          <Field Name="Title">3.02 - Investigational Medicinal Product</Field>
+          <Field Name="FolderId">Z3.S3.02</Field>
+          <Field Name="ParentFolderId">Z3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">302</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.02</Field>
+          <Field Name="SectionName">Investigational Medicinal Product</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Import or Export License Application</Field>
+          <Field Name="FolderId">03.02.01</Field>
+          <Field Name="ParentFolderId">Z3.S3.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30201</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.02</Field>
+          <Field Name="SectionName">Investigational Medicinal Product</Field>
+          <Field Name="ArtifactId">03.02.01</Field>
+          <Field Name="ArtifactName">Import or Export License Application</Field>
+          <Field Name="Description">Application for license to import/export investigational product</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Import or Export Documentation</Field>
+          <Field Name="FolderId">03.02.02</Field>
+          <Field Name="ParentFolderId">Z3.S3.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30202</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.02</Field>
+          <Field Name="SectionName">Investigational Medicinal Product</Field>
+          <Field Name="ArtifactId">03.02.02</Field>
+          <Field Name="ArtifactName">Import or Export Documentation</Field>
+          <Field Name="Description">Document issued by government authorizing importation/exportation</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 3.03 Trial Status Reporting -->
+        <Row>
+          <Field Name="Title">3.03 - Trial Status Reporting</Field>
+          <Field Name="FolderId">Z3.S3.03</Field>
+          <Field Name="ParentFolderId">Z3</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">303</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.03</Field>
+          <Field Name="SectionName">Trial Status Reporting</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Notification of Safety or Trial Information</Field>
+          <Field Name="FolderId">03.03.01</Field>
+          <Field Name="ParentFolderId">Z3.S3.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30301</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.03</Field>
+          <Field Name="SectionName">Trial Status Reporting</Field>
+          <Field Name="ArtifactId">03.03.01</Field>
+          <Field Name="ArtifactName">Notification of Safety or Trial Information</Field>
+          <Field Name="Description">Notification to Regulatory Authorities of trial events</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Regulatory Progress Report</Field>
+          <Field Name="FolderId">03.03.02</Field>
+          <Field Name="ParentFolderId">Z3.S3.03</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">30302</Field>
+          <Field Name="Zone">3</Field>
+          <Field Name="ZoneName">Regulatory</Field>
+          <Field Name="Section">3.03</Field>
+          <Field Name="SectionName">Trial Status Reporting</Field>
+          <Field Name="ArtifactId">03.03.02</Field>
+          <Field Name="ArtifactName">Regulatory Progress Report</Field>
+          <Field Name="Description">Reports concerning trial conduct, progress and status</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ZONE 4 — IRB or IEC and other Approvals               -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Row>
+          <Field Name="Title">Zone 4 - IRB or IEC and other Approvals</Field>
+          <Field Name="FolderId">Z4</Field>
+          <Field Name="ParentFolderId"></Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">400</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 4.01 IRB or IEC Trial Approval -->
+        <Row>
+          <Field Name="Title">4.01 - IRB or IEC Trial Approval</Field>
+          <Field Name="FolderId">Z4.S4.01</Field>
+          <Field Name="ParentFolderId">Z4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">401</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.01</Field>
+          <Field Name="SectionName">IRB or IEC Trial Approval</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">IRB or IEC Submission</Field>
+          <Field Name="FolderId">04.01.01</Field>
+          <Field Name="ParentFolderId">Z4.S4.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">40101</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.01</Field>
+          <Field Name="SectionName">IRB or IEC Trial Approval</Field>
+          <Field Name="ArtifactId">04.01.01</Field>
+          <Field Name="ArtifactName">IRB or IEC Submission</Field>
+          <Field Name="Description">Documents describing trial submitted to IRB/IEC for approval</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">IRB or IEC Decision</Field>
+          <Field Name="FolderId">04.01.02</Field>
+          <Field Name="ParentFolderId">Z4.S4.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">40102</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.01</Field>
+          <Field Name="SectionName">IRB or IEC Trial Approval</Field>
+          <Field Name="ArtifactId">04.01.02</Field>
+          <Field Name="ArtifactName">IRB or IEC Decision</Field>
+          <Field Name="Description">Documentation received from IRB/IEC indicating decision</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">IRB or IEC Composition</Field>
+          <Field Name="FolderId">04.01.03</Field>
+          <Field Name="ParentFolderId">Z4.S4.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">40103</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.01</Field>
+          <Field Name="SectionName">IRB or IEC Trial Approval</Field>
+          <Field Name="ArtifactId">04.01.03</Field>
+          <Field Name="ArtifactName">IRB or IEC Composition</Field>
+          <Field Name="Description">Documentation that IRB/IEC has reasonable number of qualified members</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">IRB or IEC Compliance Documentation</Field>
+          <Field Name="FolderId">04.01.05</Field>
+          <Field Name="ParentFolderId">Z4.S4.01</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">40105</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.01</Field>
+          <Field Name="SectionName">IRB or IEC Trial Approval</Field>
+          <Field Name="ArtifactId">04.01.05</Field>
+          <Field Name="ArtifactName">IRB or IEC Compliance Documentation</Field>
+          <Field Name="Description">Documentation that IRB/IEC performs according to written procedures</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+        <!-- Section 4.02 Other Committees -->
+        <Row>
+          <Field Name="Title">4.02 - Other Committees</Field>
+          <Field Name="FolderId">Z4.S4.02</Field>
+          <Field Name="ParentFolderId">Z4</Field>
+          <Field Name="IsFolder">1</Field>
+          <Field Name="SortOrder">402</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.02</Field>
+          <Field Name="SectionName">Other Committees</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+        <Row>
+          <Field Name="Title">Other Submissions</Field>
+          <Field Name="FolderId">04.02.01</Field>
+          <Field Name="ParentFolderId">Z4.S4.02</Field>
+          <Field Name="IsFolder">0</Field>
+          <Field Name="SortOrder">40201</Field>
+          <Field Name="Zone">4</Field>
+          <Field Name="ZoneName">IRB or IEC and other Approvals</Field>
+          <Field Name="Section">4.02</Field>
+          <Field Name="SectionName">Other Committees</Field>
+          <Field Name="ArtifactId">04.02.01</Field>
+          <Field Name="ArtifactName">Other Submissions</Field>
+          <Field Name="Description">Documents submitted to committee other than IRB/IEC for approval</Field>
+          <Field Name="Reference">TMF RM 3.3.1</Field>
+        </Row>
+
+      </Rows>
+    </Data>
+  </ListInstance>
+
 </Elements>
