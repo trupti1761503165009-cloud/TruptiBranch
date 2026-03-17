@@ -107,13 +107,11 @@ export const ManageTemplates: React.FC<any> = (props) => {
     (countries || []).map((c: any) => ({ label: c.name, value: c.id })), [countries]);
 
   const statusOptions = React.useMemo(() => [
-    { value: 'All', label: 'All Status' },
     { value: 'Active', label: 'Active' },
     { value: 'Inactive', label: 'Inactive' }
   ], []);
 
   const mappingTypeOptions = React.useMemo(() => [
-    { value: 'All', label: 'All Types' },
     { value: 'eCTD', label: 'eCTD' },
     { value: 'GMP', label: 'GMP' },
     { value: 'TMF', label: 'TMF' },
@@ -428,11 +426,11 @@ export const ManageTemplates: React.FC<any> = (props) => {
                 <ReactDropdown
                   name="mappingTypeFilter"
                   options={mappingTypeOptions}
-                  defaultOption={mappingTypeOptions.find(o => o.value === mappingTypeFilter) || mappingTypeOptions[0]}
+                  defaultOption={mappingTypeOptions.find(o => o.value === mappingTypeFilter)}
                   onChange={(opt: any) => setMappingTypeFilter(opt?.value ?? 'All')}
                   isCloseMenuOnSelect={true}
                   isSorted={false}
-                  isClearable={false}
+                  isClearable={true}
                 />
               </div>
             </div>
@@ -441,11 +439,11 @@ export const ManageTemplates: React.FC<any> = (props) => {
                 <ReactDropdown
                   name="statusFilter"
                   options={statusOptions}
-                  defaultOption={statusOptions.find(o => o.value === statusFilter) || statusOptions[0]}
+                  defaultOption={statusOptions.find(o => o.value === statusFilter)}
                   onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
                   isCloseMenuOnSelect={true}
                   isSorted={false}
-                  isClearable={false}
+                  isClearable={true}
                 />
               </div>
             </div>
@@ -453,20 +451,16 @@ export const ManageTemplates: React.FC<any> = (props) => {
               <div className="formControl">
                 <ReactDropdown
                   name="countryFilter"
-                  options={[{ label: 'All Countries', value: 'All' }, ...countryOptions]}
-                  defaultOption={
-                    countryFilter === 'All'
-                      ? { label: 'All Countries', value: 'All' }
-                      : countryOptions.find((c: any) => c.value === countryFilter) || { label: 'All Countries', value: 'All' }
-                  }
-                  onChange={(opt: any) => setCountryFilter(opt?.value === 'All' ? 'All' : Number(opt?.value))}
+                  options={countryOptions}
+                  defaultOption={countryOptions.find((c: any) => c.value === countryFilter)}
+                  onChange={(opt: any) => setCountryFilter(opt ? Number(opt.value) : 'All')}
                   isCloseMenuOnSelect={true}
                   isSorted={false}
-                  isClearable={false}
+                  isClearable={true}
                 />
               </div>
             </div>
-            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingBottom: 4 }}>
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 1 }}>
               <DefaultButton
                 text="Reset"
                 onClick={() => {
@@ -498,7 +492,7 @@ export const ManageTemplates: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+      <div>
         <MemoizedDataGridComponent
           items={filteredTemplates}
           columns={columns}

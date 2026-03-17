@@ -63,7 +63,7 @@ export const DrugsDatabase: React.FC<any> = (props) => {
   };
 
   const statusOptionsList: IReactDropOptionProps[] = React.useMemo(
-    () => [{ label: 'All Status', value: 'All' }, ...statusOptions.map(option => ({ label: option, value: option }))],
+    () => statusOptions.map(option => ({ label: option, value: option })),
     [statusOptions]
   );
 
@@ -77,7 +77,7 @@ export const DrugsDatabase: React.FC<any> = (props) => {
   );
 
   const statusDefault = React.useMemo(
-    () => statusOptionsList.find(o => o.value === statusFilter) ?? statusOptionsList[0],
+    () => statusOptionsList.find(o => o.value === statusFilter),
     [statusFilter, statusOptionsList]
   );
 
@@ -248,11 +248,11 @@ export const DrugsDatabase: React.FC<any> = (props) => {
                   onChange={(opt) => setStatusFilter(opt?.value ?? 'All')}
                   isCloseMenuOnSelect={true}
                   isSorted={false}
-                  isClearable={false}
+                  isClearable={true}
                 />
               </div>
             </div>
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4" style={{ paddingTop: 4, display: 'flex', alignItems: 'center' }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4" style={{ paddingTop: 1, display: 'flex', alignItems: 'center' }}>
               <DefaultButton
                 text="Reset"
                 onClick={() => { setStatusFilter('All'); setSearchTerm(''); }}

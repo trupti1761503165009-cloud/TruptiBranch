@@ -143,8 +143,8 @@ export function AdminDashboardData() {
           return acc;
         }, {})
       );
-      setRecentDocuments(mappedDocs.slice(0, 5));
-      setRecentUsers(mappedUsers.filter(u => u.status === 'Active').slice(0, 5));
+      setRecentDocuments(mappedDocs);
+      setRecentUsers(mappedUsers.filter(u => u.status === 'Active'));
       setErrorMessage('');
     } catch (error) {
       console.error('Failed to load admin dashboard data:', error);

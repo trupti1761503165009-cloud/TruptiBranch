@@ -172,7 +172,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
   }, [errorMessage]);
 
   const categoryOptions: IReactDropOptionProps[] = React.useMemo(
-    () => [{ label: 'All Categories', value: '' }, ...categories.map(cat => ({ label: cat.name, value: cat.name }))],
+    () => categories.map(cat => ({ label: cat.name, value: cat.name })),
     [categories]
   );
   const editCategoryOptions: IReactDropOptionProps[] = React.useMemo(
@@ -182,7 +182,6 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   const statusOptions: IReactDropOptionProps[] = React.useMemo(
     () => [
-      { label: 'All Status', value: 'All' },
       { label: 'Draft', value: 'Draft' },
       { label: 'Pending Approval', value: 'Pending Approval' },
       { label: 'Pending for Signature', value: 'Pending for Signature' },
@@ -199,7 +198,6 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   const dateOptions: IReactDropOptionProps[] = React.useMemo(
     () => [
-      { label: 'All Dates', value: 'all' },
       { label: 'Today', value: 'today' },
       { label: 'Yesterday', value: 'yesterday' },
       { label: 'Last 7 Days', value: 'last7days' },
@@ -221,15 +219,15 @@ export const ManageDocuments: React.FC<any> = (props) => {
   );
 
   const categoryDefault = React.useMemo(
-    () => categoryOptions.find(o => o.value === filters.category) ?? categoryOptions[0],
+    () => categoryOptions.find(o => o.value === filters.category),
     [categoryOptions, filters.category]
   );
   const statusDefault = React.useMemo(
-    () => statusOptions.find(o => o.value === filters.status) ?? statusOptions[0],
+    () => statusOptions.find(o => o.value === filters.status),
     [statusOptions, filters.status]
   );
   const dateDefault = React.useMemo(
-    () => dateOptions.find(o => o.value === filters.dateFilter) ?? dateOptions[0],
+    () => dateOptions.find(o => o.value === filters.dateFilter),
     [dateOptions, filters.dateFilter]
   );
   const structureDefault = React.useMemo(
@@ -564,24 +562,24 @@ export const ManageDocuments: React.FC<any> = (props) => {
               <div className="formControl">
                 <ReactDropdown name="category" options={categoryOptions} defaultOption={categoryDefault}
                   onChange={(opt) => setFilters({ ...filters, category: opt?.value ?? '' })}
-                  isCloseMenuOnSelect={true} isSorted={true} isClearable={false} />
+                  isCloseMenuOnSelect={true} isSorted={true} isClearable={true} />
               </div>
             </div>
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <div className="formControl">
                 <ReactDropdown name="status" options={statusOptions} defaultOption={statusDefault}
                   onChange={(opt) => setFilters({ ...filters, status: opt?.value ?? 'All' })}
-                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={true} />
               </div>
             </div>
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <div className="formControl">
                 <ReactDropdown name="dateFilter" options={dateOptions} defaultOption={dateDefault}
                   onChange={(opt) => setFilters({ ...filters, dateFilter: (opt?.value as DateFilter) ?? 'all', dateFrom: '', dateTo: '' })}
-                  isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
+                  isCloseMenuOnSelect={true} isSorted={false} isClearable={true} />
               </div>
             </div>
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 4 }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 1 }}>
               <DefaultButton
                 text="Reset"
                 onClick={() => { resetFilters(); }}

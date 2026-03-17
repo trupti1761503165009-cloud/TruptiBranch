@@ -79,17 +79,12 @@ export const AdminDashboard: React.FC = () => {
     if (errorMessage) showToast({ type: 'error', message: errorMessage });
   }, [errorMessage]);
 
-  if (isWizardOpen) {
-    return (
-      <CreateDocumentPage
-        onCancel={() => setIsWizardOpen(false)}
-        onSuccess={() => {
-          void loadData();
-          setIsWizardOpen(false);
-        }}
-      />
-    );
-  }
+  // Approval / Reject modal state
+  const [approvalModal, setApprovalModal] = React.useState<{
+    open: boolean;
+    doc: Document | null;
+    action: 'approve' | 'reject' | null;
+  }>({ open: false, doc: null, action: null });
 
   const tooltipId = React.useRef('admin-dash-tooltip').current;
   const [isDisplayEDbtn, setIsDisplayEDbtn] = React.useState(false);
@@ -107,6 +102,18 @@ export const AdminDashboard: React.FC = () => {
       setIsDisplayEDbtn(false);
     }
   };
+
+  if (isWizardOpen) {
+    return (
+      <CreateDocumentPage
+        onCancel={() => setIsWizardOpen(false)}
+        onSuccess={() => {
+          void loadData();
+          setIsWizardOpen(false);
+        }}
+      />
+    );
+  }
 
   const statCards = [
     {
@@ -167,15 +174,9 @@ export const AdminDashboard: React.FC = () => {
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
-              fontSize: 16,
-              width: 28,
-              height: 28,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: iconInfo.bgColor,
-              borderRadius: 4,
-              color: iconInfo.color
+              fontSize: 16, width: 28, height: 28, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              background: iconInfo.bgColor, borderRadius: 4, color: iconInfo.color
             }}>
               <FontAwesomeIcon icon={iconInfo.icon} />
             </div>
@@ -213,9 +214,7 @@ export const AdminDashboard: React.FC = () => {
       isSortingRequired: true,
       onColumnClick: () => handleSort('status'),
       onRender: (item: Document) => (
-        <span className={`status-badge status-${item.status.toLowerCase().replace(/\s+/g, '-')}`}>
-          {item.status}
-        </span>
+        <StatusBadge status={item.status.toLowerCase().replace(/\s+/g, '-')} size="small" />
       )
     },
     {
@@ -231,8 +230,8 @@ export const AdminDashboard: React.FC = () => {
       key: 'actions',
       name: 'ACTIONS',
       fieldName: 'actions',
-      minWidth: 130,
-      maxWidth: 160,
+      minWidth: 140,
+      maxWidth: 180,
       onRender: (item: Document) => (
         <div className="dflex" style={{ gap: 6 }}>
           <Link className="actionBtn iconSize btnView" onClick={() => handleOpenDocument(item)}>
@@ -240,21 +239,15 @@ export const AdminDashboard: React.FC = () => {
           </Link>
           <Link
             className="actionBtn iconSize btnEdit ml-10"
-            onClick={() => {
-              if (confirm(`Approve document "${item.name}"?`)) {
-                handleUpdateDocument(item.id, { status: 'Approved' });
-              }
-            }}
+            onClick={() => setApprovalModal({ open: true, doc: item, action: 'approve' })}
           >
-            <TooltipHost content="Approve"><FontAwesomeIcon icon={faCheck} style={{ color: '#2e7d32' }} /></TooltipHost>
+            <TooltipHost content="Approve">
+              <FontAwesomeIcon icon={faCheck} style={{ color: '#2e7d32' }} />
+            </TooltipHost>
           </Link>
           <Link
             className="actionBtn iconSize btnDanger ml-10"
-            onClick={() => {
-              if (confirm(`Reject document "${item.name}"?`)) {
-                handleUpdateDocument(item.id, { status: 'Rejected' });
-              }
-            }}
+            onClick={() => setApprovalModal({ open: true, doc: item, action: 'reject' })}
           >
             <TooltipHost content="Reject"><FontAwesomeIcon icon={faXmark} /></TooltipHost>
           </Link>
@@ -271,47 +264,38 @@ export const AdminDashboard: React.FC = () => {
       key: 'name',
       name: 'Name',
       fieldName: 'name',
-      minWidth: 220,
-      maxWidth: 320,
+      minWidth: 200,
+      maxWidth: 300,
       onRender: (user: User) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div className="user-avatar-small" style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            background: '#1E88E5',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: '600'
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', background: '#1E88E5',
+            color: 'white', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0
           }}>
-            {user.name.split(' ').map((n: any) => n[0]).join('')}
+            {user.name.split(' ').map((n: string) => n[0]).join('')}
           </div>
           <strong>{user.name}</strong>
         </div>
       )
     },
-    { key: 'email', name: 'Email', fieldName: 'email', minWidth: 220, maxWidth: 320 },
+    { key: 'email', name: 'Email', fieldName: 'email', minWidth: 200, maxWidth: 300 },
     {
       key: 'role',
       name: 'Role',
       fieldName: 'role',
-      minWidth: 120,
-      maxWidth: 160,
+      minWidth: 100,
+      maxWidth: 140,
       onRender: (user: User) => <span className="category-badge">{user.role}</span>
     },
     {
       key: 'status',
       name: 'Status',
       fieldName: 'status',
-      minWidth: 120,
-      maxWidth: 160,
+      minWidth: 100,
+      maxWidth: 130,
       onRender: (user: User) => (
-        <span className={`status-badge status-${user.status.toLowerCase()}`}>
-          {user.status}
-        </span>
+        <StatusBadge status={user.status.toLowerCase()} size="small" />
       )
     }
   ];
@@ -325,11 +309,9 @@ export const AdminDashboard: React.FC = () => {
 
       {/* ===== SECTION 1: Summary Cards ===== */}
       <div style={{
-        background: '#fff',
-        borderRadius: 5,
+        background: '#fff', borderRadius: 5,
         boxShadow: '0px 4px 10px rgb(166 166 166 / 55%)',
-        padding: '16px 20px',
-        marginBottom: 16
+        padding: '16px 20px', marginBottom: 16
       }}>
         <div className="summary-cards-container" style={{ marginBottom: 0 }}>
           {statCards.map((card, index) => (
@@ -350,8 +332,8 @@ export const AdminDashboard: React.FC = () => {
         <Breadcrumb items={[{ label: 'Admin Dashboard', isActive: true }]} />
       </div>
 
-      {/* ===== SECTION 3: Recent Documents Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: '0 0 16px 0', minHeight: 'auto' }}>
+      {/* ===== SECTION 3: Documents Grid ===== */}
+      <div style={{ marginBottom: 16 }}>
         <MemoizedDataGridComponent
           items={sortedDocuments}
           columns={recentDocumentsColumns}
@@ -362,44 +344,37 @@ export const AdminDashboard: React.FC = () => {
           onSelectedItem={_onItemSelectedDocs}
           isAddNew={true}
           addEDButton={
-            isDisplayEDbtn
-              ? (
-                <div className="dflex">
-                  {isDisplayEditButtonview && (
-                    <Link
-                      className="actionBtn iconSize btnEdit"
-                      onClick={() => localUpdateItem[0] && handleOpenDocument(localUpdateItem[0])}
-                    >
-                      <TooltipHost content="View Document" id={tooltipId}>
-                        <FontAwesomeIcon icon={faEye} />
-                      </TooltipHost>
-                    </Link>
-                  )}
+            isDisplayEDbtn ? (
+              <div className="dflex">
+                {isDisplayEditButtonview && (
                   <Link
-                    className="actionBtn iconSize btnDanger ml-10"
+                    className="actionBtn iconSize btnView"
                     onClick={() => localUpdateItem[0] && handleOpenDocument(localUpdateItem[0])}
                   >
-                    <TooltipHost content="Delete" id={tooltipId}>
-                      <FontAwesomeIcon icon={faTrashCan} />
+                    <TooltipHost content="View Document" id={tooltipId}>
+                      <FontAwesomeIcon icon={faEye} />
                     </TooltipHost>
                   </Link>
-                </div>
-              )
-              : false
+                )}
+                <Link
+                  className="actionBtn iconSize btnDanger ml-10"
+                  onClick={() => localUpdateItem[0] && handleOpenDocument(localUpdateItem[0])}
+                >
+                  <TooltipHost content="Delete" id={tooltipId}>
+                    <FontAwesomeIcon icon={faTrashCan} />
+                  </TooltipHost>
+                </Link>
+              </div>
+            ) : false
           }
           addNewContent={
             <div className="dflex pb-1">
-              <TooltipHost content="Create New Document" id={tooltipId}>
-                <PrimaryButton
-                  className="btn btn-primary"
-                  onClick={() => setIsWizardOpen(true)}
-                  text="Create New Document"
-                />
-              </TooltipHost>
-              <Link
-                className="actionBtn iconSize btnRefresh ml-10"
-                onClick={() => { void loadData(); }}
-              >
+              <PrimaryButton
+                className="btn btn-primary"
+                onClick={() => setIsWizardOpen(true)}
+                text="Create New Document"
+              />
+              <Link className="actionBtn iconSize btnRefresh ml-10" onClick={() => { void loadData(); }}>
                 <TooltipHost content="Refresh Grid">
                   <FontAwesomeIcon icon={faArrowsRotate} />
                 </TooltipHost>
@@ -409,8 +384,8 @@ export const AdminDashboard: React.FC = () => {
         />
       </div>
 
-      {/* ===== SECTION 4: Recent Users Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+      {/* ===== SECTION 4: Users Grid ===== */}
+      <div>
         <MemoizedDataGridComponent
           items={recentUsers}
           columns={recentUsersColumns}
@@ -418,11 +393,40 @@ export const AdminDashboard: React.FC = () => {
           isPagination={true}
           searchable={true}
           CustomselectionMode={0}
-          onSelectedItem={() => {}}
+          onSelectedItem={() => { }}
           isAddNew={false}
         />
       </div>
 
+      {/* ===== Approve / Reject Modal ===== */}
+      <CustomModal
+        isModalOpenProps={approvalModal.open}
+        setModalpopUpFalse={() => setApprovalModal({ open: false, doc: null, action: null })}
+        subject={approvalModal.action === 'approve' ? 'Approve Document' : 'Reject Document'}
+        isLoading={isLoading}
+        message={
+          approvalModal.doc ? (
+            <div>
+              <p>
+                Are you sure you want to <strong>{approvalModal.action === 'approve' ? 'approve' : 'reject'}</strong> the document:
+              </p>
+              <p style={{ fontWeight: 600, color: '#333' }}>{approvalModal.doc.name}</p>
+            </div>
+          ) : ''
+        }
+        yesButtonText={approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
+        closeButtonText="Cancel"
+        onClickOfYes={async () => {
+          if (approvalModal.doc && approvalModal.action) {
+            const newStatus = approvalModal.action === 'approve' ? 'Approved' : 'Rejected';
+            await handleUpdateDocument(approvalModal.doc.id, { Status: newStatus });
+            setApprovalModal({ open: false, doc: null, action: null });
+          }
+        }}
+        onClose={() => setApprovalModal({ open: false, doc: null, action: null })}
+      />
+
+      {/* ===== View Document Modal ===== */}
       <CustomModal
         isModalOpenProps={isViewModalOpen}
         setModalpopUpFalse={setIsViewModalOpen}
@@ -443,9 +447,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="detail-item">
                   <div className="detail-label">Status</div>
                   <div className="detail-value">
-                    <span className={`status-badge status-${viewingDocument.status.toLowerCase().replace(' ', '-')}`}>
-                      {viewingDocument.status}
-                    </span>
+                    <StatusBadge status={viewingDocument.status.toLowerCase().replace(' ', '-')} size="small" />
                   </div>
                 </div>
                 <div className="detail-item">
@@ -457,7 +459,6 @@ export const AdminDashboard: React.FC = () => {
                   <div className="detail-value">{viewingDocument.lastModified}</div>
                 </div>
               </div>
-
               {isEditing && (
                 <div style={{ marginTop: 20 }}>
                   <TextField
@@ -474,9 +475,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-          ) : (
-            ''
-          )
+          ) : ''
         }
         closeButtonText="Close"
         yesButtonText={isEditing ? 'Save Changes' : 'Edit'}
@@ -493,6 +492,8 @@ export const AdminDashboard: React.FC = () => {
         onClickThirdButton={isEditing ? undefined : handleDeleteDocument}
         onClose={() => setIsEditing(false)}
       />
+
+      {/* ===== eSignature Approval Modal ===== */}
       <CustomModal
         isModalOpenProps={isSignatureModalOpen}
         setModalpopUpFalse={setIsSignatureModalOpen}
@@ -515,17 +516,12 @@ export const AdminDashboard: React.FC = () => {
                   <div className="detail-value">{viewingDocument.author || 'Unknown'}</div>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-label">Reviewer</div>
-                  <div className="detail-value">{viewingDocument.reviewer || 'N/A'}</div>
-                </div>
-                <div className="detail-item">
                   <div className="detail-label">Status</div>
                   <div className="detail-value">
-                    <span className="status-badge status-approved">Reviewer Approved</span>
+                    <StatusBadge status="approved" size="small" />
                   </div>
                 </div>
               </div>
-
               <div style={{ marginTop: 20 }}>
                 <TextField
                   label="eSignature *"
@@ -538,9 +534,7 @@ export const AdminDashboard: React.FC = () => {
                 </p>
               </div>
             </div>
-          ) : (
-            ''
-          )
+          ) : ''
         }
         closeButtonText="Cancel"
         yesButtonText="Submit Final Approval"
@@ -550,5 +544,3 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-
-

@@ -68,7 +68,6 @@ export const ManageCategories: React.FC<any> = (props) => {
   } = ManageCategoriesData();
 
   const filterStatusOptions = React.useMemo(() => [
-    { label: 'All Status', value: 'All' },
     { label: 'Active', value: 'Active' },
     { label: 'Inactive', value: 'Inactive' }
   ], []);
@@ -86,13 +85,13 @@ export const ManageCategories: React.FC<any> = (props) => {
   // Derived filter dropdown options (named with prefix to avoid conflict with ManageCategoriesData)
   const filterDocCatOptions = React.useMemo(() => {
     const unique = Array.from(new Set(filteredCategories.map((c: any) => c.documentCategory).filter(Boolean)));
-    return [{ label: 'All Doc Categories', value: 'All' }, ...unique.map((v: string) => ({ label: v, value: v }))];
+    return unique.map((v: string) => ({ label: v, value: v }));
   }, [filteredCategories]);
 
   const filterGroupOptions = React.useMemo(() => {
     const base = docCatFilter === 'All' ? filteredCategories : filteredCategories.filter((c: any) => c.documentCategory === docCatFilter);
     const unique = Array.from(new Set(base.map((c: any) => c.group).filter(Boolean)));
-    return [{ label: 'All Groups', value: 'All' }, ...unique.map((v: string) => ({ label: v, value: v }))];
+    return unique.map((v: string) => ({ label: v, value: v }));
   }, [filteredCategories, docCatFilter]);
 
   // displayCategories applies docCat + group filters on top of filteredCategories
@@ -692,11 +691,11 @@ export const ManageCategories: React.FC<any> = (props) => {
               <ReactDropdown
                 name="statusFilter"
                 options={filterStatusOptions}
-                defaultOption={statusDefault}
+                defaultOption={filterStatusOptions.find(o => o.value === statusFilter)}
                 onChange={(opt: any) => setStatusFilter(opt?.value ?? 'All')}
                 isCloseMenuOnSelect={true}
                 isSorted={false}
-                isClearable={false}
+                isClearable={true}
               />
             </div>
           </div>
@@ -705,11 +704,11 @@ export const ManageCategories: React.FC<any> = (props) => {
               <ReactDropdown
                 name="docCatFilter"
                 options={filterDocCatOptions}
-                defaultOption={filterDocCatDefault}
+                defaultOption={filterDocCatOptions.find(o => o.value === docCatFilter)}
                 onChange={(opt: any) => { setDocCatFilter(opt?.value ?? 'All'); setGroupFilter('All'); }}
                 isCloseMenuOnSelect={true}
                 isSorted={false}
-                isClearable={false}
+                isClearable={true}
               />
             </div>
           </div>
@@ -718,15 +717,15 @@ export const ManageCategories: React.FC<any> = (props) => {
               <ReactDropdown
                 name="filterGroupFilter"
                 options={filterGroupOptions}
-                defaultOption={filterGroupDefault}
+                defaultOption={filterGroupOptions.find(o => o.value === groupFilter)}
                 onChange={(opt: any) => setGroupFilter(opt?.value ?? 'All')}
                 isCloseMenuOnSelect={true}
                 isSorted={false}
-                isClearable={false}
+                isClearable={true}
               />
             </div>
           </div>
-          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 4 }}>
+          <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 1 }}>
             <DefaultButton
               text="Reset"
               onClick={() => { setStatusFilter('All'); setDocCatFilter('All'); setGroupFilter('All'); }}
@@ -756,7 +755,7 @@ export const ManageCategories: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+      <div>
         <MemoizedDataGridComponent
           columns={hierarchyColumns}
           items={currentItems}
@@ -787,7 +786,7 @@ export const ManageCategories: React.FC<any> = (props) => {
                 onClick={() => setIsExcelUploadOpen(true)}
                 className="btn btn-success icon-mr"
                 styles={{
-                  root: { background: '#217346', borderColor: '#217346', color: '#fff' },
+                  root: { background: '#217346', borderColor: '#217346', color: '#fff', marginLeft: 8 },
                   rootHovered: { background: '#1a5c37', borderColor: '#1a5c37', color: '#fff' }
                 }}
               >
@@ -798,6 +797,7 @@ export const ManageCategories: React.FC<any> = (props) => {
                 key="add"
                 text="Add Category"
                 className="btn btn-primary"
+                style={{ marginLeft: 8 }}
                 onClick={() => {
                   props.manageComponentView({
                     currentComponentName: ComponentNameEnum.AddCategory,

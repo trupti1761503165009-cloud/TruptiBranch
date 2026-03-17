@@ -1,0 +1,273 @@
+Admin Dashboard Screen
+
+Documents are available in the Document Screen but are not отображed in the Admin Dashboard — this needs to be fixed.
+
+In the Action column:
+
+Add a View icon to open the document in a panel.
+
+Include Approve and Reject icons in the panel header.
+
+Add a History option.
+
+If required, also manage these actions directly within the grid.
+
+Fix grid layout/CSS issue:
+
+Remove this wrapper from all grids:
+
+<div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+
+Ensure:
+
+Search box and filters display properly.
+
+Card aligns on the left and form on the right, matching layout of other cards.
+
+Users grid is not displaying users — resolve this issue.
+
+Use only these groups:
+
+Admin
+
+HR
+
+Users
+❌ Do NOT use: DMS Admin, DMS HR, DMS Author
+
+Category Dashboard
+
+In all filter dropdowns:
+
+Remove --Select--
+
+Remove All Status
+
+Bind only actual values
+
+Update Reset button CSS:
+
+align-items: center;
+padding-top: 1px;
+
+Add spacing between Refresh Grid and Excel Upload buttons.
+
+Fix delete icon hover:
+
+Icon should be visible (not just red background).
+
+In Add Category Form:
+
+Remove CTD-related fields:
+
+CTD Module
+
+eCTD Section
+
+eCTD Subsection
+
+eCTD Code
+
+Description
+
+Artifact Description
+
+Fix validation issue:
+
+On Add Category, validation is not working and console shows errors.
+
+Use custom modal popup (same as Template screen) for validation messages.
+
+Confirm and implement sub-level delete functionality.
+
+Clarify 4th level column naming:
+
+“Category Name” should be replaced with correct field (Artifact Name / Document Name).
+
+Review Project Documents folder structure and align category logic accordingly:
+
+If it's Artifact → treat as Document.
+
+Display properly in panel view.
+
+Improve Category operations:
+
+Add / Update / Delete should behave like folder structure (hierarchical).
+
+Add Excel Upload icon in Category grid (same as Template screen).
+
+Manage Template Screen
+
+Filters:
+
+Remove --Select-- and All
+
+Show only actual values
+
+Apply same Reset button CSS as Category screen.
+
+Fix grid layout:
+
+Remove .boxCard wrapper
+
+Ensure proper alignment (grid left, form right)
+
+Review if Category dropdown is required (based on SOP folder structure).
+
+Fix validation issue:
+
+Sometimes shows "fill required fields" even when all fields are filled.
+
+Template not saving properly.
+
+Fix delete issue:
+
+Loader appears but template is not deleted.
+
+Ensure isDelete flag is set correctly.
+
+Edit functionality:
+
+Preview document in panel
+
+Allow delete & re-upload document before update
+
+Handle duplicate template name:
+
+If same name exists and is active → show validation
+
+If inactive → allow reuse
+
+Remove unnecessary validation:
+
+Keep only field-level validation
+
+Disable Template Name field in edit mode
+
+Create CTD Folder
+
+Fix issue where Add button is not visible.
+
+Implement proper eCTD Module page:
+
+Breadcrumb navigation
+
+Add button
+
+Grid display
+
+Support level-wise hierarchy creation with dropdowns.
+
+Drug Screen
+
+Maintain consistent grid structure:
+
+Use Edit/Delete buttons (not icons)
+
+Use button for Add Drug (not + icon)
+
+Use custom modal for:
+
+Add / Edit / Delete validation
+
+Remove inline validation.
+
+Filters:
+
+Remove --Select--
+
+Apply same Reset button CSS as Category
+
+Add Edit/Delete in grid action column.
+
+All Documents Screen
+
+Fix filter layout:
+
+Reduce extra spacing
+
+Remove --Select-- from dropdown filters.
+
+Remove:
+
+“Show Deleted”
+
+Delete button
+
+Replace tabs:
+
+❌ Remove: All / My / Assigned
+
+✅ Add:
+
+Drug Folder
+
+Document Folder
+
+Drug Folder:
+
+Show structured hierarchy (eCTD / GMP / TMF)
+
+Store finalized documents accordingly
+
+Restrict screen access to Admin only.
+
+Implement workflow:
+
+Draft → Author → Approver → Signed
+
+Add Approve / Reject / History in grid and panel
+
+Fix dropdown binding:
+
+Drug dropdown not loading values
+
+Approver dropdown should fetch users from:
+
+Admin / HR / Users groups
+
+UI consistency:
+
+Match Template & Category screen design
+
+In Document Folder tab:
+
+Show documents with:
+
+View
+
+Approve / Reject
+
+Version History
+
+Status-based actions
+
+My Documents Screen
+
+Apply same grid/UI changes as All Documents.
+
+Show only documents created by logged-in user.
+
+Assigned to Me Screen
+
+Apply same grid/UI changes as All Documents.
+
+Show only documents assigned to current user.
+
+User Management
+
+Fetch users from:
+
+Admin
+
+HR
+
+Users groups
+
+On Save:
+
+Store in list and respective group
+
+On Delete:
+
+Remove from grid and group

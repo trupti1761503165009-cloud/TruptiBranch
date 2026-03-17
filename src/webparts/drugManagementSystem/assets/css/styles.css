@@ -1616,7 +1616,11 @@ ul.HelpDeskEvent li .symbolWrapper .symbolDate {
 
 .actionBtn.btnDanger:hover {
     background: #dc3545 !important;
-    color: #fff;
+    color: #fff !important;
+}
+.actionBtn.btnDanger:hover svg,
+.actionBtn.btnDanger:hover i {
+    color: #fff !important;
 }
 
 .actionBtn.btnGray {
