@@ -17,10 +17,10 @@ interface CategoryFormProps {
   subGroupOptions: any[];
   artifactNameOptions: any[];
   templateNameOptions: any[];
-  ctdModuleOptions: any[];
-  ectdSectionOptions: any[];
-  ectdSubsectionOptions: any[];
-  ectdCodeOptions: any[];
+  ctdModuleOptions?: any[];
+  ectdSectionOptions?: any[];
+  ectdSubsectionOptions?: any[];
+  ectdCodeOptions?: any[];
   formData: any;
   setFormData: (data: any) => void;
   fieldErrors: any;
@@ -35,10 +35,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
   subGroupOptions,
   artifactNameOptions,
   templateNameOptions,
-  ctdModuleOptions,
-  ectdSectionOptions,
-  ectdSubsectionOptions,
-  ectdCodeOptions,
   formData,
   setFormData,
   fieldErrors
@@ -185,96 +181,6 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
             </div>
           </div>
         )}
-      </div>
-
-      <div className="ms-Grid-row mt-10">
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">CTD Module</label>
-            <ReactDropdown
-              name="ctdModule"
-              options={ctdModuleOptions}
-              defaultOption={ctdModuleOptions.find((o: any) => o.value === formData.ctdModule)}
-              onChange={(opt) => setFormData({ ...formData, ctdModule: opt?.value || '' })}
-              isDisabled={isReadOnly}
-              isClearable={true}
-            />
-          </div>
-        </div>
-
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">eCTD Section</label>
-            <ReactDropdown
-              name="ectdSection"
-              options={ectdSectionOptions}
-              defaultOption={ectdSectionOptions.find((o: any) => o.value === formData.ectdSection)}
-              onChange={(opt) => setFormData({ ...formData, ectdSection: opt?.value || '' })}
-              isDisabled={isReadOnly}
-              isClearable={true}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="ms-Grid-row mt-10">
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">eCTD Subsection</label>
-            <ReactDropdown
-              name="ectdSubsection"
-              options={ectdSubsectionOptions}
-              defaultOption={ectdSubsectionOptions.find((o: any) => o.value === formData.ectdSubsection)}
-              onChange={(opt) => setFormData({ ...formData, ectdSubsection: opt?.value || '' })}
-              isDisabled={isReadOnly}
-              isClearable={true}
-            />
-          </div>
-        </div>
-
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">eCTD Code</label>
-            <ReactDropdown
-              name="ectdCode"
-              options={ectdCodeOptions}
-              defaultOption={ectdCodeOptions.find((o: any) => o.value === formData.ectdCode)}
-              onChange={(opt) => setFormData({ ...formData, ectdCode: opt?.value || '' })}
-              isDisabled={isReadOnly}
-              isClearable={true}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="ms-Grid-row mt-10">
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">Description</label>
-            <TextField
-              multiline
-              rows={3}
-              value={formData.description || ''}
-              onChange={(_e, val) => setFormData({ ...formData, description: val || '' })}
-              disabled={isReadOnly}
-              placeholder="Enter category description"
-            />
-          </div>
-        </div>
-
-        <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-          <div className="form-field">
-            <label className="form-label">Artifact Description</label>
-            <TextField
-              multiline
-              rows={3}
-              value={formData.artifactDescription || ''}
-              onChange={(_e, val) => setFormData({ ...formData, artifactDescription: val || '' })}
-              disabled={isReadOnly}
-              placeholder="Enter artifact description"
-            />
-          </div>
-        </div>
       </div>
 
       {!isReadOnly && (

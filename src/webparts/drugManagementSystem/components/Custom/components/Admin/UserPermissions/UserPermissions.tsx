@@ -63,12 +63,11 @@ export const UserPermissions: React.FC<any> = (props) => {
     setMessageDialog(prev => ({ ...prev, hidden: true }));
   };
 
-  // Role options matching SharePoint Groups
+  // Role options matching SharePoint Groups: Admin, HR, Users
   const roleOptions: IReactDropOptionProps[] = React.useMemo(() => [
     { label: 'Admin', value: 'Admin' },
     { label: 'HR', value: 'HR' },
-    { label: 'Author (Member)', value: 'Author' },
-    { label: 'Approver', value: 'Approver' }
+    { label: 'Users', value: 'Users' }
   ], []);
 
   const roleFilterOptions: IReactDropOptionProps[] = React.useMemo(() => [
@@ -92,13 +91,13 @@ export const UserPermissions: React.FC<any> = (props) => {
     const summary: Record<string, number> = {
       'Admin': 0,
       'HR': 0,
-      'Author': 0,
-      'Approver': 0
+      'Users': 0
     };
     filteredUsers.forEach((user: any) => {
-      if (summary[user.role] !== undefined) {
-        summary[user.role]++;
-      }
+      const roles: string[] = Array.isArray((user as any).roles) ? (user as any).roles : [user.role];
+      roles.forEach(r => {
+        if (summary[r] !== undefined) summary[r]++;
+      });
     });
     return summary;
   }, [filteredUsers]);
@@ -110,13 +109,13 @@ export const UserPermissions: React.FC<any> = (props) => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'Author',
+        role: user.role || 'Users',
         status: user.status || 'Active',
         ProjectName: (user as any).ProjectName || ''
       });
     } else {
       setSelectedUser(null);
-      setFormData({ name: '', email: '', role: 'Author', status: 'Active', ProjectName: '' });
+      setFormData({ name: '', email: '', role: 'Users', status: 'Active', ProjectName: '' });
     }
   };
 
@@ -282,16 +281,10 @@ export const UserPermissions: React.FC<any> = (props) => {
             color="green"
           />
           <SummaryCard
-            title="Authors (Members)"
-            value={roleSummary['Author']}
+            title="Users"
+            value={roleSummary['Users']}
             icon={faUsers}
             color="orange"
-          />
-          <SummaryCard
-            title="Approvers"
-            value={roleSummary['Approver']}
-            icon={faUserCheck}
-            color="purple"
           />
         </div>
       </div>

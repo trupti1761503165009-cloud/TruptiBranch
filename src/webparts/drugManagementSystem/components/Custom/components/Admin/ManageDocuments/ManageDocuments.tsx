@@ -581,21 +581,10 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   isCloseMenuOnSelect={true} isSorted={false} isClearable={false} />
               </div>
             </div>
-            {isAdmin && (
-              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4 }}>
-                <DefaultButton
-                  toggle
-                  checked={showDeleted}
-                  text={showDeleted ? 'Hide Deleted' : 'Show Deleted'}
-                  onClick={() => setShowDeleted(!showDeleted)}
-                  iconProps={{ iconName: 'Delete' }}
-                />
-              </div>
-            )}
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ paddingTop: 4 }}>
+            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingTop: 4 }}>
               <DefaultButton
                 text="Reset"
-                onClick={() => { resetFilters(); setShowDeleted(false); }}
+                onClick={() => { resetFilters(); }}
                 styles={{
                   root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
                   rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
@@ -622,16 +611,15 @@ export const ManageDocuments: React.FC<any> = (props) => {
         />
       </div>
 
-      {/* Primary Tabs */}
+      {/* Primary Tabs: Drugs Folder | Document Folder */}
       <div style={{ marginBottom: 15 }}>
         <Pivot
           aria-label="Document Views"
           selectedKey={activeTab}
-          onLinkClick={(item) => item?.props.itemKey && setActiveTab(item.props.itemKey as 'all' | 'myDocuments' | 'assignedToMe')}
+          onLinkClick={(item) => item?.props.itemKey && setActiveTab(item.props.itemKey as any)}
         >
-          {isAdmin && <PivotItem headerText="All Documents" itemKey="all" />}
-          <PivotItem headerText="My Documents" itemKey="myDocuments" />
-          <PivotItem headerText="Assigned to Me" itemKey="assignedToMe" />
+          <PivotItem headerText="Drugs Folder" itemKey="all" />
+          <PivotItem headerText="Document Folder" itemKey="workspace" />
         </Pivot>
       </div>
 
@@ -688,7 +676,54 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <Loader />
           </div>
         )}
-        {selectedDrugId === null ? (
+        {activeTab === 'workspace' ? (
+          <MemoizedDataGridComponent
+            key="doc-folder-flat-list"
+            items={filteredDocuments}
+            columns={effectiveColumns}
+            reRenderComponent={true}
+            searchable={true}
+            isPagination={true}
+            CustomselectionMode={isVisibleCrud.current ? 2 : 0}
+            onSelectedItem={_onItemSelected}
+            isAddNew={true}
+            addNewContent={
+              <div className="dflex pb-1">
+                {canCreate && (
+                  <PrimaryButton
+                    className="btn btn-primary"
+                    text="Add Document"
+                    onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.AddDocument })}
+                  />
+                )}
+                <Link className="actionBtn iconSize btnRefresh ml-10" onClick={loadData}>
+                  <TooltipHost content="Refresh Grid"><FontAwesomeIcon icon={faArrowsRotate} /></TooltipHost>
+                </Link>
+              </div>
+            }
+            addEDButton={
+              isDisplayEDbtn && isVisibleCrud.current && (
+                <div className="dflex">
+                  {isDisplayEditButtonview && (
+                    <Link className="actionBtn iconSize btnView" onClick={() => updateItem[0] && void handleViewDocument(updateItem[0])}>
+                      <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
+                    </Link>
+                  )}
+                  {canEdit && isDisplayEditButtonview && (
+                    <Link className="actionBtn iconSize btnEdit ml-10" onClick={onclickEdit}>
+                      <TooltipHost content="Edit"><FontAwesomeIcon icon={faPenToSquare} /></TooltipHost>
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Link className="actionBtn iconSize btnDanger ml-10" onClick={onclickconfirmdelete}>
+                      <TooltipHost content="Delete"><FontAwesomeIcon icon={faTrashCan} /></TooltipHost>
+                    </Link>
+                  )}
+                </div>
+              )
+            }
+          />
+        ) : selectedDrugId === null ? (
           <MemoizedDataGridComponent
             key="drug-selection-grid"
             items={drugs}

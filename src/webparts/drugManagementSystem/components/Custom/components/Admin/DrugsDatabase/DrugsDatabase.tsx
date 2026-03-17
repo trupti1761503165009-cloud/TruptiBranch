@@ -13,7 +13,7 @@ import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
 
 import { ComponentNameEnum } from '../../../../../models/ComponentNameEnum';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { TooltipHost, Link, DefaultButton } from 'office-ui-fabric-react';
+import { TooltipHost, Link, DefaultButton, PrimaryButton } from 'office-ui-fabric-react';
 import * as React from 'react';
 
 export const DrugsDatabase: React.FC<any> = (props) => {
@@ -140,6 +140,36 @@ export const DrugsDatabase: React.FC<any> = (props) => {
         </TooltipHost>
       )
     },
+    {
+      key: 'actions',
+      name: 'ACTIONS',
+      fieldName: 'actions',
+      minWidth: 140,
+      maxWidth: 180,
+      isSortingRequired: false,
+      onRender: (item: DrugItem) => (
+        <div className="dflex" style={{ gap: 6 }}>
+          <Link
+            className="actionBtn iconSize btnView"
+            onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.EditDrug, componentProps: { item, mode: 'view' } })}
+          >
+            <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
+          </Link>
+          <Link
+            className="actionBtn iconSize btnEdit ml-10"
+            onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.EditDrug, componentProps: { item, mode: 'edit' } })}
+          >
+            <TooltipHost content="Edit"><FontAwesomeIcon icon={faPenToSquare} /></TooltipHost>
+          </Link>
+          <Link
+            className="actionBtn iconSize btnDanger ml-10"
+            onClick={() => { setSelectedIds([item.id]); setIsDeleteDialogOpen(true); }}
+          >
+            <TooltipHost content="Delete"><FontAwesomeIcon icon={faTrashCan} /></TooltipHost>
+          </Link>
+        </div>
+      )
+    },
   ];
 
 
@@ -257,39 +287,20 @@ export const DrugsDatabase: React.FC<any> = (props) => {
           isAddNew={true}
           addNewContent={
             <div className="dflex pb-1">
-              <Link
-                className="actionBtn iconSize btnEdit ml-10"
+              <PrimaryButton
+                className="btn btn-primary"
+                text="Add Drug"
                 onClick={() => {
                   props.manageComponentView({
                     currentComponentName: ComponentNameEnum.AddDrug
                   });
                 }}
-              >
-                <TooltipHost content="Add Drug" id={"tooltip-add"}>
-                  <FontAwesomeIcon icon={faPlus} />
-                </TooltipHost>
-              </Link>
-
-              <Link
-                className="actionBtn iconSize btnEdit ml-10"
-                onClick={() => {
-                  // Logic for export if implemented in Data component
-                  console.log("Export to Excel");
-                }}
-              >
-                <TooltipHost content="Export Excel" id={"tooltip-export"}>
-                  <FontAwesomeIcon icon={faFileExcel} />
-                </TooltipHost>
-              </Link>
-
+              />
               <Link
                 className="actionBtn iconSize btnRefresh ml-10"
-                onClick={() => {
-                  setStatusFilter('All');
-                  setSearchTerm('');
-                }}
+                onClick={() => { setStatusFilter('All'); setSearchTerm(''); }}
               >
-                <TooltipHost content={"Reset & Refresh Grid"} id={"tooltip-refresh"}>
+                <TooltipHost content="Refresh Grid" id="tooltip-refresh">
                   <FontAwesomeIcon icon={faArrowsRotate} />
                 </TooltipHost>
               </Link>

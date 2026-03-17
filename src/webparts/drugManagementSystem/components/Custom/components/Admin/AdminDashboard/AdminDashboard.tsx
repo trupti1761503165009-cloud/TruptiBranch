@@ -20,7 +20,10 @@ import {
   faUserPen,
   faChartPie,
   faGear,
-  faArrowsRotate
+  faArrowsRotate,
+  faCheck,
+  faXmark,
+  faClockRotateLeft
 } from '@fortawesome/free-solid-svg-icons';
 import { Link, TooltipHost } from '@fluentui/react';
 import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
@@ -63,6 +66,7 @@ export const AdminDashboard: React.FC = () => {
     handleSort,
     handleSaveChanges,
     handleDeleteDocument,
+    handleUpdateDocument,
     handleOpenDocument,
     handleFinalApprove,
     getSortIcon
@@ -225,16 +229,38 @@ export const AdminDashboard: React.FC = () => {
     },
     {
       key: 'actions',
-      name: 'Actions',
+      name: 'ACTIONS',
       fieldName: 'actions',
-      minWidth: 90,
-      maxWidth: 120,
+      minWidth: 130,
+      maxWidth: 160,
       onRender: (item: Document) => (
-        <div className="action-buttons">
-          <DefaultButton onClick={() => handleOpenDocument(item)}>
-            <FontAwesomeIcon icon={faEye} style={{ marginRight: 8 }} />
-            View
-          </DefaultButton>
+        <div className="dflex" style={{ gap: 6 }}>
+          <Link className="actionBtn iconSize btnView" onClick={() => handleOpenDocument(item)}>
+            <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
+          </Link>
+          <Link
+            className="actionBtn iconSize btnEdit ml-10"
+            onClick={() => {
+              if (confirm(`Approve document "${item.name}"?`)) {
+                handleUpdateDocument(item.id, { status: 'Approved' });
+              }
+            }}
+          >
+            <TooltipHost content="Approve"><FontAwesomeIcon icon={faCheck} style={{ color: '#2e7d32' }} /></TooltipHost>
+          </Link>
+          <Link
+            className="actionBtn iconSize btnDanger ml-10"
+            onClick={() => {
+              if (confirm(`Reject document "${item.name}"?`)) {
+                handleUpdateDocument(item.id, { status: 'Rejected' });
+              }
+            }}
+          >
+            <TooltipHost content="Reject"><FontAwesomeIcon icon={faXmark} /></TooltipHost>
+          </Link>
+          <Link className="actionBtn iconSize btnView ml-10" onClick={() => handleOpenDocument(item)}>
+            <TooltipHost content="History"><FontAwesomeIcon icon={faClockRotateLeft} /></TooltipHost>
+          </Link>
         </div>
       )
     }

@@ -1,0 +1,90 @@
+Admin Dashboard Screen
+
+1) I have document in document screen but not showing in Admin Dashboard screen.
+2) Action column add View icon for that woth proper status open that document in panel add approver reject icon above also and history and if according you in grid they wnat so according you manage it.
+3) first check Grid css because jusr remove this  <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}> style form each MemoizedDataGridComponent grid above class then searchbox nd all adding passing so showing pefect. but just that card show left side and form right side proper alignemnet with above cards.
+4) Users grid not showing users also 
+5) for Users i have 3 Group Admin HR and Users not DMS Admin and DMS HR and DMS Author not like that okay.
+
+
+Category Dashboard.
+1) For catgory Grid filter you don't add --select-- and ALl Status both not bind in dropdown just bind all status not bind then ==select-- okay same in all doc categoried dropdown and same in ALl Groups dropdown.
+2) REset button style css changes     /* display: flex; */
+    align-items: center;
+    padding-top: 1px;
+}
+like this want.
+
+3)why Refresh Grid and in Excel Upload in between not showing any space.
+4) Delete icon hover why icon notshoiwng only showing red color 
+5) Add category form do not need CTD Section there right renove all dropdown fprm ctsd reletad okay CTD Module and eCTD Section and eCTD Subsection and eCTD Code and Description and Artifact Description i dont wnat in this category form .
+6) Add Catgeory time add button click not any validation showing in console showing coding some error for that.
+7) i wnat same Custome model pop which is use Add template form validation time submit update time i wnat same custome model.
+8) we want delete sub level then it's deleted?
+9) and in forth level 4th level why showing category name column that is Artificate name and is this Document name?? i dont have and idea about that.
+10) you review my ALl Document In Project Documents folder there you know idea about how all data is added in this according that change in my code suppose it's Artificate name then it's document okay. then show in Panel.
+
+Add Update delete how we excute category please do it all changes sub level Delete and Add button means folder delete addd there folder again likethat do we need???? change according .
+same teplate screen how Excel icon added in Grid like that categoru screen alos you have to change okay.
+
+
+
+Manage Template screen.
+1) Manage Template svreen same filter all select jut put all in each dropdown not --select-- and all option.
+2) 2) REset button style css changes     /* display: flex; */
+    align-items: center;
+    padding-top: 1px;
+}
+like this want.
+reset bitton wnat category grid like.
+3) first check Grid css because jusr remove this  <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}> style form each MemoizedDataGridComponent grid above class then searchbox nd all adding passing so showing pefect. but just that card show left side and form right side proper alignemnet with above cards.
+4) Do we need Category dropdown in template screen pleas ereviwe doucmnet in project document i have sop folder that all tenplates this.
+5)Some in Add template time all required field add then also showing fill required field validation error some time add template button not working not saving templates.
+4)  delete time also not delete documents only loader showing why?
+5) isdelete flag true 
+6) Edit time Template also in Edit page but in Previwe mode click on this opne panel show that doumen in panel then show delete icons beside that document if user delete and again add new update it then update that document.
+7) same name document is added but that give validation alredy same name document exist and status is active do please do active that status then add this new template.
+Submit and update button same please fill all required field validation why that validation showing remove it because we don't need that because we have field wise validation control wise edit time template name disable.
+8) 
+
+
+Create CTD Folder
+
+1) Here we want create ectd module page proper where add button not showing why??
+2) want same bredrcumb add And below Grid want same and add ctd proper want all value dropdown and all if level wise add then give level wise like that.
+4) 
+
+
+Drug screen 
+1) I wnat Drug screen same strture wise in all memorized grid i wnat strture Edit delete button for add drug use button not icon plus 
+2) for validation submit edit dlete time use same custome custoemmodel component which is used in template screen.
+3) don't want inline validation.
+4) Drug screen also filter option remove one --select-- and reset button css want same which is in category.
+5) In memerized grid add same for Edit delete here also okay.
+
+
+
+
+All document screen
+1) this screen show data first filter why too much space each filter 
+2) from filter where 2 options bind --select-- and all option then remove --select-- okay.
+3) remove show deleted and hide delete button.
+4) here 3 tab there All document my document and assigned document we dont need that tab remove we need insted of this 2 tab Drugs folder and another is document folder
+5) Drug folder which is means which Ectd to GMp or TMF so that folder stured showing there once document is finalized stored innthat folder strture okay,
+6) All document screen only admin.
+7) i alredy told from draft to signed flow author and approver in between so pelase do it that approver reject and history button you need add in panel also in grid action button .
+8) Add document drug and approver not bidning drug dropdown we have alredy so many drugs there .
+9) approver alos get form USers Grop Admin HR and Users group.
+10) whole form ui background card controls are i want same like template category tab.
+11) 2nd tab means drug folder strture beside 2nd tab document there approver rejet view panel document version history all view according status wise. 
+
+My Document scree
+1)same change like all document grid change in this also but on change it is document which is created by login that show here nothing else okay.
+
+
+3) Assighe to me same change like all document grid change in this also current login user assigned any document show in that screen 
+
+
+4) User Grid get all user from Admin HR and Users Group save time save in list and also in that group delete time delete from that Grid please do it all changes
+
+ 

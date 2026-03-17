@@ -125,8 +125,7 @@ export function AdminDashboardData() {
 
       addUsers(adminUsers, 'Admin');
       addUsers(hrUsers, 'HR');
-      addUsers(authorUsers, 'USers');
-     // Mapping DMS Members to Author for simplicity
+      addUsers(authorUsers, 'Users');
 
       const mappedUsers = Array.from(userMap.values());
 
@@ -175,12 +174,12 @@ export function AdminDashboardData() {
     setSortedDocuments(sorted);
   };
 
-  // useEffect(() => {
-  //   void (async function (): Promise<void> {
-  //     await loadData();
-  //   })();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [provider]);
+  useEffect(() => {
+    void (async function (): Promise<void> {
+      await loadData();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider]);
 
   useEffect(() => {
     sortDocuments();
@@ -239,6 +238,21 @@ export function AdminDashboardData() {
       } finally {
         setIsLoading(false);
       }
+    }
+  };
+
+  const handleUpdateDocument = async (docId: number, updates: Record<string, any>) => {
+    if (!provider) return;
+    setIsLoading(true);
+    try {
+      await provider.updateItem(updates, ListNames.DMSDocuments, docId);
+      await loadData();
+      setSuccessMessage('Document updated successfully.');
+    } catch (error) {
+      console.error('Failed to update document:', error);
+      setErrorMessage('Unable to update document.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -306,6 +320,7 @@ export function AdminDashboardData() {
     handleSort,
     handleSaveChanges,
     handleDeleteDocument,
+    handleUpdateDocument,
     handleOpenDocument,
     handleFinalApprove,
     getSortIcon

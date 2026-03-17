@@ -49,8 +49,7 @@ export function UserPermissionsData() {
     totalUsers: 0,
     adminCount: 0,
     hrCount: 0,
-    authorCount: 0,
-    approverCount: 0
+    usersCount: 0
   });
 
   const calculateStats = (userList: UserWithRoles[]) => {
@@ -58,8 +57,7 @@ export function UserPermissionsData() {
       totalUsers: userList.length,
       adminCount: userList.filter(u => u.roles.includes('Admin')).length,
       hrCount: userList.filter(u => u.roles.includes('HR')).length,
-      authorCount: userList.filter(u => u.roles.includes('Author')).length,
-      approverCount: userList.filter(u => u.roles.includes('Approver')).length
+      usersCount: userList.filter(u => u.roles.includes('Users')).length
     };
     setStats(stats);
   };
@@ -68,14 +66,14 @@ export function UserPermissionsData() {
     if (!provider) {
       // Mock data for development
       const mockUsers: UserWithRoles[] = [
-        { id: 1, name: 'John Smith', email: 'john.smith@company.com', roles: ['Admin'], groups: ['DMS Admins'], status: 'Active' },
-        { id: 2, name: 'Sarah Johnson', email: 'sarah.johnson@company.com', roles: ['HR'], groups: ['DMS HR'], status: 'Active' },
-        { id: 3, name: 'Michael Brown', email: 'michael.brown@company.com', roles: ['Author'], groups: ['DMS Members'], status: 'Active' },
-        { id: 4, name: 'Emily Davis', email: 'emily.davis@company.com', roles: ['Approver'], groups: ['DMS Approvers'], status: 'Active' },
-        { id: 5, name: 'Robert Wilson', email: 'robert.wilson@company.com', roles: ['Author', 'Approver'], groups: ['DMS Members', 'DMS Approvers'], status: 'Active' },
-        { id: 6, name: 'Lisa Anderson', email: 'lisa.anderson@company.com', roles: ['Author'], groups: ['DMS Members'], status: 'Active' },
-        { id: 7, name: 'David Martinez', email: 'david.martinez@company.com', roles: ['Approver'], groups: ['DMS Approvers'], status: 'Active' },
-        { id: 8, name: 'Jennifer Taylor', email: 'jennifer.taylor@company.com', roles: ['Admin'], groups: ['DMS Admins'], status: 'Active' }
+        { id: 1, name: 'John Smith', email: 'john.smith@company.com', roles: ['Admin'], groups: ['Admin'], status: 'Active' },
+        { id: 2, name: 'Sarah Johnson', email: 'sarah.johnson@company.com', roles: ['HR'], groups: ['HR'], status: 'Active' },
+        { id: 3, name: 'Michael Brown', email: 'michael.brown@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
+        { id: 4, name: 'Emily Davis', email: 'emily.davis@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
+        { id: 5, name: 'Robert Wilson', email: 'robert.wilson@company.com', roles: ['HR', 'Users'], groups: ['HR', 'Users'], status: 'Active' },
+        { id: 6, name: 'Lisa Anderson', email: 'lisa.anderson@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
+        { id: 7, name: 'David Martinez', email: 'david.martinez@company.com', roles: ['Users'], groups: ['Users'], status: 'Active' },
+        { id: 8, name: 'Jennifer Taylor', email: 'jennifer.taylor@company.com', roles: ['Admin'], groups: ['Admin'], status: 'Active' }
       ];
       setUsers(mockUsers);
       calculateStats(mockUsers);
@@ -84,12 +82,11 @@ export function UserPermissionsData() {
 
     setIsLoading(true);
     try {
-      // Get users from different SharePoint groups
-      const [adminUsers, hrUsers, authorUsers, approverUsers] = await Promise.all([
-        provider.getUsersFromGroup('DMS Admins').catch(() => [] as any[]),
-        provider.getUsersFromGroup('DMS HR').catch(() => [] as any[]),
-        provider.getUsersFromGroup('DMS Members').catch(() => [] as any[]),
-        provider.getUsersFromGroup('DMS Approvers').catch(() => [] as any[])
+      // Get users from SharePoint groups: Admin, HR, Users
+      const [adminUsers, hrUsers, usersGroup] = await Promise.all([
+        provider.getUsersFromGroup('Admin').catch(() => [] as any[]),
+        provider.getUsersFromGroup('HR').catch(() => [] as any[]),
+        provider.getUsersFromGroup('Users').catch(() => [] as any[])
       ]);
 
       // Merge users and their roles
@@ -117,10 +114,9 @@ export function UserPermissionsData() {
         });
       };
 
-      addUsers(adminUsers, 'Admin', 'DMS Admins');
-      addUsers(hrUsers, 'HR', 'DMS HR');
-      addUsers(authorUsers, 'Author', 'DMS Members');
-      addUsers(approverUsers, 'Approver', 'DMS Approvers');
+      addUsers(adminUsers, 'Admin', 'Admin');
+      addUsers(hrUsers, 'HR', 'HR');
+      addUsers(usersGroup, 'Users', 'Users');
 
       const userList = Array.from(userMap.values()).map(u => ({
         ...u,

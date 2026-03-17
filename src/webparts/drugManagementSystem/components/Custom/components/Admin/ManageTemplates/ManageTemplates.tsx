@@ -466,16 +466,22 @@ export const ManageTemplates: React.FC<any> = (props) => {
                 />
               </div>
             </div>
-            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3" style={{ paddingBottom: 4 }}>
+            <div className="ms-Grid-col ms-sm12 ms-md3 ms-lg3" style={{ display: 'flex', alignItems: 'center', paddingBottom: 4 }}>
               <DefaultButton
-                className="btn btn-secondary"
-                style={{ width: '100%' }}
+                text="Reset"
                 onClick={() => {
                   setMappingTypeFilter('All');
                   setStatusFilter('All');
                   setCountryFilter('All');
                 }}
-                text="Reset Filters"
+                styles={{
+                  root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff', minWidth: 100, borderRadius: 4 },
+                  rootHovered: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  rootPressed: { background: '#b71c1c', borderColor: '#b71c1c', color: '#fff' },
+                  label: { color: '#fff', fontWeight: 600 },
+                  icon: { color: '#fff' }
+                }}
+                onRenderIcon={() => <FontAwesomeIcon icon={faArrowsRotate} style={{ marginRight: 6, color: '#fff' }} />}
               />
             </div>
           </div>
