@@ -555,7 +555,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           CTDModule: ctdModuleValue,
           Submodule: submoduleValue,
           Status: 'Draft',
-          IsEmailSend: '1',
+          IsEmailSend: true,
           DocumentVersion: 1,
           ApproverId: formData.approverId || null,
           Comments: commentsPayload.length > 0 ? JSON.stringify(commentsPayload) : '',
