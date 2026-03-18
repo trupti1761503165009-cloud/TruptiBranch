@@ -794,6 +794,14 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     if (!viewingDocument || !provider) return;
     setIsLoading(true);
     try {
+      const fileRef = viewingDocument.sharePointUrl || (viewingDocument as any).fileRef || '';
+      if (fileRef) {
+        const serverRelPath = fileRef.startsWith('http')
+          ? new URL(fileRef).pathname
+          : fileRef;
+        await provider.checkInFile(serverRelPath);
+      }
+
       const auditLog = {
         id: (viewingDocument.comments?.length || 0) + 1,
         author: 'System',
@@ -813,9 +821,18 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       await loadData();
       setIsDocPanelOpen(false);
       setSuccessMessage('Document submitted for approval.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit document:', error);
-      setErrorMessage('Unable to submit document for review.');
+      if (error?.isFileLockError) {
+        const lockedBy: string | undefined = error.lockedBy;
+        setErrorMessage(
+          lockedBy
+            ? `This document is currently open by ${lockedBy}. Please ask them to close it and try again.`
+            : 'This document is currently locked by another user. Please ask them to close it and try again.'
+        );
+      } else {
+        setErrorMessage('Unable to submit document for review.');
+      }
     } finally {
       setIsLoading(false);
     }

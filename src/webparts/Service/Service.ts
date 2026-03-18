@@ -737,6 +737,41 @@ export default class Service implements IDataProvider {
         return item
     }
 
+    public async checkInFile(serverRelativePath: string): Promise<void> {
+        try {
+            const file = this._sp.web.getFileByServerRelativePath(serverRelativePath);
+            const fileInfo: any = await file.select('CheckOutType', 'LockedByUser/Title').expand('LockedByUser')();
+            if (fileInfo.CheckOutType === 0) {
+                return;
+            }
+            await file.checkin('', 1);
+        } catch (error: any) {
+            const errorCode: number = error?.data?.responseBody?.['odata.error']?.code
+                ? parseInt(error.data.responseBody['odata.error'].code.split(',')[0], 10)
+                : (error?.status ?? 0);
+            if (errorCode === -2147018894 || (error?.message ?? '').includes('-2147018894')) {
+                let lockedBy: string | undefined;
+                try {
+                    const fileInfo: any = await this._sp.web
+                        .getFileByServerRelativePath(serverRelativePath)
+                        .select('LockedByUser/Title')
+                        .expand('LockedByUser')();
+                    lockedBy = fileInfo?.LockedByUser?.Title;
+                } catch (_) {
+                }
+                const lockError: any = new Error(
+                    lockedBy
+                        ? `FILE_LOCKED_BY:${lockedBy}`
+                        : 'FILE_LOCKED'
+                );
+                lockError.isFileLockError = true;
+                lockError.lockedBy = lockedBy;
+                throw lockError;
+            }
+            throw error;
+        }
+    }
+
     public async uploadFileInLibrary(folderPath: string, updatedExcel: string, fileContent?: ArrayBuffer): Promise<any> {
         let item = await this._sp.web.getFolderByServerRelativePath(folderPath).files.addUsingPath(folderPath, updatedExcel, { Overwrite: true });
         return item

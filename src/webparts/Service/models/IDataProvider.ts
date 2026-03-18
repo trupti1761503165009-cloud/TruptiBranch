@@ -104,5 +104,8 @@ export interface IDataProvider {
     getCTDModulesMaster(): Promise<string[]>;
     getECTDSectionsMaster(): Promise<string[]>;
     getCountriesMaster(): Promise<string[]>;
+
+    // File Operations
+    checkInFile(serverRelativePath: string): Promise<void>;
 }
 
