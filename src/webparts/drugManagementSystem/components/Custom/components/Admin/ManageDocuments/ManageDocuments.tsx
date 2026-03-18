@@ -762,7 +762,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
         </div>
       )}
       {/* Main Content Area: Drugs Grid or Documents/Folders Grid */}
-      <div className="boxCard" style={{ padding: 0, position: 'relative' }}>
+      <div className="boxCard">
         {isFolderLoading && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 5 }}>
             <Loader />

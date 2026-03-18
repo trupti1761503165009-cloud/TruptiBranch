@@ -276,7 +276,7 @@ export const DrugsDatabase: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={filteredDrugs}
           columns={columns}

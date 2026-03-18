@@ -435,7 +435,7 @@ export const CreateCTDFolder: React.FC = () => {
       </div>
 
       {/* Grid */}
-      <div className="white-card-section" style={{ padding: 0 }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={currentLevelFolders as any[]}
           columns={folderColumns}

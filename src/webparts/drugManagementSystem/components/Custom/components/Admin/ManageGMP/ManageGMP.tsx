@@ -230,7 +230,7 @@ export const ManageGMP: React.FC = () => {
         ]} />
       </div>
 
-      <div className="boxCard" style={{ padding: 0 }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={filteredItems}
           columns={columns}
