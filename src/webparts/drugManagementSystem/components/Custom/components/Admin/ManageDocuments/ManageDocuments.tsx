@@ -111,15 +111,49 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   const appGlobalState = useAtomValue(appGlobalStateAtom);
   const spContext = appGlobalState?.context;
+  const currentUser = appGlobalState?.currentUser;
 
-  const getWordEmbedUrl = (doc: Document): string => {
+  // Per-document permission: is current user the document author?
+  const isCurrentUserAuthor = React.useMemo(() => {
+    if (!viewingDocument || !currentUser) return false;
+    const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
+    const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+    return (
+      (userId > 0 && viewingDocument.authorId === userId) ||
+      (userEmail !== '' && String(viewingDocument.author || '').toLowerCase().includes(userEmail))
+    );
+  }, [viewingDocument, currentUser]);
+
+  // Per-document permission: is current user the assigned approver?
+  const isCurrentUserApprover = React.useMemo(() => {
+    if (!viewingDocument || !currentUser) return false;
+    const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
+    const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+    return (
+      canApprove && (
+        (userId > 0 && viewingDocument.approverId === userId) ||
+        (userEmail !== '' && String(viewingDocument.approver || '').toLowerCase().includes(userEmail)) ||
+        !viewingDocument.approverId // if no approver assigned, any approver-role user can act
+      )
+    );
+  }, [viewingDocument, currentUser, canApprove]);
+
+  // REQ 10: Word embed URL — edit mode for Draft/Rejected authors, view mode otherwise
+  const getWordEmbedUrl = (doc: Document, forceViewMode = false): string => {
     if (!spContext || !doc.fileRef) return '';
     const serverRelative = doc.fileRef.startsWith('http')
       ? new URL(doc.fileRef).pathname
       : doc.fileRef;
     const encodedUrl = encodeURIComponent(serverRelative);
-    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=embedview`;
+    const canEditInline = !forceViewMode && isCurrentUserAuthor &&
+      (doc.status === 'Draft' || doc.status === 'Rejected');
+    const action = canEditInline ? 'edit' : 'embedview';
+    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=${action}`;
   };
+
+  // REQ 4: Confirmation dialog state for Submit and Approve
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = React.useState(false);
+  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = React.useState(false);
 
   const hideFolderSidebar: boolean = !!(props.hideFolderSidebar);
   const hideAddButton: boolean = !!(props.hideAddButton);
@@ -729,6 +763,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             isPagination={true}
             CustomselectionMode={isVisibleCrud.current ? 2 : 0}
             onSelectedItem={_onItemSelected}
+            onItemInvoked={(item?: any) => { if (item) void handleViewDocument(item as Document); }}
             isAddNew={true}
             addNewContent={
               <div className="dflex pb-1">
@@ -916,6 +951,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
               isPagination={true}
               CustomselectionMode={isVisibleCrud.current ? 2 : 0}
               onSelectedItem={_onItemSelected}
+              onItemInvoked={(item?: any) => { if (item) void handleViewDocument(item as Document); }}
               isAddNew={true}
               addNewContent={
                 <div className="dflex pb-1">
@@ -1003,6 +1039,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
               isPagination={true}
               CustomselectionMode={isVisibleCrud.current ? 2 : 0}
               onSelectedItem={_onItemSelected}
+              onItemInvoked={(item?: any) => { if (item) void handleViewDocument(item as Document); }}
               isAddNew={true}
               addNewContent={
                 <div className="dflex pb-1">
@@ -1042,7 +1079,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
         </div>
       )}
 
-      {/* Document View Panel */}
+      {/* Document View Panel — REQ 9: Full-width */}
       <Panel
         isOpen={isDocPanelOpen}
         onDismiss={() => {
@@ -1050,14 +1087,116 @@ export const ManageDocuments: React.FC<any> = (props) => {
           setReviewerComments([]);
           setReviewerCommentError('');
         }}
-        type={PanelType.extraLarge}
+        type={PanelType.custom}
+        customWidth="100%"
         headerText={viewingDocument ? `Document: ${viewingDocument.name}` : 'Document Details'}
         closeButtonAriaLabel="Close"
+        isLightDismiss={false}
         data-testid="document-view-panel"
       >
         {isLoading && <Loader />}
         {viewingDocument && (
-          <div style={{ padding: '20px 0' }}>
+          <div style={{ padding: '16px 0' }}>
+            {/* REQ 3: Action Buttons at TOP */}
+            <div style={{
+              display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
+              padding: '12px 0 16px', borderBottom: '2px solid #eef2ff', marginBottom: 16
+            }}>
+              {/* Close */}
+              <DefaultButton
+                onClick={() => { setIsDocPanelOpen(false); setReviewerComments([]); setReviewerCommentError(''); }}
+              >
+                Close
+              </DefaultButton>
+
+              {/* View Document externally */}
+              {viewingDocument.sharePointUrl && (
+                <DefaultButton
+                  href={viewingDocument.sharePointUrl}
+                  target="_blank"
+                  styles={{ root: { borderColor: '#1E88E5', color: '#1E88E5' }, rootHovered: { background: '#E3F2FD' } }}
+                >
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
+                  Open in SharePoint
+                </DefaultButton>
+              )}
+
+              {/* REQ 2+4: AUTHOR — Submit (Draft only, creator only, with confirm) */}
+              {isCurrentUserAuthor && viewingDocument.status === 'Draft' && (
+                <PrimaryButton
+                  onClick={() => setIsSubmitConfirmOpen(true)}
+                  styles={{ root: { background: '#1E88E5', borderColor: '#1E88E5' }, rootHovered: { background: '#1565C0' } }}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                  Submit for Approval
+                </PrimaryButton>
+              )}
+
+              {/* REQ 2+4: AUTHOR — Resubmit after Rejection */}
+              {isCurrentUserAuthor && viewingDocument.status === 'Rejected' && (
+                <PrimaryButton
+                  onClick={() => setIsSubmitConfirmOpen(true)}
+                  styles={{ root: { background: '#F57C00', borderColor: '#F57C00' }, rootHovered: { background: '#E65100' } }}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                  Resubmit for Approval
+                </PrimaryButton>
+              )}
+
+              {/* REQ 2+4: APPROVER — Reject (Pending Approval, assigned approver only, with confirm) */}
+              {isCurrentUserApprover && viewingDocument.status === 'Pending Approval' && (
+                <DefaultButton
+                  onClick={handleReject}
+                  styles={{ root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' }, rootHovered: { background: '#c62828', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
+                  Reject
+                </DefaultButton>
+              )}
+
+              {/* REQ 2+4: APPROVER — Approve (Pending Approval, assigned approver only, with confirm) */}
+              {isCurrentUserApprover && viewingDocument.status === 'Pending Approval' && (
+                <PrimaryButton
+                  onClick={() => setIsApproveConfirmOpen(true)}
+                  styles={{ root: { background: '#2e7d32', borderColor: '#2e7d32' }, rootHovered: { background: '#1b5e20' } }}
+                >
+                  <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
+                  Approve
+                </PrimaryButton>
+              )}
+
+              {/* Initiate Adobe Sign when Approved */}
+              {viewingDocument.status === 'Approved' && (
+                <PrimaryButton
+                  onClick={() => initiateAdobeSign(viewingDocument)}
+                  styles={{ root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' }, rootHovered: { background: '#3700B3', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                  Initiate Adobe Sign
+                </PrimaryButton>
+              )}
+
+              {/* Sign Document when Pending for Signature */}
+              {viewingDocument.status === 'Pending for Signature' && (
+                <PrimaryButton
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  styles={{ root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' }, rootHovered: { background: '#3700B3', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                  Sign Document
+                </PrimaryButton>
+              )}
+
+              {/* History button */}
+              <DefaultButton
+                onClick={() => { /* scroll to version history */ }}
+                styles={{ root: { borderColor: '#546e7a', color: '#546e7a' } }}
+              >
+                <FontAwesomeIcon icon={faClockRotateLeft} style={{ marginRight: 6 }} />
+                History
+              </DefaultButton>
+            </div>
+
             {/* Workflow Status */}
             <div className="workflow-breadcrumb" style={{ marginBottom: 24 }}>
               {getWorkflowSteps(viewingDocument.status).map((step, index) => (
@@ -1157,7 +1296,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </>
               )}
 
-              {/* Comments Section */}
+              {/* REQ 1: Comments Section — filter out system-generated comments */}
               <div className="ms-Grid-row" style={{ marginTop: 24 }}>
                 <div className="ms-Grid-col ms-sm12">
                   <div className="form-section-header">Comments</div>
@@ -1167,37 +1306,47 @@ export const ManageDocuments: React.FC<any> = (props) => {
               <div className="ms-Grid-row" style={{ marginTop: 16 }}>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
-                    <div className="detail-label">Document Comments</div>
+                    <div className="detail-label">User Comments</div>
                     <div className="detail-value">
-                      {viewingDocument.comments && viewingDocument.comments.length > 0 ? (
-                        <ul style={{ margin: 0, paddingLeft: 16 }}>
-                          {viewingDocument.comments.map((comment) => (
-                            <li key={comment.id}>
-                              <strong>{comment.author}:</strong> {comment.text}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        'No comments'
-                      )}
+                      {(() => {
+                        const userComments = (viewingDocument.comments || []).filter(
+                          c => c.author && c.author.toLowerCase() !== 'system'
+                        );
+                        return userComments.length > 0 ? (
+                          <ul style={{ margin: 0, paddingLeft: 16 }}>
+                            {userComments.map((comment) => (
+                              <li key={comment.id} style={{ marginBottom: 6 }}>
+                                <strong>{comment.author}:</strong> {comment.text}
+                                {comment.timestamp && (
+                                  <span style={{ marginLeft: 8, fontSize: 11, color: '#888' }}>
+                                    {new Date(comment.timestamp).toLocaleString()}
+                                  </span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>No user comments</span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
-                    <div className="detail-label">Reviewer Comments</div>
+                    <div className="detail-label">Reviewer Comments (from Word)</div>
                     <div className="detail-value">
                       {reviewerCommentError && <div className="field-error">{reviewerCommentError}</div>}
                       {reviewerComments.length > 0 ? (
                         <ul style={{ margin: 0, paddingLeft: 16 }}>
                           {reviewerComments.map((comment) => (
-                            <li key={comment.id}>
+                            <li key={comment.id} style={{ marginBottom: 6 }}>
                               <strong>{comment.author}:</strong> {comment.text}
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        'No reviewer comments'
+                        <span style={{ color: '#999', fontStyle: 'italic' }}>No reviewer comments</span>
                       )}
                     </div>
                   </div>
@@ -1248,121 +1397,50 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="ms-Grid-row" style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #E0E0E0' }}>
-                <div className="ms-Grid-col ms-sm12" style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                  {viewingDocument.sharePointUrl && (
-                    <DefaultButton
-                      href={viewingDocument.sharePointUrl}
-                      target="_blank"
-                      styles={{
-                        root: { borderColor: '#1E88E5', color: '#1E88E5' },
-                        rootHovered: { background: '#E3F2FD', borderColor: '#1565C0', color: '#1565C0' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
-                      View Document
-                    </DefaultButton>
-                  )}
-                  <DefaultButton
-                    onClick={() => {
-                      setIsDocPanelOpen(false);
-                      setReviewerComments([]);
-                      setReviewerCommentError('');
-                    }}
-                  >
-                    Close
-                  </DefaultButton>
-
-                  {/* AUTHOR: Submit for Approval (Draft only) */}
-                  {viewingDocument.status === 'Draft' && (
-                    <PrimaryButton
-                      onClick={handleSubmitForReview}
-                      styles={{
-                        root: { background: '#1E88E5', borderColor: '#1E88E5' },
-                        rootHovered: { background: '#1976D2', borderColor: '#1976D2' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
-                      Submit for Approval
-                    </PrimaryButton>
-                  )}
-
-                  {/* AUTHOR: Resubmit after Rejection */}
-                  {viewingDocument.status === 'Rejected' && (
-                    <PrimaryButton
-                      onClick={handleSubmitForReview}
-                      styles={{
-                        root: { background: '#F57C00', borderColor: '#F57C00' },
-                        rootHovered: { background: '#E65100', borderColor: '#E65100' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
-                      Resubmit for Approval
-                    </PrimaryButton>
-                  )}
-
-                  {/* APPROVER: Reject — shown ONLY when Pending Approval */}
-                  {canApprove && viewingDocument.status === 'Pending Approval' && (
-                    <DefaultButton
-                      onClick={handleReject}
-                      styles={{
-                        root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' },
-                        rootHovered: { background: '#c62828', borderColor: '#c62828', color: '#fff' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
-                      Reject
-                    </DefaultButton>
-                  )}
-
-                  {/* APPROVER: Approve — shown ONLY when Pending Approval */}
-                  {canApprove && viewingDocument.status === 'Pending Approval' && (
-                    <PrimaryButton
-                      onClick={handleApprove}
-                      styles={{
-                        root: { background: '#2e7d32', borderColor: '#2e7d32' },
-                        rootHovered: { background: '#1b5e20', borderColor: '#1b5e20' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
-                      Approve
-                    </PrimaryButton>
-                  )}
-
-                  {/* AUTHOR: Initiate Adobe Sign when Approved */}
-                  {viewingDocument.status === 'Approved' && (
-                    <PrimaryButton
-                      onClick={() => initiateAdobeSign(viewingDocument)}
-                      styles={{
-                        root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
-                        rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
-                      Initiate Adobe Sign
-                    </PrimaryButton>
-                  )}
-
-                  {/* AUTHOR: Sign Document when Pending for Signature */}
-                  {viewingDocument.status === 'Pending for Signature' && (
-                    <PrimaryButton
-                      onClick={() => setIsSignatureModalOpen(true)}
-                      styles={{
-                        root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' },
-                        rootHovered: { background: '#3700B3', borderColor: '#3700B3', color: '#fff' }
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
-                      Sign Document
-                    </PrimaryButton>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         )}
       </Panel>
+
+      {/* REQ 4: Submit Confirmation Dialog */}
+      <CustomModal
+        isModalOpenProps={isSubmitConfirmOpen}
+        setModalpopUpFalse={setIsSubmitConfirmOpen}
+        subject="Confirm Submission"
+        isLoading={isLoading}
+        message={
+          <p>
+            Are you sure you want to submit <strong>"{viewingDocument?.name}"</strong> for approval?
+            Once submitted, you will not be able to edit the document until it is approved or rejected.
+          </p>
+        }
+        yesButtonText="Yes, Submit"
+        onClickOfYes={() => {
+          setIsSubmitConfirmOpen(false);
+          void handleSubmitForReview();
+        }}
+        closeButtonText="No, Cancel"
+      />
+
+      {/* REQ 4: Approve Confirmation Dialog */}
+      <CustomModal
+        isModalOpenProps={isApproveConfirmOpen}
+        setModalpopUpFalse={setIsApproveConfirmOpen}
+        subject="Confirm Approval"
+        isLoading={isLoading}
+        message={
+          <p>
+            Are you sure you want to approve <strong>"{viewingDocument?.name}"</strong>?
+            This will move the document to the next stage in the workflow.
+          </p>
+        }
+        yesButtonText="Yes, Approve"
+        onClickOfYes={() => {
+          setIsApproveConfirmOpen(false);
+          void handleApprove();
+        }}
+        closeButtonText="No, Cancel"
+      />
 
       <CustomModal
         isModalOpenProps={isRejectModalOpen}

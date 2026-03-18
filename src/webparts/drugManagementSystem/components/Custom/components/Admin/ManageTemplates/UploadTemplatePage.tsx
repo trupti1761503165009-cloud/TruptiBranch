@@ -10,7 +10,7 @@ import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { UploadTemplateModalData } from '../UploadTemplateModal/UploadTemplateModalData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes, faTrashCan, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface UploadTemplatePageProps {
   onCancel: () => void;
@@ -28,6 +28,9 @@ const ECTD_MODULES = [
 ];
 
 export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel, onSuccess, editMode = false, editData }) => {
+  const editItemId = editMode && editData ? Number(editData.id) || undefined : undefined;
+  const editFileRef = editMode && editData ? (editData.fileRef || editData.serverRelativeUrl || '') : '';
+
   const {
     formData,
     setFormData,
@@ -43,7 +46,9 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     closeAndReset,
     gmpModels,
     tmfFolders
-  } = UploadTemplateModalData({ onClose: onCancel, onSuccess });
+  } = UploadTemplateModalData({ onClose: onCancel, onSuccess, editMode, editItemId, editFileRef });
+
+  const [existingFileDeleted, setExistingFileDeleted] = React.useState(false);
 
   const [selectedModule, setSelectedModule] = React.useState<string>('');
 
@@ -124,8 +129,9 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
-    if (!formData.name?.trim()) errors.push('Template Name is required.');
+    if (!editMode && !formData.name?.trim()) errors.push('Template Name is required.');
     if (!editMode && selectedFiles.length === 0) errors.push('Please select a file to upload.');
+    if (editMode && existingFileDeleted && selectedFiles.length === 0) errors.push('Please upload a replacement file.');
 
     if (formData.mappingType === 'eCTD') {
       if (!selectedModule) errors.push('eCTD Module (1–5) is required.');
@@ -371,6 +377,53 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
                   Accepted: DOC, DOCX, PDF, XLS, XLSX
                 </p>
+              </div>
+            </div>
+          )}
+
+          {editMode && (
+            <div className="ms-Grid-row mt-20">
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                <Label className="formLabel">Template File</Label>
+                {!existingFileDeleted && editFileRef ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', background: '#f4f6fb',
+                    borderRadius: 6, border: '1px solid #d0d7e5'
+                  }}>
+                    <FontAwesomeIcon icon={faFileAlt} style={{ fontSize: 20, color: '#1300a6' }} />
+                    <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
+                      {editFileRef.split('/').pop() || editData?.name || 'Current File'}
+                    </span>
+                    <DefaultButton
+                      title="Remove existing file and upload a new one"
+                      className="btn btn-danger"
+                      style={{ minWidth: 'unset', padding: '0 10px', height: 30 }}
+                      onClick={() => setExistingFileDeleted(true)}
+                    >
+                      <FontAwesomeIcon icon={faTrashCan} style={{ marginRight: 4 }} />
+                      Remove
+                    </DefaultButton>
+                  </div>
+                ) : (
+                  <div>
+                    {existingFileDeleted && (
+                      <div style={{ marginBottom: 6, fontSize: 12, color: '#c0392b' }}>
+                        Existing file removed. Upload a replacement below.
+                      </div>
+                    )}
+                    <DragandDropFilePicker setFilesToState={handleFileSelection} isMultiple={false} />
+                    {selectedFiles.length > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
+                        <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: 6, color: '#1300a6' }} />
+                        <strong>{selectedFiles[0].name}</strong> ({(selectedFiles[0].size / 1024).toFixed(2)} KB)
+                      </div>
+                    )}
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                      Accepted: DOC, DOCX, PDF, XLS, XLSX
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -758,6 +758,25 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     setIsLoading(true);
     try {
       await updateSignatureStatus(viewingDocument, 'Signed', signature);
+
+      // REQ 5: Auto-create eSignature entry when document reaches Signed status
+      if (provider) {
+        try {
+          const eSignPayload = {
+            Title: viewingDocument.name,
+            FilePath: viewingDocument.fileRef || viewingDocument.sharePointUrl,
+            FileName: viewingDocument.fileName || (viewingDocument.fileRef || '').split('/').pop() || viewingDocument.name,
+            SignerEmail: viewingDocument.reviewer || viewingDocument.approver || '',
+            ApproverEmail: viewingDocument.approver || '',
+            SignatureStatus: 'Signed',
+            DocumentId: viewingDocument.id
+          };
+          await provider.createItem(eSignPayload, ListNames.eSignature);
+        } catch (eSignError) {
+          console.warn('Failed to create eSignature entry (non-fatal):', eSignError);
+        }
+      }
+
       await createSignedCopies(viewingDocument, signature);
       await updateSignatureStatus(viewingDocument, 'Final', signature);
       await loadData();

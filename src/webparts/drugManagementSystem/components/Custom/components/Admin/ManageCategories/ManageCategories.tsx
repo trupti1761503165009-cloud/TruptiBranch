@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import * as React from 'react';
-import { DefaultButton, PrimaryButton, TextField, Link, TooltipHost } from '@fluentui/react';
+import { DefaultButton, PrimaryButton, TextField, Link, TooltipHost, Label } from '@fluentui/react';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faEye, faFileExcel, faFolder, faPenToSquare, faPlus, faSave, faTimes, faTrashCan, faList, faCheckCircle, faFolderTree, faLayerGroup, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChevronRight, faEye, faFileExcel, faFolder, faFolderOpen,
+  faPenToSquare, faPlus, faSave, faTimes, faTrashCan,
+  faList, faCheckCircle, faFolderTree, faLayerGroup, faArrowsRotate,
+  faFileWord, faFilePdf, faFile, faFileAlt
+} from '@fortawesome/free-solid-svg-icons';
 import { CustomModal } from '../../../../Common/CustomModal';
 import ReactDropdown from '../../../../Common/ReactSelectDropdown';
 import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
@@ -15,6 +20,8 @@ import { ExcelUploadCategoriesModal } from './ExcelUploadCategoriesModal';
 import { CategoryForm } from './CategoryForm';
 import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import { SummaryCard } from '../../../../Common/SummaryCard/SummaryCard';
+import { useAtomValue } from 'jotai';
+import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 
 type HierarchyPath = {
   documentCategory?: string;
@@ -29,7 +36,10 @@ import { StatusBadge } from '../../../../Common/StatusBadge/StatusBadge';
 import { getFileTypeIcon } from '../../../../Common/utils';
 
 export const ManageCategories: React.FC<any> = (props) => {
+  const { context } = useAtomValue(appGlobalStateAtom);
+
   const {
+    categories,
     filteredCategories,
     searchTerm,
     statusFilter,
@@ -63,6 +73,9 @@ export const ManageCategories: React.FC<any> = (props) => {
     handleDeleteClick,
     handleDeleteConfirm,
     handleBulkDelete,
+    handleAddNode,
+    handleRenameNode,
+    handleDeleteNode,
     loadCategories,
     setEditingCategory
   } = ManageCategoriesData();
@@ -77,6 +90,36 @@ export const ManageCategories: React.FC<any> = (props) => {
     [statusFilter, filterStatusOptions]);
 
   const [isExcelUploadOpen, setIsExcelUploadOpen] = React.useState(false);
+
+  // Quick-add dialog (level-aware)
+  const [quickAddDialog, setQuickAddDialog] = React.useState<{
+    open: boolean;
+    level: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName';
+    label: string;
+    value: string;
+    linkedTemplate: string;
+  }>({ open: false, level: 'documentCategory', label: '', value: '', linkedTemplate: '' });
+
+  // Rename dialog
+  const [renameDialog, setRenameDialog] = React.useState<{
+    open: boolean;
+    level: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName';
+    oldValue: string;
+    newValue: string;
+    path: HierarchyPath;
+  }>({ open: false, level: 'documentCategory', oldValue: '', newValue: '', path: {} });
+
+  // Node-level delete confirmation
+  const [nodeDeleteDialog, setNodeDeleteDialog] = React.useState<{
+    open: boolean;
+    level: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName';
+    nodeValue: string;
+    path: HierarchyPath;
+    count: number;
+  }>({ open: false, level: 'documentCategory', nodeValue: '', path: {}, count: 0 });
+
+  // View/Preview panel for artifact/leaf items
+  const [viewPanelItem, setViewPanelItem] = React.useState<any>(null);
 
   // Extra filter state
   const [docCatFilter, setDocCatFilter] = React.useState('All');
@@ -273,25 +316,46 @@ export const ManageCategories: React.FC<any> = (props) => {
     return crumbs;
   }, [hierarchyPath]);
 
+  const columnHeaderByLevel: Record<string, string> = {
+    documentCategory: 'DOCUMENT CATEGORY',
+    group: 'GROUP',
+    subGroup: 'SUB GROUP',
+    artifactName: 'ARTIFACT NAME',
+    templateName: 'TEMPLATE NAME',
+    items: 'NAME'
+  };
+
   const columns: any[] = [
     {
       key: 'name',
-      name: 'CATEGORY NAME',
+      name: columnHeaderByLevel[hierarchyLevel] || 'CATEGORY NAME',
       fieldName: 'name',
       minWidth: 260,
       maxWidth: 420,
       isSortingRequired: true,
-      onRender: (category: any) => (
-        <div className="doc-name-cell">
-          <img
-            className="doc-icon"
-            src={getFileTypeIcon('folder')}
-            alt=""
-            style={{ width: 16, height: 16, marginRight: 8 }}
-          />
-          <span>{category.name}</span>
-        </div>
-      )
+      onRender: (category: any) => {
+        const isLeaf = hierarchyLevel === 'artifactName' || hierarchyLevel === 'templateName' || hierarchyLevel === 'items';
+        let iconSrc = getFileTypeIcon('folder');
+        if (isLeaf) {
+          const name: string = (category.name || '').toLowerCase();
+          if (name.endsWith('.pdf')) iconSrc = getFileTypeIcon('pdf');
+          else if (name.endsWith('.doc') || name.endsWith('.docx')) iconSrc = getFileTypeIcon('docx');
+          else if (name.endsWith('.xls') || name.endsWith('.xlsx')) iconSrc = getFileTypeIcon('xlsx');
+          else if (name.endsWith('.ppt') || name.endsWith('.pptx')) iconSrc = getFileTypeIcon('pptx');
+          else iconSrc = getFileTypeIcon('docx');
+        }
+        return (
+          <div className="doc-name-cell">
+            <img
+              className="doc-icon"
+              src={iconSrc}
+              alt=""
+              style={{ width: 16, height: 16, marginRight: 8 }}
+            />
+            <span>{category.name}</span>
+          </div>
+        );
+      }
     },
     {
       key: 'createdDate',
@@ -471,67 +535,137 @@ export const ManageCategories: React.FC<any> = (props) => {
         setHierarchyPath((p) => ({ ...p, templateName: item._value }));
         return;
       }
-      // At items level, open view panel
-      openPanel('view', item as any);
+      // At items level, open preview panel
+      setViewPanelItem(item);
     },
     [hierarchyLevel]
   );
 
+  const levelToField = (level: string): 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName' => {
+    const map: Record<string, any> = {
+      documentCategory: 'documentCategory', group: 'group',
+      subGroup: 'subGroup', artifactName: 'artifactName', templateName: 'templateName'
+    };
+    return map[level] || 'documentCategory';
+  };
+
+  const getNodeCount = (level: string, value: string): number => {
+    const n = (v?: string) => (v || '').trim();
+    return categories.filter(cat => {
+      if (level === 'documentCategory') return n(cat.documentCategory) === n(value);
+      if (level === 'group') return n(cat.documentCategory) === n(hierarchyPath.documentCategory) && n(cat.group) === n(value);
+      if (level === 'subGroup') return n(cat.documentCategory) === n(hierarchyPath.documentCategory) && n(cat.group) === n(hierarchyPath.group) && n(cat.subGroup) === n(value);
+      if (level === 'artifactName') return n(cat.documentCategory) === n(hierarchyPath.documentCategory) && n(cat.group) === n(hierarchyPath.group) && n(cat.artifactName) === n(value);
+      if (level === 'templateName') return n(cat.documentCategory) === n(hierarchyPath.documentCategory) && n(cat.group) === n(hierarchyPath.group) && n(cat.artifactName) === n(hierarchyPath.artifactName) && n(cat.templateName) === n(value);
+      return false;
+    }).length;
+  };
+
+  const getDocIcon = (name: string): any => {
+    const lower = (name || '').toLowerCase();
+    if (lower.endsWith('.pdf')) return faFilePdf;
+    if (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.rtf')) return faFileWord;
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) return faFileExcel;
+    return faFileAlt;
+  };
+
+  const getDocIconColor = (name: string): string => {
+    const lower = (name || '').toLowerCase();
+    if (lower.endsWith('.pdf')) return '#e53935';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return '#1565c0';
+    if (lower.endsWith('.xls') || lower.endsWith('.xlsx')) return '#2e7d32';
+    return '#546e7a';
+  };
+
   const hierarchyColumns: any[] = React.useMemo(() => {
+    const isLeaf = hierarchyLevel === 'artifactName' || hierarchyLevel === 'templateName';
+
     if (hierarchyLevel === 'items') return columns;
+
     return [
       {
         key: 'name',
         name:
-          hierarchyLevel === 'documentCategory'
-            ? 'DOCUMENT CATEGORY'
-            : hierarchyLevel === 'group'
-              ? 'GROUP'
-              : hierarchyLevel === 'subGroup'
-                ? 'SUB-GROUP'
-                : hierarchyLevel === 'artifactName'
-                  ? 'ARTIFACT NAME / DOCUMENT NAME'
+          hierarchyLevel === 'documentCategory' ? 'DOCUMENT CATEGORY'
+            : hierarchyLevel === 'group' ? 'GROUP'
+              : hierarchyLevel === 'subGroup' ? 'SUB-GROUP'
+                : hierarchyLevel === 'artifactName' ? 'ARTIFACT NAME / DOCUMENT'
                   : 'TEMPLATE NAME',
         fieldName: 'name',
         minWidth: 350,
-        maxWidth: 600,
+        maxWidth: 620,
         isSortingRequired: true,
         onRender: (item: any) => (
           <div
-            className="folder-row-clickable"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              cursor: 'pointer',
-              padding: '8px 0'
-            }}
-            onClick={() => onInvokeHierarchyItem(item)}
-            data-testid={`category-folder-${item.id}`}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', width: '100%' }}
           >
-            <FontAwesomeIcon
-              icon={faFolder}
-              style={{ fontSize: 20, color: '#FFA000' }}
-            />
-            <div style={{ flex: 1 }}>
-              <span style={{ fontWeight: 500, fontSize: 14, color: '#333' }}>{item.name}</span>
-              <span style={{
-                marginLeft: 12,
-                fontSize: 12,
-                color: '#666'
-              }}>
-                ({item.count} {item.count === 1 ? 'item' : 'items'})
-              </span>
+            {/* Clickable folder/doc area */}
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer', minWidth: 0 }}
+              onClick={() => onInvokeHierarchyItem(item)}
+            >
+              {isLeaf ? (
+                <FontAwesomeIcon icon={getDocIcon(item.name)} style={{ fontSize: 18, color: getDocIconColor(item.name), flexShrink: 0 }} />
+              ) : (
+                <FontAwesomeIcon icon={faFolder} style={{ fontSize: 20, color: '#FFA000', flexShrink: 0 }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontWeight: 500, fontSize: 14, color: '#1300a6', cursor: 'pointer' }}>{item.name}</span>
+                {item.count !== undefined && (
+                  <span style={{ marginLeft: 10, fontSize: 12, color: '#888' }}>
+                    ({item.count} {item.count === 1 ? 'record' : 'records'})
+                  </span>
+                )}
+              </div>
+              {!isLeaf && <FontAwesomeIcon icon={faChevronRight} style={{ fontSize: 13, color: '#bbb', flexShrink: 0 }} />}
             </div>
-            <FontAwesomeIcon
-              icon={faChevronRight}
-              style={{ fontSize: 14, color: '#999' }}
-            />
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+              {isLeaf && (
+                <TooltipHost content="Preview">
+                  <span
+                    style={{ padding: '4px 7px', borderRadius: 4, cursor: 'pointer', color: '#1300a6', fontSize: 13 }}
+                    onClick={() => setViewPanelItem(item)}
+                  >
+                    <FontAwesomeIcon icon={faEye} />
+                  </span>
+                </TooltipHost>
+              )}
+              <TooltipHost content="Rename">
+                <span
+                  style={{ padding: '4px 7px', borderRadius: 4, cursor: 'pointer', color: '#0066cc', fontSize: 13 }}
+                  onClick={() => setRenameDialog({
+                    open: true,
+                    level: levelToField(hierarchyLevel),
+                    oldValue: item.name,
+                    newValue: item.name,
+                    path: { ...hierarchyPath }
+                  })}
+                >
+                  <FontAwesomeIcon icon={faPenToSquare} />
+                </span>
+              </TooltipHost>
+              <TooltipHost content="Delete">
+                <span
+                  style={{ padding: '4px 7px', borderRadius: 4, cursor: 'pointer', color: '#d32f2f', fontSize: 13 }}
+                  onClick={() => setNodeDeleteDialog({
+                    open: true,
+                    level: levelToField(hierarchyLevel),
+                    nodeValue: item.name,
+                    path: { ...hierarchyPath },
+                    count: getNodeCount(hierarchyLevel, item.name)
+                  })}
+                >
+                  <FontAwesomeIcon icon={faTrashCan} />
+                </span>
+              </TooltipHost>
+            </div>
           </div>
         )
       }
     ];
-  }, [hierarchyLevel, columns, onInvokeHierarchyItem]);
+  }, [hierarchyLevel, columns, onInvokeHierarchyItem, hierarchyPath, categories]);
 
 
 
@@ -795,16 +929,40 @@ export const ManageCategories: React.FC<any> = (props) => {
               </DefaultButton>
               <PrimaryButton
                 key="add"
-                text="Add Category"
                 className="btn btn-primary"
                 style={{ marginLeft: 8 }}
                 onClick={() => {
-                  props.manageComponentView({
-                    currentComponentName: ComponentNameEnum.AddCategory,
-                    componentProps: { parentId: undefined } // or relevant parent
-                  });
+                  if (hierarchyLevel === 'items') {
+                    props.manageComponentView({
+                      currentComponentName: ComponentNameEnum.AddCategory,
+                      componentProps: { parentId: undefined }
+                    });
+                  } else {
+                    const labelMap: Record<string, string> = {
+                      documentCategory: 'Document Category',
+                      group: 'Group',
+                      subGroup: 'Sub Group',
+                      artifactName: 'Artifact / Document Name',
+                      templateName: 'Template Name'
+                    };
+                    setQuickAddDialog({
+                      open: true,
+                      level: levelToField(hierarchyLevel),
+                      label: labelMap[hierarchyLevel] || 'Name',
+                      value: '',
+                      linkedTemplate: ''
+                    });
+                  }
                 }}
-              />
+              >
+                <FontAwesomeIcon icon={faPlus} style={{ marginRight: 6 }} />
+                {hierarchyLevel === 'documentCategory' ? 'Add Document Category'
+                  : hierarchyLevel === 'group' ? 'Add Group'
+                    : hierarchyLevel === 'subGroup' ? 'Add Sub Group'
+                      : hierarchyLevel === 'artifactName' ? 'Add Artifact'
+                        : hierarchyLevel === 'templateName' ? 'Add Template'
+                          : 'Add Category'}
+              </PrimaryButton>
             </div>
           }
           addEDButton={
@@ -859,6 +1017,186 @@ export const ManageCategories: React.FC<any> = (props) => {
           }
         />
       </div>
+
+      {/* ===== Quick Add Dialog ===== */}
+      {quickAddDialog.open && (
+        <Panel
+          isOpen={quickAddDialog.open}
+          onDismiss={() => setQuickAddDialog(prev => ({ ...prev, open: false, value: '', linkedTemplate: '' }))}
+          type={PanelType.medium}
+          headerText={`Add ${quickAddDialog.label}`}
+          closeButtonAriaLabel="Close"
+        >
+          <div style={{ padding: '20px 0' }}>
+            <div style={{ marginBottom: 16 }}>
+              <Label style={{ fontWeight: 600 }}>{quickAddDialog.label} Name <span style={{ color: 'red' }}>*</span></Label>
+              <TextField
+                placeholder={`Enter ${quickAddDialog.label} name`}
+                value={quickAddDialog.value}
+                onChange={(_e, v) => setQuickAddDialog(prev => ({ ...prev, value: v || '' }))}
+                autoFocus
+              />
+            </div>
+            {(quickAddDialog.level === 'artifactName' || quickAddDialog.level === 'templateName') && (
+              <div style={{ marginBottom: 16 }}>
+                <Label style={{ fontWeight: 600 }}>Linked Template (Optional)</Label>
+                <ReactDropdown
+                  name="linkedTemplate"
+                  options={templateNameOptions.filter(o => o.value !== '')}
+                  defaultOption={null}
+                  placeholder="-- Select a template --"
+                  onChange={(opt) => setQuickAddDialog(prev => ({ ...prev, linkedTemplate: opt?.value as string || '' }))}
+                  isCloseMenuOnSelect={true}
+                  isSorted={true}
+                  isClearable={true}
+                />
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <PrimaryButton
+                className="btn btn-primary"
+                disabled={isLoading || !quickAddDialog.value.trim()}
+                onClick={async () => {
+                  const ok = await handleAddNode(
+                    quickAddDialog.level,
+                    quickAddDialog.value,
+                    { ...hierarchyPath },
+                    quickAddDialog.linkedTemplate || undefined
+                  );
+                  if (ok) setQuickAddDialog(prev => ({ ...prev, open: false, value: '', linkedTemplate: '' }));
+                }}
+              >
+                <FontAwesomeIcon icon={faSave} style={{ marginRight: 6 }} />
+                {isLoading ? 'Saving...' : 'Save'}
+              </PrimaryButton>
+              <DefaultButton
+                className="btn btn-danger"
+                onClick={() => setQuickAddDialog(prev => ({ ...prev, open: false, value: '', linkedTemplate: '' }))}
+              >
+                <FontAwesomeIcon icon={faTimes} style={{ marginRight: 6 }} />
+                Cancel
+              </DefaultButton>
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      {/* ===== Rename Dialog ===== */}
+      {renameDialog.open && (
+        <Panel
+          isOpen={renameDialog.open}
+          onDismiss={() => setRenameDialog(prev => ({ ...prev, open: false }))}
+          type={PanelType.medium}
+          headerText={`Rename: ${renameDialog.oldValue}`}
+          closeButtonAriaLabel="Close"
+        >
+          <div style={{ padding: '20px 0' }}>
+            <div style={{ marginBottom: 16 }}>
+              <Label style={{ fontWeight: 600 }}>New Name <span style={{ color: 'red' }}>*</span></Label>
+              <TextField
+                value={renameDialog.newValue}
+                onChange={(_e, v) => setRenameDialog(prev => ({ ...prev, newValue: v || '' }))}
+                autoFocus
+              />
+            </div>
+            <div style={{ padding: '10px 12px', background: '#fff8e1', borderRadius: 4, border: '1px solid #ffe082', fontSize: 13, color: '#795548', marginBottom: 16 }}>
+              Renaming will update all records under this folder. This action cannot be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <PrimaryButton
+                className="btn btn-primary"
+                disabled={isLoading || !renameDialog.newValue.trim() || renameDialog.newValue === renameDialog.oldValue}
+                onClick={async () => {
+                  const ok = await handleRenameNode(
+                    renameDialog.level, renameDialog.oldValue, renameDialog.newValue, renameDialog.path
+                  );
+                  if (ok) setRenameDialog(prev => ({ ...prev, open: false }));
+                }}
+              >
+                <FontAwesomeIcon icon={faSave} style={{ marginRight: 6 }} />
+                {isLoading ? 'Saving...' : 'Rename'}
+              </PrimaryButton>
+              <DefaultButton className="btn btn-danger" onClick={() => setRenameDialog(prev => ({ ...prev, open: false }))}>
+                <FontAwesomeIcon icon={faTimes} style={{ marginRight: 6 }} />
+                Cancel
+              </DefaultButton>
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      {/* ===== Node Delete Confirmation ===== */}
+      <CustomModal
+        isModalOpenProps={nodeDeleteDialog.open}
+        setModalpopUpFalse={() => setNodeDeleteDialog(prev => ({ ...prev, open: false }))}
+        onClose={() => setNodeDeleteDialog(prev => ({ ...prev, open: false }))}
+        subject="Confirm Delete"
+        message={
+          <p>
+            Are you sure you want to delete <strong>"{nodeDeleteDialog.nodeValue}"</strong>?
+            This will delete <strong>{nodeDeleteDialog.count} record(s)</strong> under this folder. This action cannot be undone.
+          </p>
+        }
+        yesButtonText="Delete"
+        closeButtonText="Cancel"
+        onClickOfYes={async () => {
+          setNodeDeleteDialog(prev => ({ ...prev, open: false }));
+          await handleDeleteNode(nodeDeleteDialog.level, nodeDeleteDialog.nodeValue, nodeDeleteDialog.path);
+        }}
+      />
+
+      {/* ===== View / Preview Panel ===== */}
+      <Panel
+        isOpen={!!viewPanelItem}
+        onDismiss={() => setViewPanelItem(null)}
+        type={PanelType.extraLarge}
+        headerText={viewPanelItem ? `Preview: ${viewPanelItem.name}` : 'Preview'}
+        closeButtonAriaLabel="Close"
+        isLightDismiss
+      >
+        {viewPanelItem && (() => {
+          const fullCat = categories.find(c =>
+            (c.artifactName || '').trim() === (viewPanelItem.name || '').trim() ||
+            (c.templateName || '').trim() === (viewPanelItem.name || '').trim() ||
+            c.id === viewPanelItem.id
+          );
+          const fileRef: string = (viewPanelItem.fileRef || viewPanelItem.serverRelativeUrl || fullCat?.['fileRef'] || '');
+          const webUrl = context?.pageContext?.web?.absoluteUrl || '';
+          const fileExt = fileRef.split('.').pop()?.toLowerCase() || '';
+          const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'rtf'].indexOf(fileExt) >= 0;
+          const embedUrl = fileRef
+            ? (isOffice
+              ? `${webUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodeURIComponent(fileRef)}&action=embedview`
+              : (viewPanelItem.serverRedirectedEmbedUrl || (window.location.origin + fileRef)))
+            : '';
+
+          return (
+            <div>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16, padding: '12px 0', borderBottom: '1px solid #eee' }}>
+                {fullCat?.documentCategory && <div><span style={{ color: '#888', fontSize: 12 }}>Document Category</span><div style={{ fontWeight: 600, fontSize: 13 }}>{fullCat.documentCategory}</div></div>}
+                {fullCat?.group && <div><span style={{ color: '#888', fontSize: 12 }}>Group</span><div style={{ fontWeight: 600, fontSize: 13 }}>{fullCat.group}</div></div>}
+                {fullCat?.subGroup && <div><span style={{ color: '#888', fontSize: 12 }}>Sub Group</span><div style={{ fontWeight: 600, fontSize: 13 }}>{fullCat.subGroup}</div></div>}
+                {fullCat?.artifactName && <div><span style={{ color: '#888', fontSize: 12 }}>Artifact Name</span><div style={{ fontWeight: 600, fontSize: 13 }}>{fullCat.artifactName}</div></div>}
+                {fullCat?.templateName && <div><span style={{ color: '#888', fontSize: 12 }}>Template</span><div style={{ fontWeight: 600, fontSize: 13 }}>{fullCat.templateName}</div></div>}
+                {fullCat?.status && <div><span style={{ color: '#888', fontSize: 12 }}>Status</span><div><StatusBadge status={(fullCat.status || 'active').toLowerCase()} size="small" /></div></div>}
+              </div>
+              {embedUrl ? (
+                <iframe
+                  title={viewPanelItem.name}
+                  src={embedUrl}
+                  style={{ width: '100%', height: '75vh', border: '1px solid #e5e5e5', borderRadius: 4 }}
+                />
+              ) : (
+                <div style={{ padding: 24, textAlign: 'center', color: '#888', background: '#f9f9f9', borderRadius: 6 }}>
+                  <FontAwesomeIcon icon={faFileAlt} style={{ fontSize: 40, color: '#ccc', marginBottom: 12, display: 'block' }} />
+                  <p>No file preview available for this item.</p>
+                  <p style={{ fontSize: 12 }}>If a document exists, it will appear here once a file reference is linked.</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </Panel>
 
       {/* Excel Upload Modal */}
       <ExcelUploadCategoriesModal
