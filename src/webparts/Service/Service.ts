@@ -379,12 +379,17 @@ export default class Service implements IDataProvider {
 
     public deleteItem(listName: string, itemId: number): Promise<boolean> {
         return new Promise<any>((resolve: (results: any) => void, reject: (error: any) => void): void => {
+            if (!itemId || typeof itemId !== 'number' || isNaN(itemId)) {
+                console.log("Invalid item ID for deletion from -" + listName + ", id:", itemId);
+                reject(new Error(`Invalid item ID: ${itemId}`));
+                return;
+            }
             this._sp.web.lists.getByTitle(listName).items.getById(itemId).delete()
                 .then(_ => {
                     resolve(true);
                 }, (error: any): void => {
-                    console.log("Error in deleting Item from -" + listName);
-                    reject(false);
+                    console.log("Error in deleting Item from -" + listName, error);
+                    reject(error);
                 });
         });
     }
@@ -441,7 +446,7 @@ export default class Service implements IDataProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async getItemsByCAMLQuery(listName: string, xmlQuery: string, overrideParameters: any = { SortField: "Id", SortDir: "Asc" }, siteUrl?: string): Promise<any> {
+    public async getItemsByCAMLQuery(listName: string, xmlQuery: string, overrideParameters: any = {}, siteUrl?: string): Promise<any> {
         try {
             let isPaged: boolean = true;
             let allData: any[] = [];
@@ -450,6 +455,7 @@ export default class Service implements IDataProvider {
                 const renderListDataParams: IRenderListDataParameters = {
                     ViewXml: xmlQuery,
                     Paging: pageToken,
+                    RenderOptions: 2,
                 };
 
                 let r;

@@ -320,12 +320,27 @@ export function ManageCategoriesData() {
       return;
     }
 
+    const numericIds = selectedIds.filter(id => typeof id === 'number' && !isNaN(id));
+    if (numericIds.length === 0) {
+      setErrorMessage('No valid items selected for deletion.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      for (const id of selectedIds) {
-        await provider.deleteCategory(id);
+      let failedCount = 0;
+      for (const id of numericIds) {
+        try {
+          await provider.deleteCategory(id);
+        } catch {
+          failedCount++;
+        }
       }
-      setSuccessMessage(`${selectedIds.length} category(s) deleted successfully.`);
+      if (failedCount > 0) {
+        setErrorMessage(`Failed to delete ${failedCount} of ${numericIds.length} category(s).`);
+      } else {
+        setSuccessMessage(`${numericIds.length} category(s) deleted successfully.`);
+      }
       await loadCategories();
       setSelectedIds([]);
     } catch (error) {
@@ -416,7 +431,7 @@ export function ManageCategoriesData() {
     setIsLoading(true);
     try {
       for (const cat of toUpdate) {
-        await provider.updateCategory(cat.id, { [levelField === 'documentCategory' ? 'DocumentCategory' : levelField === 'artifactName' ? 'ArtifactName' : levelField === 'templateName' ? 'TemplateName' : levelField.charAt(0).toUpperCase() + levelField.slice(1)]: newValue.trim() });
+        await provider.updateCategory(cat.id, { [levelField]: newValue.trim() });
       }
       setSuccessMessage(`Renamed "${oldValue}" to "${newValue}" (${toUpdate.length} record(s) updated).`);
       await loadCategories();

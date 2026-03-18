@@ -1006,7 +1006,24 @@ export const ManageCategories: React.FC<any> = (props) => {
                 )}
                 <Link
                   className="actionBtn iconSize btnDanger ml-10"
-                  onClick={() => setHideDeleteDialog(false)}
+                  onClick={() => {
+                    if (hierarchyLevel !== 'items') {
+                      const nodeItems = (currentItems as any[]).filter((i: any) => selectedIds.includes(i.id) && i._kind === 'node');
+                      if (nodeItems.length > 0) {
+                        const first = nodeItems[0];
+                        const count = getNodeCount(hierarchyLevel, first._value);
+                        setNodeDeleteDialog({
+                          open: true,
+                          level: levelToField(hierarchyLevel),
+                          nodeValue: first._value,
+                          path: { ...hierarchyPath },
+                          count
+                        });
+                        return;
+                      }
+                    }
+                    setHideDeleteDialog(false);
+                  }}
                 >
                   <TooltipHost content="Delete Selected">
                     <FontAwesomeIcon icon={faTrashCan} />
