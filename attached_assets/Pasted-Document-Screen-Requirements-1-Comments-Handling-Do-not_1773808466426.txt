@@ -1,0 +1,130 @@
+Document Screen Requirements
+1. Comments Handling
+
+Do not display system-generated comments.
+
+Only fetch and display user-added comments related to the document opened in the panel.
+
+2. Action Buttons Visibility
+Submit Button
+
+Should be visible only to the document creator (Author).
+
+Visible only when the document is in Draft status.
+
+Approve / Reject Buttons
+
+Should be visible only to the assigned Approver.
+
+Should appear only when the document is in the Submitted / Approval stage.
+
+3. Button Placement
+
+All action buttons should be placed at the top of the panel, including:
+
+Submit
+
+Approve
+
+Reject
+
+History
+
+Do not place buttons at the bottom.
+
+4. Confirmation Dialogs
+
+Every action should require confirmation:
+
+Submit
+
+Approve
+
+Reject
+
+Delete
+
+Example:
+
+“Are you sure you want to proceed?” → Yes / No
+
+5. eSignature Integration
+
+When a document reaches Signed status:
+
+Automatically create an entry in the eSignature list.
+
+6. Document Folder Structure
+
+Current issue:
+
+Folders are being created using date/time.
+
+Required change:
+
+Folders should be created using Drug Name only.
+
+Remove any date-based naming logic.
+
+7. Tabs & Naming Issues
+
+In the Documents section (2nd tab):
+
+Currently displaying Drug Name instead of Document Name.
+
+Fix to correctly display the Document Name.
+
+8. Tabs Validation
+
+Ensure correct data and behavior for:
+
+All Documents
+
+My Documents
+
+Assigned To Me
+
+9. Panel Behavior & Document Opening
+
+Panel should open in full size (full-width view).
+
+Currently, documents are not opening in the panel — fix this issue.
+
+Document preview should behave same as Template screen:
+
+Open document in panel using iframe (Office viewer).
+
+10. Document Edit Permissions (Workflow-Based)
+Draft अवस्था (Author Stage)
+
+Author should have edit permission.
+
+Document should open in edit mode (Word Online) inside panel.
+
+After Submit (Approval Stage)
+
+Author should lose edit permission.
+
+Only Approver has access to review.
+
+If Approved
+
+Document moves forward (e.g., signing stage).
+
+Author should not have edit permission.
+
+If Rejected
+
+Author should regain edit permission.
+
+Author can:
+
+Edit document
+
+Resubmit for approval
+
+After Resubmission
+
+Author should again lose edit permission.
+
+Workflow continues with Approver.
