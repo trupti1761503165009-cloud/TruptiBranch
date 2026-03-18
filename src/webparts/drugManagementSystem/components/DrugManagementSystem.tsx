@@ -160,12 +160,26 @@ const DmsShell: React.FC = () => {
   React.useEffect(() => {
     if (!roleMapping) return;
     const baseRole = siteAdmin ? 'Admin' : roleMapping.roleLabel;
-    setCurrentRole(forcedRole ?? baseRole);
+    const role = forcedRole ?? baseRole;
+    setCurrentRole(role);
+    if (role === 'Author' || role === 'Approver') {
+      setCurrentView('myDocuments');
+    } else if (role === 'HR') {
+      setCurrentView('users');
+    } else {
+      setCurrentView('dashboard');
+    }
   }, [roleMapping, forcedRole, siteAdmin]);
 
   const handleRoleChange = (role: UserRole) => {
     setForcedRole(role);
-    setCurrentView('dashboard');
+    if (role === 'Author' || role === 'Approver') {
+      setCurrentView('myDocuments');
+    } else if (role === 'HR') {
+      setCurrentView('users');
+    } else {
+      setCurrentView('dashboard');
+    }
   };
 
   const hasDmsSecurityGroups = React.useMemo(() => {
@@ -198,11 +212,8 @@ const DmsShell: React.FC = () => {
         ];
       case 'HR':
         return [
-          { id: '_documents', label: 'DOCUMENTS', isSection: true },
-          { id: 'myDocuments', label: 'My Documents', icon: '📝' },
-          { id: 'pendingApproval', label: 'Assigned to Me', icon: '⏳' },
           { id: '_users', label: 'USERS', isSection: true },
-          { id: 'users', label: 'HR Group', icon: '👥' },
+          { id: 'users', label: 'Manage Users', icon: '👥' },
         ];
       case 'Author':
         return [
@@ -278,12 +289,7 @@ const DmsShell: React.FC = () => {
         ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />
         : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
     } else if (effectiveRole === 'HR') {
-      if (currentView === 'users') {
-        return <UsersViewRouter hrOnly={true} />;
-      }
-      return currentView === 'pendingApproval'
-        ? <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />
-        : <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />;
+      return <UsersViewRouter />;
     }
     return <AdminDashboard />;
   };

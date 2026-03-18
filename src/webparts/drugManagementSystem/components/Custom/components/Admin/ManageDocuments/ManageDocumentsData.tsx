@@ -148,7 +148,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       return value[0]?.lookupValue ?? value[0]?.Title ?? value[0]?.title ?? value[0]?.Name ?? '';
     }
     if (typeof value === 'string') {
-      return value.split(';#').filter(Boolean)[0] ?? value;
+      const parts = value.split(';#').filter(Boolean);
+      return (parts.length > 1 ? parts[1] : parts[0]) ?? value;
     }
     if (typeof value === 'object') {
       return value.lookupValue ?? value.Title ?? value.title ?? value.Name ?? '';
@@ -273,15 +274,10 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   };
 
   const mapDocumentItem = (item: any): Document => {
-    // Name priority:
-    // 1. item.Title — if it does NOT look like a folder/timestamp name
-    //    (Title set to artifactName at creation for new docs)
-    // 2. FileLeafRef stripped of all extensions (actual file name)
+    // Document name: always use the actual file name (FileLeafRef stripped of all extensions).
+    // Title is unreliable — SharePoint sets it to the drug folder name on upload.
     const fileLeafStripped = stripAllExts(item.FileLeafRef || '');
-    const titleLooks = (v: string) => v && v !== item.FileLeafRef && v !== fileLeafStripped;
-    const resolvedName = titleLooks(item.Title)
-      ? item.Title
-      : (fileLeafStripped || stripExt(item.Title || 'Untitled'));
+    const resolvedName = fileLeafStripped || stripExt(item.Title || 'Untitled');
 
     return ({
     id: item.ID,

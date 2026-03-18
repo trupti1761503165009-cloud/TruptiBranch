@@ -143,21 +143,24 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!spContext) return '';
     const canEditInline = !forceViewMode && isCurrentUserAuthor &&
       (doc.status === 'Draft' || doc.status === 'Rejected');
-    const action = canEditInline ? 'edit' : 'embedview';
+    const action = canEditInline ? 'edit' : 'view';
 
-    // Best approach: Doc.aspx with UniqueId GUID (most reliable for SP Online)
-    if (doc.uniqueId) {
-      const guid = doc.uniqueId.replace(/^\{|\}$/g, '');
-      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=%7B${guid}%7D&action=${action}`;
+    // Use WopiFrame.aspx with server-relative file URL (most reliable for SP Online)
+    const fileRef = doc.fileRef || doc.sharePointUrl || '';
+    if (fileRef) {
+      const serverRelative = fileRef.startsWith('http')
+        ? new URL(fileRef).pathname
+        : fileRef;
+      const encodedUrl = encodeURIComponent(serverRelative);
+      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodedUrl}&action=${action}`;
     }
 
-    // Fallback: WopiFrame.aspx with server-relative URL
-    if (!doc.fileRef) return '';
-    const serverRelative = doc.fileRef.startsWith('http')
-      ? new URL(doc.fileRef).pathname
-      : doc.fileRef;
-    const encodedUrl = encodeURI(serverRelative);
-    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodedUrl}&action=${action}`;
+    // Last resort: Doc.aspx with UniqueId
+    if (doc.uniqueId) {
+      const guid = doc.uniqueId.replace(/^\{|\}$/g, '');
+      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=%7B${guid}%7D&action=${action === 'edit' ? 'edit' : 'embedview'}`;
+    }
+    return '';
   };
 
   // REQ 4: Confirmation dialog state for Submit and Approve
@@ -310,13 +313,16 @@ export const ManageDocuments: React.FC<any> = (props) => {
     const map = new Map<string, string>();
     const traverse = (nodes: CTDFolder[]) => {
       nodes.forEach((node: any) => {
-        map.set(node.id, node.name);
+        if (node.id) map.set(String(node.id), node.name);
+        if (node.folderId) map.set(String(node.folderId), node.name);
         if (node.children) traverse(node.children);
       });
     };
     traverse(ctdFolders);
+    traverse(tmfFolders);
+    traverse(gmpFolders);
     return map;
-  }, [ctdFolders]);
+  }, [ctdFolders, tmfFolders, gmpFolders]);
 
   // Summary stats calculations
   const totalDocCount = filteredDocuments.length;
@@ -496,7 +502,10 @@ export const ManageDocuments: React.FC<any> = (props) => {
       minWidth: 140,
       maxWidth: 220,
       isSortingRequired: true,
-      onRender: (doc: Document) => <span>{folderLabelMap.get(doc.ctdFolder || '') || doc.ctdFolder || 'N/A'}</span>
+      onRender: (doc: Document) => {
+        const key = doc.ctdFolder || doc.ctdModule || '';
+        return <span>{folderLabelMap.get(key) || key || 'N/A'}</span>;
+      }
     },
     {
       key: 'status',
@@ -1385,29 +1394,60 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
       {/* Comments Modal */}
       {viewingDocument && (
-        <Panel
-          isOpen={isCommentsModalOpen}
-          onDismiss={() => setIsCommentsModalOpen(false)}
-          type={PanelType.medium}
-          headerText="Comments"
-          closeButtonAriaLabel="Close"
-          isLightDismiss
-        >
-          <div style={{ padding: '16px 0' }}>
-            <div style={{ marginBottom: 24 }}>
-              <div className="form-section-header" style={{ marginBottom: 12 }}>DMS Comments</div>
-              {(() => {
-                const userComments = (viewingDocument.comments || []).filter(
-                  c => c.author && c.author.toLowerCase() !== 'system'
-                );
-                return userComments.length > 0 ? (
+        <CustomModal
+          isModalOpenProps={isCommentsModalOpen}
+          setModalpopUpFalse={() => setIsCommentsModalOpen(false)}
+          subject="Comments"
+          dialogWidth="680px"
+          isBlocking={false}
+          message={
+            <div style={{ padding: '8px 0', maxHeight: '60vh', overflowY: 'auto' }}>
+              <div style={{ marginBottom: 24 }}>
+                <div className="form-section-header" style={{ marginBottom: 12 }}>DMS Comments</div>
+                {(() => {
+                  const userComments = (viewingDocument.comments || []).filter(
+                    c => c.author && c.author.toLowerCase() !== 'system'
+                  );
+                  return userComments.length > 0 ? (
+                    <div>
+                      {userComments.map((comment) => (
+                        <div key={comment.id} style={{
+                          background: '#f5f7ff', borderRadius: 8, padding: '10px 14px',
+                          marginBottom: 10, borderLeft: '4px solid #1300a6'
+                        }}>
+                          <div style={{ fontWeight: 600, color: '#1300a6', marginBottom: 4 }}>
+                            {comment.author}
+                            {comment.timestamp && (
+                              <span style={{ fontWeight: 400, fontSize: 12, color: '#888', marginLeft: 10 }}>
+                                {new Date(comment.timestamp).toLocaleString('en-GB', {
+                                  day: '2-digit', month: 'short', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ color: '#333', fontSize: 14 }}>{comment.text}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ color: '#999', fontStyle: 'italic' }}>No DMS comments yet</span>
+                  );
+                })()}
+              </div>
+              <div>
+                <div className="form-section-header" style={{ marginBottom: 12 }}>
+                  Reviewer Comments (from Word document)
+                </div>
+                {reviewerCommentError && <div className="field-error" style={{ marginBottom: 8 }}>{reviewerCommentError}</div>}
+                {reviewerComments.length > 0 ? (
                   <div>
-                    {userComments.map((comment) => (
+                    {reviewerComments.map((comment) => (
                       <div key={comment.id} style={{
-                        background: '#f5f7ff', borderRadius: 8, padding: '10px 14px',
-                        marginBottom: 10, borderLeft: '4px solid #1300a6'
+                        background: '#fff8e1', borderRadius: 8, padding: '10px 14px',
+                        marginBottom: 10, borderLeft: '4px solid #f9a825'
                       }}>
-                        <div style={{ fontWeight: 600, color: '#1300a6', marginBottom: 4 }}>
+                        <div style={{ fontWeight: 600, color: '#e65100', marginBottom: 4 }}>
                           {comment.author}
                           {comment.timestamp && (
                             <span style={{ fontWeight: 400, fontSize: 12, color: '#888', marginLeft: 10 }}>
@@ -1423,92 +1463,60 @@ export const ManageDocuments: React.FC<any> = (props) => {
                     ))}
                   </div>
                 ) : (
-                  <span style={{ color: '#999', fontStyle: 'italic' }}>No DMS comments yet</span>
-                );
-              })()}
-            </div>
-
-            <div>
-              <div className="form-section-header" style={{ marginBottom: 12 }}>
-                Reviewer Comments (from Word document)
+                  <span style={{ color: '#999', fontStyle: 'italic' }}>No reviewer comments in document</span>
+                )}
               </div>
-              {reviewerCommentError && <div className="field-error" style={{ marginBottom: 8 }}>{reviewerCommentError}</div>}
-              {reviewerComments.length > 0 ? (
-                <div>
-                  {reviewerComments.map((comment) => (
-                    <div key={comment.id} style={{
-                      background: '#fff8e1', borderRadius: 8, padding: '10px 14px',
-                      marginBottom: 10, borderLeft: '4px solid #f9a825'
-                    }}>
-                      <div style={{ fontWeight: 600, color: '#e65100', marginBottom: 4 }}>
-                        {comment.author}
-                        {comment.timestamp && (
-                          <span style={{ fontWeight: 400, fontSize: 12, color: '#888', marginLeft: 10 }}>
-                            {new Date(comment.timestamp).toLocaleString('en-GB', {
-                              day: '2-digit', month: 'short', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit'
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ color: '#333', fontSize: 14 }}>{comment.text}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <span style={{ color: '#999', fontStyle: 'italic' }}>No reviewer comments in document</span>
-              )}
             </div>
-          </div>
-        </Panel>
+          }
+        />
       )}
 
       {/* Version History Modal */}
       {viewingDocument && (
-        <Panel
-          isOpen={isHistoryModalOpen}
-          onDismiss={() => setIsHistoryModalOpen(false)}
-          type={PanelType.large}
-          headerText="Version History"
-          closeButtonAriaLabel="Close"
-          isLightDismiss
-        >
-          <div style={{ padding: '16px 0' }}>
-            {versionHistory.length === 0 ? (
-              <span style={{ color: '#999', fontStyle: 'italic' }}>No version history available</span>
-            ) : (
-              <div className="table-wrapper">
-                <table className="version-table">
-                  <thead>
-                    <tr>
-                      <th>Version</th>
-                      <th>Modified By</th>
-                      <th>Modified Date</th>
-                      <th>Changes</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {versionHistory.map(version => (
-                      <tr key={version.id ?? version.version}>
-                        <td>v{version.version}</td>
-                        <td>{version.modifiedBy}</td>
-                        <td>{version.modifiedDate}</td>
-                        <td>{version.changes}</td>
-                        <td>
-                          <DefaultButton onClick={() => version.id !== undefined && handleCompareVersion(version.id)}>
-                            <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
-                            Compare
-                          </DefaultButton>
-                        </td>
+        <CustomModal
+          isModalOpenProps={isHistoryModalOpen}
+          setModalpopUpFalse={() => setIsHistoryModalOpen(false)}
+          subject="Version History"
+          dialogWidth="820px"
+          isBlocking={false}
+          message={
+            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {versionHistory.length === 0 ? (
+                <span style={{ color: '#999', fontStyle: 'italic' }}>No version history available</span>
+              ) : (
+                <div className="table-wrapper">
+                  <table className="version-table">
+                    <thead>
+                      <tr>
+                        <th>Version</th>
+                        <th>Modified By</th>
+                        <th>Modified Date</th>
+                        <th>Changes</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </Panel>
+                    </thead>
+                    <tbody>
+                      {versionHistory.map(version => (
+                        <tr key={version.id ?? version.version}>
+                          <td>v{version.version}</td>
+                          <td>{version.modifiedBy}</td>
+                          <td>{version.modifiedDate}</td>
+                          <td>{version.changes}</td>
+                          <td>
+                            <DefaultButton onClick={() => version.id !== undefined && handleCompareVersion(version.id)}>
+                              <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
+                              Compare
+                            </DefaultButton>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          }
+        />
       )}
 
       {/* REQ 4: Submit Confirmation Dialog */}
