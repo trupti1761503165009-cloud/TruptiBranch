@@ -1073,6 +1073,7 @@ export const ManageCategories: React.FC<any> = (props) => {
               <PrimaryButton
                 className="btn btn-primary"
                 disabled={isLoading || !quickAddDialog.value.trim()}
+                style={{ opacity: (isLoading || !quickAddDialog.value.trim()) ? 0.45 : 1, cursor: (isLoading || !quickAddDialog.value.trim()) ? 'not-allowed' : 'pointer' }}
                 onClick={async () => {
                   const ok = await handleAddNode(
                     quickAddDialog.level,
@@ -1123,6 +1124,7 @@ export const ManageCategories: React.FC<any> = (props) => {
               <PrimaryButton
                 className="btn btn-primary"
                 disabled={isLoading || !renameDialog.newValue.trim() || renameDialog.newValue === renameDialog.oldValue}
+                style={{ opacity: (isLoading || !renameDialog.newValue.trim() || renameDialog.newValue === renameDialog.oldValue) ? 0.45 : 1, cursor: (isLoading || !renameDialog.newValue.trim() || renameDialog.newValue === renameDialog.oldValue) ? 'not-allowed' : 'pointer' }}
                 onClick={async () => {
                   const ok = await handleRenameNode(
                     renameDialog.level, renameDialog.oldValue, renameDialog.newValue, renameDialog.path

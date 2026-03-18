@@ -379,12 +379,13 @@ export default class Service implements IDataProvider {
 
     public deleteItem(listName: string, itemId: number): Promise<boolean> {
         return new Promise<any>((resolve: (results: any) => void, reject: (error: any) => void): void => {
-            if (!itemId || typeof itemId !== 'number' || isNaN(itemId)) {
+            const numericId = Number(itemId);
+            if (!numericId || isNaN(numericId) || numericId <= 0) {
                 console.log("Invalid item ID for deletion from -" + listName + ", id:", itemId);
                 reject(new Error(`Invalid item ID: ${itemId}`));
                 return;
             }
-            this._sp.web.lists.getByTitle(listName).items.getById(itemId).delete()
+            this._sp.web.lists.getByTitle(listName).items.getById(numericId).delete()
                 .then(_ => {
                     resolve(true);
                 }, (error: any): void => {

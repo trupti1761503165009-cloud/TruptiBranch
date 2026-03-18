@@ -373,6 +373,13 @@ export const ManageDocuments: React.FC<any> = (props) => {
     [activeFolderTree, folderTrail, findFolderNode]
   );
 
+  // Only show drug folders that have at least one document (any status).
+  // Uses the unfiltered `documents` list so search/status filters don't hide drug folders.
+  const drugsWithDocs = React.useMemo(
+    () => (drugs || []).filter(drug => (documents || []).some(d => d.drugId === drug.id)),
+    [drugs, documents]
+  );
+
   const normalized = (v?: string | number | null) => (v != null ? String(v) : '');
   const getDescendantKeys = React.useCallback((node: CTDFolder): string[] => {
     const keys: string[] = [];
@@ -861,9 +868,23 @@ export const ManageDocuments: React.FC<any> = (props) => {
             }
           />
         ) : selectedDrugId === null ? (
+          drugsWithDocs.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+              <FontAwesomeIcon icon={faFolder} style={{ fontSize: 48, color: '#ccc', marginBottom: 16 }} />
+              <p style={{ fontSize: 16, fontWeight: 600, color: '#555', marginBottom: 8 }}>No documents yet</p>
+              <p style={{ fontSize: 13, marginBottom: 24 }}>No documents have been created for any drug. Add a document to see the drug folder structure here.</p>
+              {canCreate && !hideAddButton && (
+                <PrimaryButton
+                  className="btn btn-primary"
+                  text="Add Document"
+                  onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.AddDocument, componentProps: {} })}
+                />
+              )}
+            </div>
+          ) : (
           <MemoizedDataGridComponent
             key="drug-selection-grid"
-            items={drugs}
+            items={drugsWithDocs}
             columns={[
               {
                 key: 'name',
@@ -957,6 +978,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
               </div>
             }
           />
+          )
         ) : (
           subTab === 'folder' ? (
             (!isShowingFolders && folderTrail.length === 0 && filteredDocuments.length === 0) ? (
