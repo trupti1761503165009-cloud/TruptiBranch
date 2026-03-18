@@ -469,8 +469,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       const templateLeaf = selTemplate.fileLeafRef || 'Template.docx';
       const extMatch = templateLeaf.match(/\.[0-9a-z]+$/i);
       const ext = extMatch ? extMatch[0] : '.docx';
-      const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
-      const targetFileName = `${sanitize(artifactName)}_${stamp}${ext}`;
+      // REQ 6: Use Drug Name only for folder path — no date/time in naming
+      const targetFileName = `${sanitize(artifactName)}${ext}`;
       const drugName = drugs.find(d => d.id === formData.drugId)?.name || 'Drug';
 
       const mappingType = selTemplate.mappingType || 'None';
