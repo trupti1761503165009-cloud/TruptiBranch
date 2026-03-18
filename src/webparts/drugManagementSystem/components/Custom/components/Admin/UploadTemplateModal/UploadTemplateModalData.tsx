@@ -21,10 +21,13 @@ export interface UploadTemplateModalFormData {
 export interface UploadTemplateModalDataParams {
   onClose: () => void;
   onSuccess: () => void;
+  editMode?: boolean;
+  editItemId?: number;
+  editFileRef?: string;
 }
 
 export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
-  const { onClose, onSuccess } = params;
+  const { onClose, onSuccess, editMode = false, editItemId, editFileRef } = params;
   const appGlobalState = useAtomValue(appGlobalStateAtom);
   const { provider, context } = appGlobalState;
 
@@ -181,8 +184,27 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
     resetForm();
   };
 
+  const sharedMetadata = () => ({
+    Version: formData.version.trim(),
+    ...(formData.categoryId ? { CategoryId: formData.categoryId } : {}),
+    ...(formData.countryId ? { CountryId: formData.countryId } : {}),
+    UploadDate: new Date().toISOString(),
+    Status: formData.status,
+    MappingType: formData.mappingType,
+    ...(formData.mappingType === 'eCTD' && formData.mappedCTDFolderId ? { MappedCTDFolderId: formData.mappedCTDFolderId } : {}),
+    ...(formData.mappingType === 'eCTD' && formData.ectdSectionId ? { eCTDSectionId: formData.ectdSectionId } : {}),
+    ...(formData.mappingType === 'eCTD' && formData.ectdSubsection.trim()
+      ? { eCTDSubsection: formData.ectdSubsection.trim() }
+      : {}),
+    ...(formData.mappingType === 'GMP' && formData.mappedGMPModelId ? { MappedGMPModelId: formData.mappedGMPModelId } : {}),
+    ...(formData.mappingType === 'TMF' && formData.mappedTMFFolderId ? { MappedTMFFolderId: formData.mappedTMFFolderId } : {}),
+    IsEctdMapped: formData.mappingType === 'eCTD',
+    IsDelete: false
+  });
+
   const handleUpload = async () => {
     if (!provider || !context) return;
+
     const nextErrors: {
       name?: string;
       version?: string;
@@ -194,13 +216,14 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
       file?: string;
     } = {};
 
-    if (!formData.name.trim()) nextErrors.name = 'Template Name is required.';
+    if (!editMode && !formData.name.trim()) nextErrors.name = 'Template Name is required.';
     if (!formData.version.trim()) nextErrors.version = 'Version No. is required.';
-    if (selectedFiles.length === 0) nextErrors.file = 'Upload File is required.';
+    if (!editMode && selectedFiles.length === 0) nextErrors.file = 'Upload File is required.';
 
-    // If you haven't created Categories yet, allow upload (so you can upload first, map later).
-    if (categories.length > 0 && !formData.categoryId) nextErrors.categoryId = 'Category is required.';
-    if (countries.length > 0 && !formData.countryId) nextErrors.countryId = 'Country is required.';
+    if (!editMode) {
+      if (categories.length > 0 && !formData.categoryId) nextErrors.categoryId = 'Category is required.';
+      if (countries.length > 0 && !formData.countryId) nextErrors.countryId = 'Country is required.';
+    }
 
     if (formData.mappingType === 'eCTD') {
       if (!formData.mappedCTDFolderId) nextErrors.mappedCTDFolderId = 'Mapped CTD Folder is required for eCTD mapping.';
@@ -209,7 +232,7 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
 
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      setErrorMessage('Please complete all required fields.');
+      setErrorMessage(Object.values(nextErrors).join(' '));
       return;
     }
 
@@ -217,7 +240,37 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
     setErrorMessage('');
 
     try {
-      // DUPLICATE CHECK
+      if (editMode && editItemId) {
+        if (selectedFiles.length > 0) {
+          const file = selectedFiles[0];
+          const folderUrl = `${context.pageContext.web.serverRelativeUrl.replace(/\/$/, '')}/${ListNames.Templates}`;
+          const sanitizeFileBase = (value: string) =>
+            String(value || 'Template')
+              .trim()
+              .replace(/[\\/:*?"<>|#%&{}~]+/g, '_')
+              .replace(/\s+/g, '_')
+              .replace(/_+/g, '_')
+              .replace(/^_+|_+$/g, '')
+              .slice(0, 120) || 'Template';
+          const extMatch = file.name.match(/\.[0-9a-z]+$/i);
+          const ext = extMatch ? extMatch[0] : '';
+          const existingBase = editFileRef
+            ? editFileRef.split('/').pop()?.replace(/\.[^.]+$/, '') || sanitizeFileBase(formData.name)
+            : sanitizeFileBase(formData.name);
+          const uploadName = `${existingBase}${ext}`;
+          await provider.uploadFile(
+            { name: uploadName, file, folderServerRelativeURL: folderUrl },
+            true,
+            sharedMetadata()
+          );
+        } else {
+          await provider.updateItem(sharedMetadata(), ListNames.Templates, editItemId);
+        }
+        onSuccess();
+        closeAndReset();
+        return;
+      }
+
       const dupeQuery = new CamlBuilder()
         .View(['ID', 'LinkFilename', 'Version'])
         .Query()
@@ -251,31 +304,9 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
       const uploadName = `${sanitizeFileBase(formData.name)}${ext}`;
 
       await provider.uploadFile(
-        {
-          name: uploadName,
-          file,
-          folderServerRelativeURL: folderUrl
-        },
+        { name: uploadName, file, folderServerRelativeURL: folderUrl },
         true,
-        {
-          // IMPORTANT: Templates library schema does NOT have 'Title', so never update it.
-          // Use file name (LinkFilename) as the visible template name.
-          Version: formData.version.trim(),
-          ...(formData.categoryId ? { CategoryId: formData.categoryId } : {}),
-          ...(formData.countryId ? { CountryId: formData.countryId } : {}),
-          UploadDate: new Date().toISOString(),
-          Status: formData.status,
-          MappingType: formData.mappingType,
-          ...(formData.mappingType === 'eCTD' && formData.mappedCTDFolderId ? { MappedCTDFolderId: formData.mappedCTDFolderId } : {}),
-          ...(formData.mappingType === 'eCTD' && formData.ectdSectionId ? { eCTDSectionId: formData.ectdSectionId } : {}),
-          ...(formData.mappingType === 'eCTD' && formData.ectdSubsection.trim()
-            ? { eCTDSubsection: formData.ectdSubsection.trim() }
-            : {}),
-          ...(formData.mappingType === 'GMP' && formData.mappedGMPModelId ? { MappedGMPModelId: formData.mappedGMPModelId } : {}),
-          ...(formData.mappingType === 'TMF' && formData.mappedTMFFolderId ? { MappedTMFFolderId: formData.mappedTMFFolderId } : {}),
-          IsEctdMapped: formData.mappingType === 'eCTD',
-          IsDelete: false
-        }
+        sharedMetadata()
       );
       onSuccess();
       closeAndReset();

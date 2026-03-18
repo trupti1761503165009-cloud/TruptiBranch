@@ -595,7 +595,7 @@ export const ManageTemplates: React.FC<any> = (props) => {
       <Panel
         isOpen={isPreviewOpen}
         onDismiss={() => { setIsPreviewOpen(false); setPreviewingTemplate(null); }}
-        type={PanelType.large}
+        type={PanelType.extraLarge}
         headerText={previewingTemplate ? `Template: ${previewingTemplate.name}` : 'Template Preview'}
         closeButtonAriaLabel="Close"
         isLightDismiss
@@ -694,27 +694,25 @@ export const ManageTemplates: React.FC<any> = (props) => {
               const items = previewingTemplate as any;
               if (!context) return <div className="field-error">Preview not available.</div>;
               const webUrl = context.pageContext?.web?.absoluteUrl || '';
-              const filePath = items.serverRedirectedEmbedUrl
-                ? items.serverRedirectedEmbedUrl
-                : (items.fileRef ? window.location.origin + items.fileRef : '');
+              const serverRelUrl: string = items.fileRef || items.serverRelativeUrl || '';
 
-              if (!filePath) return (
-                <div className="field-error" style={{ padding: 16, color: '#666' }}>
+              if (!serverRelUrl) return (
+                <div style={{ padding: 16, color: '#666', fontSize: 13 }}>
                   Template file preview not available. Use the Download button to access the file.
                 </div>
               );
 
-              const fileType = filePath.split('.').pop()?.toLowerCase();
-              const isOfficeDoc = OFFICE_DOC_TYPES.indexOf(fileType || '') >= 0;
+              const fileExt = serverRelUrl.split('.').pop()?.toLowerCase() || '';
+              const isOfficeDoc = OFFICE_DOC_TYPES.indexOf(fileExt) >= 0;
               const embedUrl = isOfficeDoc
-                ? `${webUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodeURIComponent(items.serverRedirectedEmbedUrl || '')}&action=embedview`
-                : filePath;
+                ? `${webUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodeURIComponent(serverRelUrl)}&action=embedview`
+                : (items.serverRedirectedEmbedUrl || (window.location.origin + serverRelUrl));
 
               return (
                 <iframe
                   title={previewingTemplate.name}
                   src={embedUrl}
-                  style={{ width: '100%', height: '70vh', border: '1px solid #e5e5e5', borderRadius: 4 }}
+                  style={{ width: '100%', height: '75vh', border: '1px solid #e5e5e5', borderRadius: 4 }}
                 />
               );
             })()}

@@ -1,0 +1,153 @@
+Project Review (GMP, TMF, eCTD)
+
+First, review all Project Documents, including:
+
+GMP Excel
+
+TMF Excel
+
+eCTD Excel
+
+Understand the folder structure, hierarchy, and data mapping before implementing changes.
+
+Category Screen
+
+Clarification required:
+
+Should we allow Add / Edit / Delete of folders (categories)?
+
+After sub-group level, why is the column named “Category Name”?
+
+In Excel, this seems to represent Artifact Name.
+
+Is this actually a Document?
+
+If it represents a document:
+
+Show appropriate Word/Excel/PDF icons in the grid.
+
+Enable document preview in panel view.
+
+While adding a Category:
+
+Should we allow Template selection/upload within Category?
+
+If yes, this likely applies to GMP structure.
+
+Folder Structure Logic:
+
+When selecting GMP:
+
+Folder structure should be created automatically.
+
+But where should the actual documents be stored within this structure?
+
+Define complete end-to-end scenarios, including:
+
+Folder creation
+
+Document placement
+
+Template linkage
+
+Hierarchy Management:
+
+Do we need:
+
+Level-wise Add/Delete folders?
+
+Only allow Edit (rename) for folders?
+
+Category List:
+
+Since we are using Choice columns, review:
+
+List schema
+
+Add form
+
+Grid display
+
+Adjust implementation accordingly.
+
+Template Screen
+
+Validation Issue:
+
+Error message:
+
+Please complete all required fields.
+
+This appears even when all required fields are filled.
+
+Action:
+
+Remove or fix this incorrect validation logic (same issue exists in Category form).
+
+Document Preview (Panel):
+
+Use iframe-based preview:
+
+const fullPath = `/sites${item.AnnualPAExcelURL}`;
+const encodedUrl = encodeURIComponent(fullPath);
+const embedFullFile = `${context.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=embedview?action=edit`;
+
+Panel implementation:
+
+<Panel
+  isOpen={isPanelOpen}
+  onDismiss={closePanel}
+  type={PanelType.extraLarge}
+  onRenderFooterContent={onRenderFooterContent}
+>
+  <iframe
+    src={selectedFile}
+    style={{ width: "100%", height: "85vh" }}
+  />
+</Panel>
+
+Requirement:
+
+Panel should open in full size.
+
+Template Edit Behavior:
+
+In Edit mode:
+
+Show preview of existing template document.
+
+Currently opens in read-only mode due to permission.
+
+Questions & Requirements:
+
+Can users edit or delete the existing document?
+
+If user deletes:
+
+Show upload (drag & drop) component again.
+
+Allow uploading a new document.
+
+On update:
+
+Should it:
+
+Replace the old document? OR
+
+Create a new version?
+
+Expected Behavior (recommended):
+
+Show Delete icon in edit mode for document.
+
+On delete:
+
+Remove existing file reference
+
+Show upload control
+
+On upload:
+
+Save as new file/version
+
+Do not display old file anymore

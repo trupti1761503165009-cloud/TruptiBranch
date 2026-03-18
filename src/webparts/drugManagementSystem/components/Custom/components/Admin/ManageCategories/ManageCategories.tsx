@@ -273,25 +273,46 @@ export const ManageCategories: React.FC<any> = (props) => {
     return crumbs;
   }, [hierarchyPath]);
 
+  const columnHeaderByLevel: Record<string, string> = {
+    documentCategory: 'DOCUMENT CATEGORY',
+    group: 'GROUP',
+    subGroup: 'SUB GROUP',
+    artifactName: 'ARTIFACT NAME',
+    templateName: 'TEMPLATE NAME',
+    items: 'NAME'
+  };
+
   const columns: any[] = [
     {
       key: 'name',
-      name: 'CATEGORY NAME',
+      name: columnHeaderByLevel[hierarchyLevel] || 'CATEGORY NAME',
       fieldName: 'name',
       minWidth: 260,
       maxWidth: 420,
       isSortingRequired: true,
-      onRender: (category: any) => (
-        <div className="doc-name-cell">
-          <img
-            className="doc-icon"
-            src={getFileTypeIcon('folder')}
-            alt=""
-            style={{ width: 16, height: 16, marginRight: 8 }}
-          />
-          <span>{category.name}</span>
-        </div>
-      )
+      onRender: (category: any) => {
+        const isLeaf = hierarchyLevel === 'artifactName' || hierarchyLevel === 'templateName' || hierarchyLevel === 'items';
+        let iconSrc = getFileTypeIcon('folder');
+        if (isLeaf) {
+          const name: string = (category.name || '').toLowerCase();
+          if (name.endsWith('.pdf')) iconSrc = getFileTypeIcon('pdf');
+          else if (name.endsWith('.doc') || name.endsWith('.docx')) iconSrc = getFileTypeIcon('docx');
+          else if (name.endsWith('.xls') || name.endsWith('.xlsx')) iconSrc = getFileTypeIcon('xlsx');
+          else if (name.endsWith('.ppt') || name.endsWith('.pptx')) iconSrc = getFileTypeIcon('pptx');
+          else iconSrc = getFileTypeIcon('docx');
+        }
+        return (
+          <div className="doc-name-cell">
+            <img
+              className="doc-icon"
+              src={iconSrc}
+              alt=""
+              style={{ width: 16, height: 16, marginRight: 8 }}
+            />
+            <span>{category.name}</span>
+          </div>
+        );
+      }
     },
     {
       key: 'createdDate',
