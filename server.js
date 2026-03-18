@@ -1587,6 +1587,26 @@ ReactDOM.render(React.createElement(App), document.getElementById('root'));
 const server = http.createServer((req, res) => {
   const reqUrl = req.url.split('?')[0];
 
+  if (reqUrl === '/download/sop-word') {
+    const filePath = path.join(__dirname, 'public', 'DMS-SOP.docx');
+    if (!fs.existsSync(filePath)) { res.writeHead(404); return res.end('Not found'); }
+    res.writeHead(200, {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': 'attachment; filename="DMS-SOP.docx"',
+    });
+    return res.end(fs.readFileSync(filePath));
+  }
+
+  if (reqUrl === '/download/sop-ppt') {
+    const filePath = path.join(__dirname, 'public', 'DMS-SOP.pptx');
+    if (!fs.existsSync(filePath)) { res.writeHead(404); return res.end('Not found'); }
+    res.writeHead(200, {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'Content-Disposition': 'attachment; filename="DMS-SOP.pptx"',
+    });
+    return res.end(fs.readFileSync(filePath));
+  }
+
   if (reqUrl === '/app.css') {
     res.writeHead(200, { 'Content-Type': 'text/css' });
     return res.end(appCss);

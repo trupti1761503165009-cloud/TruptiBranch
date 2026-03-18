@@ -13,7 +13,8 @@
     "serve": "gulp bundle --custom-serve --max_old_space_size=4096 && fast-serve",
     "playwright:test": "npx playwright test",
     "playwright:debug": "npx playwright test --debug",
-    "playwright:codegen": "npx playwright codegen"
+    "playwright:codegen": "npx playwright codegen",
+    "generate:sop": "node scripts/generate-docs.js"
   },
   "dependencies": {
     "@fluentui/react": "^8.106.4",
