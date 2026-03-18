@@ -102,7 +102,7 @@ export function ManageTemplatesData() {
           eCTDSubsection: item.eCTDSubsection || '',
           mappedGMPModel: parseLookupText(item.MappedGMPModel),
           mappedTMFFolder: parseLookupText(item.MappedTMFFolder),
-          isEctdMapped: Boolean(item.IsEctdMapped),
+          isEctdMapped: item.IsEctdMapped === true || item.IsEctdMapped === 1 || item.IsEctdMapped === '1' || item.IsEctdMapped === 'true',
           fileRef: item.FileRef || '',
           fileName: item.FileLeafRef || item.LinkFilename || '',
           categoryId: Number(item.CategoryId || parseLookupId(item.Category)) || 0,

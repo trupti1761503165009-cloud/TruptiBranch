@@ -100,7 +100,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
           MappedCTDFolderId: mappedCTDFolderId || null,
           eCTDSectionId: ectdSectionId || null,
           eCTDSubsection: row.ectdSubsection || '',
-          IsEctdMapped: row.mappingType === 'eCTD',
+          IsEctdMapped: row.mappingType === 'eCTD' ? '1' : '0',
           UploadDate: new Date().toISOString()
         };
 
