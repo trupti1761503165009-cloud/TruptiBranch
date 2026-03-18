@@ -1177,6 +1177,18 @@ export const ManageDocuments: React.FC<any> = (props) => {
       <Panel
         isOpen={isDocPanelOpen}
         onDismiss={() => {
+          // Guard: do not close panel while any child modal is open.
+          // Fluent UI Modal's FocusTrapZone steals focus from the Panel when
+          // a modal opens, which triggers onDismiss. Block it here.
+          if (
+            isCommentsModalOpen ||
+            isHistoryModalOpen ||
+            isSubmitConfirmOpen ||
+            isApproveConfirmOpen ||
+            isRejectModalOpen ||
+            isSignatureModalOpen ||
+            !!compareVersion
+          ) return;
           setIsDocPanelOpen(false);
           setReviewerComments([]);
           setReviewerCommentError('');
@@ -1186,6 +1198,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
         headerText={viewingDocument ? `Document: ${viewingDocument.name}` : 'Document Details'}
         closeButtonAriaLabel="Close"
         isLightDismiss={false}
+        layerProps={{ eventBubblingEnabled: true }}
         data-testid="document-view-panel"
       >
         {isLoading && <Loader />}
