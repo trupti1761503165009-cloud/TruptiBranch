@@ -79,8 +79,8 @@ export function ManageTemplatesData() {
           'Category', 'CategoryId', 'Country', 'CountryId', 'MappingType',
           'MappedCTDFolder', 'MappedCTDFolderId', 'eCTDSection', 'eCTDSectionId',
           'eCTDSubsection', 'IsEctdMapped', 'MappedGMPModel', 'MappedGMPModelId',
-          'MappedTMFFolder', 'MappedTMFFolderId', 'ServerRedirectedEmbedUrl', 'Version',
-          'IsDeleted'
+          'MappedTMFFolder', 'MappedTMFFolderId', 'ServerRedirectedEmbedUrl', 'TemplateVersion',
+          'IsDelete'
         ])
         .RowLimit(5000, true)
         .Query();
@@ -91,7 +91,7 @@ export function ManageTemplatesData() {
         (data || []).map((item: any) => ({
           id: item.ID,
           name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
-          version: item.Version || '1.0',
+          version: item.TemplateVersion || '1.0',
           category: parseLookupText(item.Category),
           country: parseLookupText(item.Country),
           uploadDate: item.UploadDate ? new Date(item.UploadDate).toLocaleDateString('en-GB') : '',

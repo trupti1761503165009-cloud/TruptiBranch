@@ -185,7 +185,7 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
   };
 
   const sharedMetadata = () => ({
-    Version: formData.version.trim(),
+    TemplateVersion: formData.version.trim(),
     ...(formData.categoryId ? { CategoryId: formData.categoryId } : {}),
     ...(formData.countryId ? { CountryId: formData.countryId } : {}),
     UploadDate: new Date().toISOString(),
@@ -272,12 +272,12 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
       }
 
       const dupeQuery = new CamlBuilder()
-        .View(['ID', 'LinkFilename', 'Version'])
+        .View(['ID', 'LinkFilename', 'TemplateVersion'])
         .Query()
         .Where()
         .TextField('LinkFilename').EqualTo(formData.name.trim())
         .And()
-        .TextField('Version').EqualTo(formData.version.trim())
+        .TextField('TemplateVersion').EqualTo(formData.version.trim())
         .ToString();
 
       const existingItems = await provider.getItemsByCAMLQuery(ListNames.Templates, dupeQuery);
