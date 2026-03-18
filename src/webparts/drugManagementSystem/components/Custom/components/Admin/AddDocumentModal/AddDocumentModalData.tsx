@@ -544,7 +544,10 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         return;
       }
 
-      const absoluteFileUrl = `${context.pageContext.web.absoluteUrl}${targetUrl}`;
+      // Use origin only (not absoluteUrl) because targetUrl is already server-relative
+      // and includes the site path (e.g. /sites/DMS/...). Concatenating with
+      // absoluteUrl (https://tenant.sharepoint.com/sites/DMS) would double the path.
+      const absoluteFileUrl = `${new URL(context.pageContext.web.absoluteUrl).origin}${targetUrl}`;
       await provider.updateItem(
         {
           CategoryId: formData.categoryId || null,

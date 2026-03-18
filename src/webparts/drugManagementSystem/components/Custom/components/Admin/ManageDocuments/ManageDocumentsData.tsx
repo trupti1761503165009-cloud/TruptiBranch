@@ -796,9 +796,15 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     try {
       const fileRef = viewingDocument.sharePointUrl || (viewingDocument as any).fileRef || '';
       if (fileRef) {
-        const serverRelPath = fileRef.startsWith('http')
+        let serverRelPath = fileRef.startsWith('http')
           ? new URL(fileRef).pathname
           : fileRef;
+        // Fix doubled site path that may exist in older documents
+        // e.g. /sites/DMS/sites/DMS/DMSDocuments/... → /sites/DMS/DMSDocuments/...
+        const siteRel = context?.pageContext?.web?.serverRelativeUrl?.replace(/\/$/, '') || '';
+        if (siteRel && serverRelPath.startsWith(`${siteRel}${siteRel}`)) {
+          serverRelPath = serverRelPath.slice(siteRel.length);
+        }
         await provider.checkInFile(serverRelPath);
       }
 
