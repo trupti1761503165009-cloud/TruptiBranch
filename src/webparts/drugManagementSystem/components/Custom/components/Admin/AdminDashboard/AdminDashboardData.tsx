@@ -82,15 +82,17 @@ export function AdminDashboardData() {
       const docsQuery = new CamlBuilder()
         .View(['ID', 'FileLeafRef', 'Modified', 'Status', 'Author', 'Category', 'CategoryId'])
         .RowLimit(5000, true)
-        .Query();
-      docsQuery.OrderByDesc('Modified');
+        .Query()
+        .Where()
+        .NumberField('FSObjType').EqualTo(0)
+        .OrderByDesc('Modified');
       const templatesQuery = new CamlBuilder().View(['ID']).RowLimit(5000, true).Query();
       const categoriesQuery = new CamlBuilder().View(['ID', 'Title']).RowLimit(5000, true).Query();
       categoriesQuery.OrderBy('Title');
 
 
       const [docs, templates, categories, adminUsers, hrUsers, authorUsers] = await Promise.all([
-        provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString()),
+        provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString().replace('<View>', '<View Scope="RecursiveAll">')),
         provider.getItemsByCAMLQuery(ListNames.Templates, templatesQuery.ToString()),
         provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()),
         provider.getUsersFromGroup('Admin').catch(() => []),

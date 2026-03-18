@@ -415,7 +415,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       drugsQuery.OrderBy('Title');
 
       const [docs, folders, cats, gmp] = await Promise.all([
-        provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString()),
+        provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString().replace('<View>', '<View Scope="RecursiveAll">')),
         provider.getItemsByCAMLQuery(ListNames.CTDFolders, foldersQuery.ToString()),
         provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()),
         provider.getItemsByCAMLQuery(ListNames.GmpModels, gmpQuery.ToString())
