@@ -556,7 +556,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           Submodule: submoduleValue,
           Status: 'Draft',
           IsEmailSend: true,
-          DocumentVersion: 1,
+          // DocumentVersion: 1,
           ApproverId: formData.approverId || null,
           Comments: commentsPayload.length > 0 ? JSON.stringify(commentsPayload) : '',
           SharePointURL: { Url: absoluteFileUrl, Description: artifactName }
