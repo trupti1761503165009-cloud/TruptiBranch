@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  eSignature List
+  Stores Adobe Sign signature requests.
+  Power Automate Flow 1 polls this list for items where SignatureStatus = 'Pending',
+  sends the document to Adobe Sign, and updates the status.
+  Power Automate Flow 2 updates SignatureStatus to 'Signed' when Adobe Sign completes.
+
+  Fields created by code (ManageDocumentsData.tsx → initiateAdobeSign):
+    Title, FilePath, FileName, SignerEmail, ApproverEmail, SignatureStatus,
+    DocumentId, DocumentType, CTDFolder, CTDModule, DrugName, DrugId,
+    InitiatedBy, InitiatedDate
+
+  Fields updated when signing completes:
+    SignatureStatus → 'Signed', SignatureCompletedOn, SignedBy
+-->
+<List xmlns:ows="Microsoft SharePoint"
+      Title="eSignature"
+      Direction="$Resources:Direction;"
+      Url="Lists/eSignature"
+      BaseType="0"
+      xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x01">
+        <Folder />
+      </ContentTypeRef>
+    </ContentTypes>
+    <Fields>
+
+      <!-- Server-relative URL of the document to be signed -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000001}"
+             Type="Text"
+             Name="FilePath"
+             DisplayName="File Path"
+             MaxLength="1000" />
+
+      <!-- Actual filename including extension (e.g. 721814_SOP.docx) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000002}"
+             Type="Text"
+             Name="FileName"
+             DisplayName="File Name"
+             MaxLength="500" />
+
+      <!-- Email address of the primary signer (Reviewer) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000003}"
+             Type="Text"
+             Name="SignerEmail"
+             DisplayName="Signer Email"
+             MaxLength="255" />
+
+      <!-- Email address of the Approver who approved the document -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000004}"
+             Type="Text"
+             Name="ApproverEmail"
+             DisplayName="Approver Email"
+             MaxLength="255" />
+
+      <!--
+        Signature workflow status.
+        'Pending'   → Power Automate Flow 1 picks up and sends to Adobe Sign.
+        'Signed'    → Power Automate Flow 2 updates after Adobe Sign webhook fires.
+        'Cancelled' → Agreement cancelled by user or expired in Adobe Sign.
+        'Expired'   → Adobe Sign agreement expired without all signatures.
+      -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000005}"
+             Type="Choice"
+             Name="SignatureStatus"
+             DisplayName="Signature Status"
+             Default="Pending">
+        <CHOICES>
+          <CHOICE>Pending</CHOICE>
+          <CHOICE>Signed</CHOICE>
+          <CHOICE>Cancelled</CHOICE>
+          <CHOICE>Expired</CHOICE>
+        </CHOICES>
+      </Field>
+
+      <!-- SharePoint item ID of the source document in the DMS Documents list -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000006}"
+             Type="Number"
+             Name="DocumentId"
+             DisplayName="Document Id"
+             Decimals="0" />
+
+      <!-- Mapping type context of the document -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000007}"
+             Type="Choice"
+             Name="DocumentType"
+             DisplayName="Document Type"
+             Default="eCTD">
+        <CHOICES>
+          <CHOICE>eCTD</CHOICE>
+          <CHOICE>GMP</CHOICE>
+          <CHOICE>TMF</CHOICE>
+        </CHOICES>
+      </Field>
+
+      <!-- CTD / TMF / GMP folder path of the document -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000008}"
+             Type="Text"
+             Name="CTDFolder"
+             DisplayName="CTD Folder"
+             MaxLength="500" />
+
+      <!-- CTD Module (e.g. Module 1, Module 3) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000009}"
+             Type="Text"
+             Name="CTDModule"
+             DisplayName="CTD Module"
+             MaxLength="255" />
+
+      <!-- Display name of the drug -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000010}"
+             Type="Text"
+             Name="DrugName"
+             DisplayName="Drug Name"
+             MaxLength="255" />
+
+      <!-- SP item ID of the drug in DrugsDatabase list -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000011}"
+             Type="Number"
+             Name="DrugId"
+             DisplayName="Drug Id"
+             Decimals="0" />
+
+      <!-- Display name of the user who initiated the Adobe Sign process -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000012}"
+             Type="Text"
+             Name="InitiatedBy"
+             DisplayName="Initiated By"
+             MaxLength="255" />
+
+      <!-- Date/time when the signature request was initiated -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000013}"
+             Type="DateTime"
+             Name="InitiatedDate"
+             DisplayName="Initiated Date"
+             Format="DateTime" />
+
+      <!-- Date/time when signing was completed (set by PA Flow 2 or manual sign-off) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000014}"
+             Type="DateTime"
+             Name="SignatureCompletedOn"
+             DisplayName="Signature Completed On"
+             Format="DateTime" />
+
+      <!-- Name / identifier of who signed (set when status moves to Signed) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000015}"
+             Type="Text"
+             Name="SignedBy"
+             DisplayName="Signed By"
+             MaxLength="255" />
+
+      <!-- Adobe Sign Agreement ID — stored so signed PDF can be retrieved via Adobe Sign API -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000016}"
+             Type="Text"
+             Name="AdobeAgreementId"
+             DisplayName="Adobe Agreement Id"
+             MaxLength="500" />
+
+      <!-- Raw status string returned by Adobe Sign API (SIGNED, CANCELLED, EXPIRED, etc.) -->
+      <Field ID="{A1E59001-1111-4A00-BB00-000000000017}"
+             Type="Text"
+             Name="AdobeSignStatus"
+             DisplayName="Adobe Sign Status"
+             MaxLength="100" />
+
+    </Fields>
+    <Views>
+      <View BaseViewID="1"
+            Type="HTML"
+            WebPartZoneID="Main"
+            DisplayName="$Resources:core,AllItems;"
+            DefaultView="TRUE"
+            MobileView="TRUE"
+            MobileDefaultView="TRUE"
+            SetupPath="pages\viewpage.aspx"
+            ImageUrl="/_layouts/images/generic.png"
+            Url="AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkTitle" />
+          <FieldRef Name="SignatureStatus" />
+          <FieldRef Name="DocumentType" />
+          <FieldRef Name="SignerEmail" />
+          <FieldRef Name="ApproverEmail" />
+          <FieldRef Name="DrugName" />
+          <FieldRef Name="InitiatedBy" />
+          <FieldRef Name="InitiatedDate" />
+          <FieldRef Name="SignatureCompletedOn" />
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="InitiatedDate" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+        <RowLimit Paged="TRUE">100</RowLimit>
+      </View>
+    </Views>
+  </MetaData>
+</List>

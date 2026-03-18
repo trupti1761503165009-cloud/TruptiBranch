@@ -1449,6 +1449,15 @@
                 Url="Lists/AuditLogs"
                 Description="Audit trail for document actions" />
 
+  <!-- eSignature — Adobe Sign signature requests (Power Automate triggers on SignatureStatus = 'Pending') -->
+  <ListInstance Title="eSignature"
+                OnQuickLaunch="FALSE"
+                TemplateType="100"
+                FeatureId="00bfea71-de22-43b2-a848-c05709900100"
+                CustomSchema="eSignature.xml"
+                Url="Lists/eSignature"
+                Description="Adobe Sign signature requests. Power Automate Flow 1 reads Pending items and sends to Adobe Sign. Flow 2 updates status to Signed on completion." />
+
   <!-- TMF Folders — sourced from DIA TMF Reference Model 3.3.1 (DIA_TMF_Document_List.xlsx) -->
   <!-- Hierarchy: Zone (IsFolder=1, no parent) → Section (IsFolder=1, ParentFolderId=ZoneId)
                  → Artifact (IsFolder=0, ParentFolderId=SectionId)                          -->
