@@ -200,7 +200,6 @@ const TEMPLATES = [
   { id:4, name:'Investigator Brochure.docx',            ext:'docx', mappingType:'eCTD', ctdFolder:'Module 1', section:'1.2 IB',                          country:'US',     ver:'3.0', status:'Active', date:'2025-11-30' },
   { id:5, name:'GMP Batch Record Template.xlsx',        ext:'xlsx', mappingType:'GMP',  model:'Batch Record', section:'-',                              country:'US',     ver:'1.2', status:'Inactive', date:'2025-10-05' },
   { id:6, name:'TMF Index Template.docx',               ext:'docx', mappingType:'TMF',  tmfFolder:'Zone 1',   section:'-',                              country:'Global', ver:'1.0', status:'Active', date:'2025-09-18' },
-  { id:7, name:'Document1.docx',                         ext:'docx', mappingType:'eCTD', ctdFolder:'1.1.1',    section:'1.1.1',                           country:'Canada',  ver:'1.0', status:'Active', date:'2026-02-13' },
 ];
 const CATEGORIES = [
   { id:1, name:'Administrative',          documentCategory:'Regulatory',  group:'Module 1', level:1, docs:12, status:'Active' },
