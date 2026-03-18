@@ -574,17 +574,23 @@ export const ManageDocuments: React.FC<any> = (props) => {
     {
       key: 'actions',
       name: 'ACTIONS',
-      minWidth: 160,
-      maxWidth: 220,
+      minWidth: 200,
+      maxWidth: 280,
       onRender: (doc: Document) => {
         const userEmail = String(currentUser?.email || currentUser?.loginName || '').toLowerCase();
         const userId = currentUser?.id || 0;
         const isRowAuthor =
           (userId > 0 && doc.authorId === userId) ||
           (userEmail !== '' && String(doc.author || '').toLowerCase().includes(userEmail));
-        const canSubmitRow = isRowAuthor && (doc.status === 'Draft' || doc.status === 'Rejected');
+        const isRowApprover = canApprove ||
+          (userId > 0 && doc.approverId === userId) ||
+          (userEmail !== '' && String(doc.approver || '').toLowerCase().includes(userEmail));
+        // Admin can perform any workflow action; otherwise check role
+        const canSubmitRow  = (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
+        const canApproveRow = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canRejectRow  = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
         return (
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'nowrap' }}>
             <TooltipHost content="View Details">
               <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#1E88E5' }}>
                 <FontAwesomeIcon icon={faEye} />
@@ -604,6 +610,26 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   style={{ fontSize: 16, color: doc.status === 'Rejected' ? '#F57C00' : '#1565C0' }}
                 >
                   <FontAwesomeIcon icon={faPaperPlane} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canApproveRow && (
+              <TooltipHost content="Approve">
+                <Link
+                  onClick={() => { setViewingDocument(doc); setIsApproveConfirmOpen(true); }}
+                  style={{ fontSize: 16, color: '#2e7d32' }}
+                >
+                  <FontAwesomeIcon icon={faCheck} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canRejectRow && (
+              <TooltipHost content="Reject">
+                <Link
+                  onClick={() => { setViewingDocument(doc); handleReject(); }}
+                  style={{ fontSize: 16, color: '#d32f2f' }}
+                >
+                  <FontAwesomeIcon icon={faXmark} />
                 </Link>
               </TooltipHost>
             )}
