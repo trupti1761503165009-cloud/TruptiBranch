@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "SUlzqTiBXPAmZmwA7LobJ"
+uri = "file://docs/Manage-Templates-Screen-Flow-and-Versioning.md"
+type = "text"
+title = "Manage Templates — Screen Flow & Versioning Document"

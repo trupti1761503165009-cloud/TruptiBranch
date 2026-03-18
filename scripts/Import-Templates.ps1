@@ -107,9 +107,12 @@ foreach ($file in $docxFiles) {
 
     # Build metadata
     $metadata = @{
-        "Title"       = $title
-        "Status"      = "Active"
-        "MappingType" = "None"
+        "Title"           = $title
+        "Status"          = "Active"
+        "MappingType"     = "None"
+        "TemplateVersion" = "1.0"
+        "IsLatestVersion" = $true
+        "ParentTemplateId" = $null
     }
 
     # Resolve Category lookup ID — required when a subfolder name is present
