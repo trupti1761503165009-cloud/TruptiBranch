@@ -350,39 +350,71 @@ export const ManageDocuments: React.FC<any> = (props) => {
     setIsFolderLoading(false);
   }, [selectedDrugId]);
 
-  const findFolderNode = React.useCallback((nodes: CTDFolder[], id: any): CTDFolder | undefined => {
+  const findFolderNode = React.useCallback((nodes: CTDFolder[], key: any): CTDFolder | undefined => {
+    const keyStr = String(key);
     for (const n of nodes) {
-      if (n.id === id) return n;
+      if (String(n.id) === keyStr || String(n.folderId) === keyStr) return n;
       if (n.children?.length) {
-        const hit = findFolderNode(n.children, id);
+        const hit = findFolderNode(n.children, key);
         if (hit) return hit;
       }
     }
     return undefined;
   }, []);
 
+  const activeFolderTree = React.useMemo(() => {
+    if (ctdStructure === 'ectd') return ctdFolders;
+    if (ctdStructure === 'dossier') return tmfFolders;
+    return ctdFolders;
+  }, [ctdFolders, tmfFolders, ctdStructure]);
+
   const currentFolderNode = React.useMemo(
-    () => (folderTrail.length ? findFolderNode(ctdFolders, folderTrail[folderTrail.length - 1]) : undefined),
-    [ctdFolders, folderTrail, findFolderNode]
+    () => (folderTrail.length ? findFolderNode(activeFolderTree, folderTrail[folderTrail.length - 1]) : undefined),
+    [activeFolderTree, folderTrail, findFolderNode]
   );
 
-  const currentFolderChildren = React.useMemo(() => {
-    if (!folderTrail.length) {
-      if (ctdStructure === 'ectd') return ctdFolders;
-      if (ctdStructure === 'dossier') return tmfFolders; 
-      // Add GMP check if needed
-      return ctdFolders;
-    }
+  const normalized = (v?: string | number | null) => (v != null ? String(v) : '');
+  const getDescendantKeys = React.useCallback((node: CTDFolder): string[] => {
+    const keys: string[] = [];
+    if (node.id != null) keys.push(String(node.id));
+    if (node.folderId) keys.push(String(node.folderId));
+    (node.children || []).forEach((c) => keys.push(...getDescendantKeys(c)));
+    return keys;
+  }, []);
+
+  const folderHasDocuments = React.useCallback((node: CTDFolder, docs: Document[]): boolean => {
+    const descendantKeys = new Set(getDescendantKeys(node));
+    return docs.some(
+      (d) =>
+        (normalized(d.ctdFolder) && descendantKeys.has(normalized(d.ctdFolder))) ||
+        (normalized(d.ctdModule) && descendantKeys.has(normalized(d.ctdModule))) ||
+        (normalized(d.submodule) && descendantKeys.has(normalized(d.submodule)))
+    );
+  }, [getDescendantKeys]);
+
+  const allFolderChildren = React.useMemo(() => {
+    if (!folderTrail.length) return activeFolderTree;
     return currentFolderNode?.children || [];
-  }, [ctdFolders, tmfFolders, gmpFolders, currentFolderNode, folderTrail.length, ctdStructure]);
+  }, [activeFolderTree, currentFolderNode, folderTrail.length]);
+
+  const currentFolderChildren = React.useMemo(() => {
+    return allFolderChildren.filter((f) => folderHasDocuments(f, filteredDocuments));
+  }, [allFolderChildren, filteredDocuments, folderHasDocuments]);
 
   const isShowingFolders = currentFolderChildren.length > 0;
   const currentFolderId = folderTrail.length ? folderTrail[folderTrail.length - 1] : undefined;
 
   const docsForCurrentFolder = React.useMemo(() => {
-    if (!currentFolderId) return filteredDocuments;
-    return filteredDocuments.filter((d) => d.ctdFolder === currentFolderId || d.ctdModule === currentFolderId || d.submodule === currentFolderId);
-  }, [currentFolderId, filteredDocuments]);
+    if (!currentFolderNode) return filteredDocuments;
+    const folderKeys = new Set<string>();
+    if (currentFolderNode.id != null) folderKeys.add(String(currentFolderNode.id));
+    if (currentFolderNode.folderId) folderKeys.add(String(currentFolderNode.folderId));
+    return filteredDocuments.filter((d) =>
+      (normalized(d.ctdFolder) && folderKeys.has(normalized(d.ctdFolder))) ||
+      (normalized(d.ctdModule) && folderKeys.has(normalized(d.ctdModule))) ||
+      (normalized(d.submodule) && folderKeys.has(normalized(d.submodule)))
+    );
+  }, [currentFolderNode, filteredDocuments]);
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -401,24 +433,17 @@ export const ManageDocuments: React.FC<any> = (props) => {
   }, [currentPage, docsForCurrentFolder, itemsPerPage]);
 
   const folderGridItems = React.useMemo(() => {
-    const normalized = (v?: string) => (v ? String(v) : '');
-    const getDescendantIds = (node: CTDFolder): string[] => {
-      const ids: string[] = [node.id];
-      (node.children || []).forEach((c) => ids.push(...getDescendantIds(c)));
-      return ids;
-    };
-
     return currentFolderChildren.map((f) => {
-      const descendantIds = new Set(getDescendantIds(f));
+      const descendantKeys = new Set(getDescendantKeys(f));
       const count = filteredDocuments.filter(
         (d) =>
-          descendantIds.has(normalized(d.ctdFolder)) ||
-          descendantIds.has(normalized(d.ctdModule)) ||
-          descendantIds.has(normalized(d.submodule))
+          (normalized(d.ctdFolder) && descendantKeys.has(normalized(d.ctdFolder))) ||
+          (normalized(d.ctdModule) && descendantKeys.has(normalized(d.ctdModule))) ||
+          (normalized(d.submodule) && descendantKeys.has(normalized(d.submodule)))
       ).length;
       return { id: f.id, name: f.name, count };
     });
-  }, [currentFolderChildren, filteredDocuments]);
+  }, [currentFolderChildren, filteredDocuments, getDescendantKeys]);
 
   const folderColumns: any[] = React.useMemo(
     () => [
@@ -934,7 +959,19 @@ export const ManageDocuments: React.FC<any> = (props) => {
           />
         ) : (
           subTab === 'folder' ? (
-            isShowingFolders ? (
+            (!isShowingFolders && folderTrail.length === 0 && filteredDocuments.length === 0) ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#888' }}>
+              <FontAwesomeIcon icon={faFolder} style={{ fontSize: 48, color: '#ccc', marginBottom: 16 }} />
+              <p style={{ fontSize: 16, fontWeight: 600, color: '#555', marginBottom: 8 }}>No documents yet</p>
+              <p style={{ fontSize: 13, marginBottom: 24 }}>No documents have been created for this drug. Create a document to see the folder structure.</p>
+              {canCreate && !hideAddButton && (
+                <PrimaryButton
+                  text="Add Document"
+                  onClick={() => props.manageComponentView({ currentComponentName: ComponentNameEnum.AddDocument, componentProps: { drugId: selectedDrugId } })}
+                />
+              )}
+            </div>
+          ) : isShowingFolders ? (
             <MemoizedDataGridComponent
               key={`folder-tree-${folderTrail.join('-') || 'root'}`}
               items={folderGridItems}
