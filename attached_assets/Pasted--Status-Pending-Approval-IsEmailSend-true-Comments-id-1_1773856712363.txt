@@ -1,0 +1,73 @@
+{Status: "Pending Approval", IsEmailSend: true,…}
+Comments
+:
+"[{"id":1,"author":"System","text":"Document submitted for review by Admin","timestamp":"2026-03-18T17:51:27.530Z"}]"
+IsEmailSend
+:
+true
+Status
+:
+"Pending Approval"
+{odata.error: {code: "-2147018894, Microsoft.SharePoint.SPException", message: {lang: "en-US",…}}}
+odata.error
+:
+{code: "-2147018894, Microsoft.SharePoint.SPException", message: {lang: "en-US",…}}
+code
+:
+"-2147018894, Microsoft.SharePoint.SPException"
+message
+:
+{lang: "en-US",…}
+lang
+:
+"en-US"
+value
+:
+"The file "https://redgreens.sharepoint.com/sites/DMS/DMSDocuments/Drug1/Template12.docx\" is locked for shared use by admin@redgreens.in."
+const handleSubmitForReview = async () => {
+if (!viewingDocument || !provider) return;
+setIsLoading(true);
+try {
+const auditLog = {
+id: (viewingDocument.comments?.length || 0) + 1,
+author: 'System',
+text: Document submitted for review by ${currentUser?.displayName || 'Unknown'},
+timestamp: new Date().toISOString()
+};
+const nextComments = [...(viewingDocument.comments || []), auditLog];
+await provider.updateItem(
+{
+Status: 'Pending Approval',
+IsEmailSend: true,
+Comments: JSON.stringify(nextComments)
+},
+ListNames.DMSDocuments,
+viewingDocument.id
+);
+await loadData();
+setIsDocPanelOpen(false);
+setSuccessMessage('Document submitted for approval.');
+} catch (error) {
+console.error('Failed to submit document:', error);
+setErrorMessage('Unable to submit document for review.');
+} finally {
+setIsLoading(false);
+}
+};
+
+Let me look at the codebase to understand the context before planning a fix.
+
+Now I have a clear picture of the issue. When handleSubmitForReview tries to update the list item, SharePoint rejects it because the linked .docx file is currently open and locked by a user. The updateItem call touches the list item that is associated with the locked file, triggering the SPException.
+
+The fix involves checking in the file before updating the list item (and gracefully handling the case where it's locked by someone else entirely). Let me check what field holds the file URL on the document record.
+
+Now I have everything I need. The problem is clear:
+
+The handleSubmitForReview updates the DMSDocuments list item
+SharePoint rejects the update because the .docx file associated with that item is currently open/locked
+No check-in step exists before the update — so if anyone has the file open, the entire submit fails
+The fix needs to:
+
+Add a checkInFile method to Service.ts using PnPjs
+Call it in handleSubmitForReview before the list item update, to release the lock
+If the file is locked by a different user (not the current user), show a clear, actionable error message instead of the generic "Unable to submit" one
