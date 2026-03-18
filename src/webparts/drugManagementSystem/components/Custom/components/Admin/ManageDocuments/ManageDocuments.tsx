@@ -147,7 +147,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
     // Use WopiFrame.aspx with server-relative file URL (most reliable for SP Online)
     // Prefer sharePointUrl (explicitly stored on create) over fileRef which may be a folder path
-    const fileRef = doc.sharePointUrl || doc.fileRef || '';
+    const fileRef =  doc.fileRef || '';
     if (fileRef) {
       const serverRelative = fileRef.startsWith('http')
         ? new URL(fileRef).pathname
