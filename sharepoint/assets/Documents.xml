@@ -74,7 +74,7 @@
            Set to TRUE by SPFx whenever Status changes.
            Power Automate triggers on item modification, reads this flag, sends email, then sets it to FALSE.
            This prevents duplicate email sends on subsequent minor updates. -->
-      <Field ID="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" Type="Text" Name="IsEmailSend" DisplayName="Is Email Send" />
+      <Field ID="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" Type="Boolean" Name="IsEmailSend" DisplayName="Is Email Send" />
 
       <!-- Adobe Sign: Agreement ID returned by Adobe Sign after initiation -->
       <Field ID="{B2C3D4E5-F6A7-8901-BCDE-F12345678901}" Type="Text" Name="AdobeAgreementId" DisplayName="Adobe Agreement Id" />
@@ -83,7 +83,7 @@
       <Field ID="{C3D4E5F6-A7B8-9012-CDEF-123456789012}" Type="Note" Name="RejectionReason" DisplayName="Rejection Reason" NumLines="4" />
 
       <!-- Soft delete flag -->
-      <Field ID="{D4E5F6A7-B8C9-0123-DEF0-234567890123}" Type="Text" Name="IsDeleted" DisplayName="Is Deleted" />
+      <Field ID="{D4E5F6A7-B8C9-0123-DEF0-234567890123}" Type="Boolean" Name="IsDeleted" DisplayName="Is Deleted" />
     </Fields>
     <Views>
       <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">

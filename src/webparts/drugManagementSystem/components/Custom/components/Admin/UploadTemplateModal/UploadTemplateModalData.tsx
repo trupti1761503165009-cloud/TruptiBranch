@@ -198,8 +198,8 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
       : {}),
     ...(formData.mappingType === 'GMP' && formData.mappedGMPModelId ? { MappedGMPModelId: formData.mappedGMPModelId } : {}),
     ...(formData.mappingType === 'TMF' && formData.mappedTMFFolderId ? { MappedTMFFolderId: formData.mappedTMFFolderId } : {}),
-    IsEctdMapped: formData.mappingType === 'eCTD' ? '1' : '0',
-    IsDelete: '0'
+    IsEctdMapped: formData.mappingType === 'eCTD',
+    IsDelete: false
   });
 
   const handleUpload = async () => {

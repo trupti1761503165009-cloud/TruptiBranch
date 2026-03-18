@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+DUMMY DATA FOR VISUALIZATION - Shows how templates connect to other lists:
+
+TEMPLATE 1: Quality Policy Template
+- Title: Quality Policy Template
+- Description: Template for creating quality policy documents
+- Category: Governance Document (lookup to Categories list)
+- CreatedBy: John Doe (lookup to Employees list)
+- UploadDate: 2024-01-15
+- Status: Active
+- MappedCTDFolder: Module 1 (lookup to CTDFolders list)
+- MappedGMPModel: Quality (lookup to GMPModels list)
+- eCTDSection: 1.0 (lookup to eCTDSections list)
+- eCTDSubsection: Administrative Information
+- IsEctdMapped: True
+
+TEMPLATE 2: Stability Study Report Template  
+- Title: Stability Study Report Template
+- Description: Template for stability study documentation
+- Category: Manufacturing and Product Quality (lookup to Categories list)
+- CreatedBy: Jane Smith (lookup to Employees list)
+- UploadDate: 2024-01-20
+- Status: Active
+- MappedCTDFolder: Module 3 (lookup to CTDFolders list)
+- MappedGMPModel: Stability (lookup to GMPModels list)
+- eCTDSection: 3.2 (lookup to eCTDSections list)
+- eCTDSubsection: Body of Data
+- IsEctdMapped: True
+
+TEMPLATE 3: General Document Template
+- Title: General Document Template
+- Description: Generic template for non-regulated documents
+- Category: Governance Document (lookup to Categories list)
+- CreatedBy: Admin User (lookup to Employees list)
+- UploadDate: 2024-01-10
+- Status: Active
+- MappedCTDFolder: (empty - not CTD mapped)
+- MappedGMPModel: (empty - not GMP mapped)
+- eCTDSection: (empty - not eCTD mapped)
+- eCTDSubsection: (empty)
+- IsEctdMapped: False
+
+CONNECTIONS:
+- Templates → Categories (via Category lookup)
+- Templates → Employees (via CreatedBy lookup)
+- Templates → CTDFolders (via MappedCTDFolder lookup)
+- Templates → GMPModels (via MappedGMPModel lookup)
+- Templates → eCTDSections (via eCTDSection lookup)
+- Documents → Templates (via Template lookup in Documents.xml)
+-->
+<List xmlns:ows="Microsoft SharePoint" Title="Templates" Direction="$Resources:Direction;" Url="Templates" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes>
+      <ContentTypeRef ID="0x0101">
+        <Folder />
+      </ContentTypeRef>
+      <ContentTypeRef ID="0x0101009148F5A04DDD49CBA7127AADA5FB7926" />
+    </ContentTypes>
+    <Fields>
+      <Field ID="{B4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Note" Name="Description" DisplayName="Description" NumLines="6" />
+      <Field ID="{C4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Category" DisplayName="Category" List="Lists/Categories" ShowField="Title" />
+      <Field ID="{D4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="Country" DisplayName="Country" List="Lists/Countries" ShowField="Title" />
+      <Field ID="{F4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="DateTime" Name="UploadDate" DisplayName="Upload Date" />
+      <Field ID="{3faf02eb-3b22-45c2-94c5-88c9464765f4}" Type="Choice" Name="Status" DisplayName="Status">
+        <CHOICES>
+          <CHOICE>Active</CHOICE>
+          <CHOICE>Inactive</CHOICE>
+        </CHOICES>
+      </Field>
+
+      <!-- Mapping fields to support: Template ↔ eCTD module OR GMP model OR none -->
+      <Field ID="{9ce5cdd6-6585-4296-b49c-8d00844b7695}" Type="Choice" Name="MappingType" DisplayName="Mapping Type">
+        <CHOICES>
+          <CHOICE>eCTD</CHOICE>
+          <CHOICE>GMP</CHOICE>
+          <CHOICE>TMF</CHOICE>
+          <CHOICE>None</CHOICE>
+        </CHOICES>
+      </Field>
+      <Field ID="{299bd34c-9e06-4dc2-a272-8131680ce1e6}" Type="Lookup" Name="MappedCTDFolder" DisplayName="Mapped CTD Folder" List="Lists/CTDFolders" ShowField="FolderId" />
+      <Field ID="{31fac171-6922-4b56-a35a-7e578471364d}" Type="Lookup" Name="MappedGMPModel" DisplayName="Mapped GMP Model" List="Lists/GMPModels" ShowField="Title" />
+      <Field ID="{E4B3C9A0-4E9A-4B8A-8B8A-8B8A8B8A8B8A}" Type="Lookup" Name="MappedTMFFolder" DisplayName="Mapped TMF Folder" List="Lists/TMFFolders" ShowField="Title" />
+      <Field ID="{4b2aad8b-8a4c-435a-bd3d-ffb314b80dfd}" Type="Lookup" Name="eCTDSection" DisplayName="eCTD Section" List="Lists/eCTDSections" ShowField="SectionCode" />
+      <Field ID="{5552ffed-2390-4271-bb88-ae161f0a6e96}" Type="Text" Name="eCTDSubsection" DisplayName="eCTD Subsection" />
+      <Field ID="{6fcaa0e6-68fb-43c0-a2e6-6a972a6ba226}" Type="Boolean" Name="IsEctdMapped" DisplayName="Is eCTD Mapped" />
+      <Field ID="{7a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d}" Type="Text" Name="TemplateVersion" DisplayName="TemplateVersion" />
+      <Field ID="{8b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e}" Type="Boolean" Name="IsDelete" DisplayName="Is Delete" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="LinkFilename"></FieldRef>
+          <FieldRef Name="Description"></FieldRef>
+          <FieldRef Name="Category"></FieldRef>
+          <FieldRef Name="UploadDate"></FieldRef>
+          <FieldRef Name="Status"></FieldRef>
+          <FieldRef Name="MappedCTDFolder"></FieldRef>
+          <FieldRef Name="MappedGMPModel"></FieldRef>
+          <FieldRef Name="eCTDSection"></FieldRef>
+          <FieldRef Name="eCTDSubsection"></FieldRef>
+          <FieldRef Name="IsEctdMapped"></FieldRef>
+          <FieldRef Name="TemplateVersion"></FieldRef>
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="Modified" Ascending="FALSE" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="Forms/DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="Forms/EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="Forms/Upload.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>
