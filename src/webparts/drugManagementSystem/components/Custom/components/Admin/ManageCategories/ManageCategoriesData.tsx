@@ -336,7 +336,134 @@ export function ManageCategoriesData() {
     }
   };
 
+  type NodePath = {
+    documentCategory?: string;
+    group?: string;
+    subGroup?: string;
+    artifactName?: string;
+    templateName?: string;
+  };
+
+  const matchesPath = (cat: ExtendedCategory, path: NodePath): boolean => {
+    const n = (v?: string) => (v || '').trim();
+    if (path.documentCategory && n(cat.documentCategory) !== n(path.documentCategory)) return false;
+    if (path.group && n(cat.group) !== n(path.group)) return false;
+    if (path.subGroup && n(cat.subGroup) !== n(path.subGroup)) return false;
+    if (path.artifactName && n(cat.artifactName) !== n(path.artifactName)) return false;
+    if (path.templateName && n(cat.templateName) !== n(path.templateName)) return false;
+    return true;
+  };
+
+  const handleAddNode = async (
+    levelField: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName',
+    newValue: string,
+    path: NodePath,
+    linkedTemplateName?: string
+  ): Promise<boolean> => {
+    if (!newValue.trim()) {
+      setErrorMessage('Please enter a name.');
+      return false;
+    }
+    if (!provider) {
+      setSuccessMessage(`Demo mode: ${levelField} "${newValue}" added.`);
+      return true;
+    }
+    setIsLoading(true);
+    try {
+      const data: any = {
+        name: newValue.trim(),
+        documentCategory: path.documentCategory || (levelField === 'documentCategory' ? newValue.trim() : ''),
+        group: path.group || (levelField === 'group' ? newValue.trim() : ''),
+        subGroup: path.subGroup || (levelField === 'subGroup' ? newValue.trim() : ''),
+        artifactName: path.artifactName || (levelField === 'artifactName' ? newValue.trim() : ''),
+        templateName: linkedTemplateName || path.templateName || (levelField === 'templateName' ? newValue.trim() : ''),
+        level: 4,
+        status: 'Active'
+      };
+      await provider.createCategory(data);
+      setSuccessMessage(`"${newValue}" added successfully.`);
+      await loadCategories();
+      return true;
+    } catch (error) {
+      console.error('Failed to add node:', error);
+      setErrorMessage('Unable to add. Please try again.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRenameNode = async (
+    levelField: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName',
+    oldValue: string,
+    newValue: string,
+    path: NodePath
+  ): Promise<boolean> => {
+    if (!newValue.trim() || newValue.trim() === oldValue.trim()) {
+      setErrorMessage('Please enter a different name.');
+      return false;
+    }
+    if (!provider) {
+      setSuccessMessage(`Demo mode: Renamed "${oldValue}" to "${newValue}".`);
+      return true;
+    }
+    const matchPath = { ...path, [levelField]: oldValue };
+    const toUpdate = categories.filter(cat => matchesPath(cat, matchPath));
+    if (toUpdate.length === 0) {
+      setErrorMessage('No records found to rename.');
+      return false;
+    }
+    setIsLoading(true);
+    try {
+      for (const cat of toUpdate) {
+        await provider.updateCategory(cat.id, { [levelField === 'documentCategory' ? 'DocumentCategory' : levelField === 'artifactName' ? 'ArtifactName' : levelField === 'templateName' ? 'TemplateName' : levelField.charAt(0).toUpperCase() + levelField.slice(1)]: newValue.trim() });
+      }
+      setSuccessMessage(`Renamed "${oldValue}" to "${newValue}" (${toUpdate.length} record(s) updated).`);
+      await loadCategories();
+      return true;
+    } catch (error) {
+      console.error('Failed to rename node:', error);
+      setErrorMessage('Unable to rename. Please try again.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteNode = async (
+    levelField: 'documentCategory' | 'group' | 'subGroup' | 'artifactName' | 'templateName',
+    nodeValue: string,
+    path: NodePath
+  ): Promise<boolean> => {
+    if (!provider) {
+      setSuccessMessage(`Demo mode: "${nodeValue}" deleted.`);
+      return true;
+    }
+    const matchPath = { ...path, [levelField]: nodeValue };
+    const toDelete = categories.filter(cat => matchesPath(cat, matchPath));
+    if (toDelete.length === 0) {
+      setErrorMessage('No records found to delete.');
+      return false;
+    }
+    setIsLoading(true);
+    try {
+      for (const cat of toDelete) {
+        await provider.deleteCategory(cat.id);
+      }
+      setSuccessMessage(`"${nodeValue}" and ${toDelete.length} record(s) deleted.`);
+      await loadCategories();
+      return true;
+    } catch (error) {
+      console.error('Failed to delete node:', error);
+      setErrorMessage('Unable to delete. Please try again.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
+    categories,
     filteredCategories,
     searchTerm,
     statusFilter,
@@ -370,6 +497,9 @@ export function ManageCategoriesData() {
     handleDeleteClick,
     handleDeleteConfirm,
     handleBulkDelete,
+    handleAddNode,
+    handleRenameNode,
+    handleDeleteNode,
     loadCategories,
     setEditingCategory
   };
