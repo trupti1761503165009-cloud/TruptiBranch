@@ -1073,7 +1073,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
             {/* Document Details using ms-Grid */}
             <div className="ms-Grid">
-              <div className="ms-Grid-row">
+              {/* <div className="ms-Grid-row">
                 <div className="ms-Grid-col ms-sm12">
                   <div className="form-section-header">Document Information</div>
                 </div>
@@ -1135,7 +1135,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                     <div className="detail-value">{viewingDocument.lastModified}</div>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Word Document Embed */}
               {viewingDocument.fileRef && getWordEmbedUrl(viewingDocument) && (

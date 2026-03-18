@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import * as React from 'react';
 import type { Template } from '../../../types';
 import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';

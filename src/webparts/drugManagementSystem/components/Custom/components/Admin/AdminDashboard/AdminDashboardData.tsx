@@ -210,7 +210,7 @@ export function AdminDashboardData() {
           viewingDocument.id
         );
         setIsEditing(false);
-        // await loadData();
+        await loadData();
         setIsViewModalOpen(false);
         setSuccessMessage('Document updated successfully.');
       } catch (error) {

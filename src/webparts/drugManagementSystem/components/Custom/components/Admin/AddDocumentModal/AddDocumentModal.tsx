@@ -85,7 +85,7 @@ export const AddDocumentModal: React.FC<AddDocumentModalProps> = ({ isOpen, onCl
                 <div className="ms-Grid-row">
                   <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                     <div className="form-group">
-                      <label className="form-label">Select Drug *</label>
+                      <label className="form-label">Select Drug</label>
                       <ReactDropdown
                         name="drug"
                         options={drugOptions}
@@ -103,7 +103,7 @@ export const AddDocumentModal: React.FC<AddDocumentModalProps> = ({ isOpen, onCl
                   </div>
                   <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                     <div className="form-group">
-                      <label className="form-label">Select Country *</label>
+                      <label className="form-label">Select Country</label>
                       <ReactDropdown
                         name="country"
                         options={countryOptions}
@@ -125,7 +125,7 @@ export const AddDocumentModal: React.FC<AddDocumentModalProps> = ({ isOpen, onCl
 
             {step === 2 && (
               <div className="form-group">
-                <label className="form-label">Select Template *</label>
+                <label className="form-label">Select Template</label>
                 <ReactDropdown
                   name="template"
                   options={templateOptions}
@@ -149,7 +149,7 @@ export const AddDocumentModal: React.FC<AddDocumentModalProps> = ({ isOpen, onCl
 
             {step === 3 && (
               <div className="form-group">
-                <label className="form-label">Select Approver *</label>
+                <label className="form-label">Select Approver</label>
                 <ReactDropdown
                   name="approver"
                   options={approverOptions}
@@ -165,7 +165,7 @@ export const AddDocumentModal: React.FC<AddDocumentModalProps> = ({ isOpen, onCl
                 {errors.approverId && <div className="field-error">{errors.approverId}</div>}
 
                 <div className="form-group" style={{ marginTop: 16 }}>
-                  <label className="form-label">Comments (Optional)</label>
+                  <label className="form-label">Comments</label>
                   {formData.comments.map((comment, index) => (
                     <div key={`comment-${index}`} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                       <TextField

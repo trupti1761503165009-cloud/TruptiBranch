@@ -163,3 +163,4 @@ obj
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+*.scss.d.ts

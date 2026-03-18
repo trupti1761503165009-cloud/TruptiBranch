@@ -284,7 +284,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
   // Auto-bind folder placement from selected Template mapping type
   React.useEffect(() => {
-    const selectedTemplate = templates.find(t => t.id === formData.templateId);
+    const selectedTemplate = templates.find(t => t.id == formData.templateId);
     if (!selectedTemplate || !selectedTemplate.mappedFolderId) {
       setFormData(prev => {
         if (!prev.moduleId && !prev.submoduleId) return prev;
