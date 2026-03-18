@@ -146,7 +146,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
     const action = canEditInline ? 'edit' : 'view';
 
     // Use WopiFrame.aspx with server-relative file URL (most reliable for SP Online)
-    const fileRef = doc.fileRef || doc.sharePointUrl || '';
+    // Prefer sharePointUrl (explicitly stored on create) over fileRef which may be a folder path
+    const fileRef = doc.sharePointUrl || doc.fileRef || '';
     if (fileRef) {
       const serverRelative = fileRef.startsWith('http')
         ? new URL(fileRef).pathname

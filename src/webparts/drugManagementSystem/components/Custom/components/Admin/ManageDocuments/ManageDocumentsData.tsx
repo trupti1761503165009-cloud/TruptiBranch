@@ -381,8 +381,10 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           'UniqueId'
         ])
         .RowLimit(5000, true)
-        .Query();
-      docsQuery.OrderByDesc('Modified');
+        .Query()
+        .Where()
+        .NumberField('FSObjType').EqualTo(0)
+        .OrderByDesc('Modified');
       const tmfQuery = new CamlBuilder()
         .View(['ID', 'Title', 'FolderId', 'ParentFolderId', 'SortOrder'])
         .RowLimit(5000, true)
