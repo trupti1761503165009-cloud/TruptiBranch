@@ -25,16 +25,17 @@ const ADOBE_CONN_REF = 'shared_adobesign';
 const OUTLOOK_CONN_REF = 'shared_office365';
 
 function buildManifest(flowName, flowGuid, connectorRefs) {
+  const now = new Date().toISOString();
   const resources = {
     [flowGuid]: {
       type: 'Microsoft.Flow/flows',
       id: flowGuid,
-      name: flowName,
+      name: flowGuid,
       order: 1,
       displayName: flowName,
       description: '',
-      creator: 'DMS Automation',
-      suggestedCreationPrecedence: 'CreateNew',
+      creator: 'N/A',
+      suggestedCreationPrecedence: 'New',
       configureAll: false
     }
   };
@@ -42,11 +43,12 @@ function buildManifest(flowName, flowGuid, connectorRefs) {
   connectorRefs.forEach((ref, idx) => {
     resources[ref.id] = {
       type: 'Microsoft.PowerApps/apis/connections',
-      id: ref.id,
-      name: ref.displayName,
+      id: `/providers/Microsoft.PowerApps/apis/${ref.id}`,
+      name: ref.id,
       order: idx + 2,
       displayName: ref.displayName,
       description: ref.description,
+      suggestedCreationPrecedence: 'Existing',
       configureAll: false
     };
   });
@@ -54,12 +56,12 @@ function buildManifest(flowName, flowGuid, connectorRefs) {
   return {
     packageSchemaVersion: '1.0',
     packageTelemetryId: newGuid(),
-    publisher: 'DMS Automation',
+    publisher: 'N/A',
     publisherVersion: '1.0.0.0',
     packageName: flowName,
     packageDescription: '',
-    createdTime: new Date().toISOString(),
-    lastModifiedTime: new Date().toISOString(),
+    createdTime: now,
+    lastModifiedTime: now,
     resources
   };
 }
@@ -661,14 +663,37 @@ const flows = [
   }
 ];
 
+function buildConnectionReferences(connectors) {
+  const refs = {};
+  connectors.forEach(ref => {
+    refs[ref.id] = {
+      connectionName: ref.id,
+      source: 'NotSpecified',
+      id: `/providers/Microsoft.PowerApps/apis/${ref.id}`,
+      tier: 'Standard',
+      apiTier: 'Standard',
+      isCustomApiConnection: false
+    };
+  });
+  return refs;
+}
+
 async function generateZip(flow) {
   const zip = new JSZip();
 
   const manifest = buildManifest(flow.name, flow.guid, flow.connectors);
   zip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
+  const wrappedDefinition = {
+    properties: {
+      connectionReferences: buildConnectionReferences(flow.connectors),
+      definition: flow.definition,
+      parameters: {}
+    }
+  };
+
   const definitionPath = `Microsoft.Flow/flows/${flow.guid}/definition.json`;
-  zip.file(definitionPath, JSON.stringify(flow.definition, null, 2));
+  zip.file(definitionPath, JSON.stringify(wrappedDefinition, null, 2));
 
   const content = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   const outPath = path.join(OUTPUT_DIR, flow.zipName);
