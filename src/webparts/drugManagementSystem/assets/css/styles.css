@@ -591,7 +591,7 @@ footer .cb-space {
     box-shadow: 0px 4px 10px rgb(166 166 166 / 55%);
     border-radius: 5px;
     background: #fff;
-    margin: 25px 15px 80px 15px;
+    /* margin: 25px 15px 80px 15px; */
     min-height: calc(100vh - 160px);
 }
 

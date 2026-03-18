@@ -445,7 +445,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         return;
       }
 
-      const selTemplate = templates.find(t => t.id === formData.templateId);
+      const selTemplate = templates.find(t => t.id == formData.templateId);
       if (!selTemplate?.fileRef) {
         setErrors({ templateId: 'Template file not found. Please re-upload the template.' });
         setIsSubmitting(false);
@@ -475,7 +475,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       const ext = extMatch ? extMatch[0] : '.docx';
       // REQ 6: Use Drug Name only for folder path — no date/time in naming
       const targetFileName = `${sanitize(artifactName)}${ext}`;
-      const drugName = drugs.find(d => d.id === formData.drugId)?.name || 'Drug';
+      const drugName = drugs.find(d => d.id == formData.drugId)?.name || 'Drug';
 
       const mappingType = selTemplate.mappingType || 'None';
       let ctdSegments: string[] = [];
@@ -485,7 +485,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
       if (mappingType === 'GMP') {
         // GMP: 1-level folder = GMP model name
-        const gmpModel = gmpModels.find(g => g.id === formData.moduleId);
+        const gmpModel = gmpModels.find(g => g.id == formData.moduleId);
         const modelName = gmpModel?.name || formData.moduleId || 'GMP';
         ctdSegments = [modelName];
         ctdFolderValue = modelName;
