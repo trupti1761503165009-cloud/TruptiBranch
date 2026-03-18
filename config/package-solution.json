@@ -49,6 +49,7 @@
             "Mappings.xml",
             "SignedDocuments.xml",
             "Templates.xml",
+            "TMFFolders.xml",
             "UserRolesPermissions.xml",
             "WorkflowsApprovals.xml"
           ]
