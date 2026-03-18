@@ -158,7 +158,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
                    'MappedTMFFolder', 'MappedTMFFolderId'])
             .RowLimit(5000, true)
             .Query();
-          return await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
+          const items = await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
+          // Only show Active, non-deleted templates in the Add Document dropdown
+          return (items || []).filter((item: any) =>
+            !item.IsDeleted && (item.Status === 'Active' || !item.Status)
+          );
         } catch (e) {
           console.error('Templates CAML load failed:', e);
           return [];

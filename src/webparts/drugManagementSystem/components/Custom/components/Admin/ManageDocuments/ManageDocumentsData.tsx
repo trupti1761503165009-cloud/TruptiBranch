@@ -251,16 +251,37 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
 
   const stripExt = (s: string) => s.replace(/\.[^/.]+$/, '') || s;
 
+  // Strip all trailing extensions — handles double extension like .docx_20260317135114.docx
+  const stripAllExts = (s: string): string => {
+    if (!s) return s;
+    const parts = s.split('.');
+    if (parts.length <= 1) return s;
+    // Keep stripping while the last segment looks like an extension or a timestamp
+    let result = s;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const idx = result.lastIndexOf('.');
+      if (idx <= 0) break;
+      const ext = result.substring(idx + 1);
+      // Stop if the remaining name before the dot would be empty
+      if (!result.substring(0, idx)) break;
+      result = result.substring(0, idx);
+      // Stop when we've removed a known doc extension
+      if (/^(docx?|xlsx?|pptx?|pdf|txt|rtf|csv)$/i.test(ext)) break;
+    }
+    return result || s;
+  };
+
   const mapDocumentItem = (item: any): Document => {
-    // Priority: SharePointURL.Description (actual artifact/template name set at creation)
-    //           → item.Title (if different from file name)
-    //           → stripExt(FileLeafRef) (last resort)
-    const urlDesc = parseUrlDescription(item.SharePointURL);
-    const resolvedName = urlDesc && urlDesc.trim()
-      ? urlDesc.trim()
-      : (item.Title && item.Title !== item.FileLeafRef && item.Title !== stripExt(item.FileLeafRef || ''))
-        ? item.Title
-        : stripExt(item.FileLeafRef || item.Title || 'Untitled');
+    // Name priority:
+    // 1. item.Title — if it does NOT look like a folder/timestamp name
+    //    (Title set to artifactName at creation for new docs)
+    // 2. FileLeafRef stripped of all extensions (actual file name)
+    const fileLeafStripped = stripAllExts(item.FileLeafRef || '');
+    const titleLooks = (v: string) => v && v !== item.FileLeafRef && v !== fileLeafStripped;
+    const resolvedName = titleLooks(item.Title)
+      ? item.Title
+      : (fileLeafStripped || stripExt(item.Title || 'Untitled'));
 
     return ({
     id: item.ID,
@@ -290,7 +311,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     createdDate: item.Created ? new Date(item.Created).toISOString().split('T')[0] : '',
     sentBy: parseLookupText(item.SentBy),
     sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
-    isDeleted: !!item.IsDeleted
+    isDeleted: !!item.IsDeleted,
+    uniqueId: item.UniqueId ? String(item.UniqueId).replace(/^\{|\}$/g, '') : undefined
   });
   };
 
@@ -359,7 +381,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           'DrugId',
           'Template',
           'TemplateId',
-          'IsDeleted'
+          'IsDeleted',
+          'UniqueId'
         ])
         .RowLimit(5000, true)
         .Query();

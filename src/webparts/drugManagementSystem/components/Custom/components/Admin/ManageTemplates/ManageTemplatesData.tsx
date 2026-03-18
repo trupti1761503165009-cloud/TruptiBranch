@@ -79,7 +79,8 @@ export function ManageTemplatesData() {
           'Category', 'CategoryId', 'Country', 'CountryId', 'MappingType',
           'MappedCTDFolder', 'MappedCTDFolderId', 'eCTDSection', 'eCTDSectionId',
           'eCTDSubsection', 'IsEctdMapped', 'MappedGMPModel', 'MappedGMPModelId',
-          'MappedTMFFolder', 'MappedTMFFolderId', 'ServerRedirectedEmbedUrl', 'Version'
+          'MappedTMFFolder', 'MappedTMFFolderId', 'ServerRedirectedEmbedUrl', 'Version',
+          'IsDeleted'
         ])
         .RowLimit(5000, true)
         .Query();
@@ -110,7 +111,8 @@ export function ManageTemplatesData() {
           ectdSectionId: Number(item.eCTDSectionId || parseLookupId(item.eCTDSection)) || 0,
           mappedGMPModelId: Number(item.MappedGMPModelId || parseLookupId(item.MappedGMPModel)) || 0,
           mappedTMFFolderId: Number(item.MappedTMFFolderId || parseLookupId(item.MappedTMFFolder)) || 0,
-          serverRedirectedEmbedUrl: item.ServerRedirectedEmbedUrl || ''
+          serverRedirectedEmbedUrl: item.ServerRedirectedEmbedUrl || '',
+          isDeleted: !!item.IsDeleted
         }))
       );
       setErrorMessage('');
@@ -176,7 +178,8 @@ export function ManageTemplatesData() {
   }, [provider]);
 
   useEffect(() => {
-    let filtered = [...templates];
+    // Always exclude soft-deleted templates from the grid
+    let filtered = templates.filter(t => !t.isDeleted);
 
     if (searchTerm.trim()) {
       const s = searchTerm.trim().toLowerCase();
@@ -216,12 +219,15 @@ export function ManageTemplatesData() {
     if (!provider || deleteIds.length === 0) return;
     setIsLoading(true);
     try {
-      await provider.DeleteItemsWithBatch(ListNames.Templates, deleteIds.map(id => ({ Id: id })));
+      // Soft delete: set IsDeleted = true (preserves file; removes from grid and dropdowns)
+      await Promise.all(
+        deleteIds.map(id => provider.updateItem({ IsDeleted: true }, ListNames.Templates, id))
+      );
       await loadTemplates();
       setSelectedIds([]);
       setDeleteIds([]);
       setIsDeleteDialogOpen(false);
-      setSuccessMessage('Templates deleted successfully.');
+      setSuccessMessage('Template(s) removed successfully.');
     } catch (error) {
       console.error('Failed to delete templates:', error);
       setErrorMessage('Unable to delete templates. Please try again.');
