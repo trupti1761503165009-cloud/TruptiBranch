@@ -1,0 +1,157 @@
+Failed to load resource: the server responded with a status of 404 ()Understand this error
+graph.microsoft.com/v1.0/users/Admin@redgreens.in/photo/$value:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+drug-management-system-web-part.js:155733  POST https://redgreens.sharepoint.com/sites/DMS/_api/web/getFileByServerRelativePath(decodedUrl='%2Fsites%2FDMS%2FDMSDocuments%2FDrug1%2FTemplate12.docx')/checkin(comment='',checkintype=1) 423 (Locked)
+retry @ drug-management-system-web-part.js:155733
+(anonymous) @ drug-management-system-web-part.js:155755
+(anonymous) @ drug-management-system-web-part.js:154808
+(anonymous) @ drug-management-system-web-part.js:155196
+(anonymous) @ drug-management-system-web-part.js:156646
+setTimeout
+execute @ drug-management-system-web-part.js:156617
+start @ drug-management-system-web-part.js:155230
+post @ drug-management-system-web-part.js:156474
+op @ drug-management-system-web-part.js:156486
+spPost @ drug-management-system-web-part.js:162923
+checkin @ drug-management-system-web-part.js:160819
+eval @ Service.ts:747
+step @ 48378:51
+eval @ 48378:32
+fulfilled @ 48378:23
+Promise.then
+step @ 48378:25
+eval @ 48378:26
+__awaiter @ 48378:22
+Service.checkInFile @ Service.ts:740
+eval @ ManageDocumentsData.tsx:809
+step @ 60098:57
+eval @ 60098:38
+eval @ 60098:32
+__awaiter @ 60098:28
+handleSubmitForReview @ ManageDocumentsData.tsx:793
+onClickOfYes @ ManageDocuments.tsx:1671
+onClick @ CustomModal.tsx:153
+BaseButton._this._onClick @ drug-management-system-web-part.js:6940
+Ve @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+wa @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ea @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ue @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ta @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Zt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Xt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Pe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Yt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102Understand this error
+ManageDocumentsData.tsx:813 [handleSubmitForReview] checkInFile skipped (non-fatal): FILE_LOCKED_BY:Admin
+eval @ ManageDocumentsData.tsx:813
+step @ 60098:57
+eval @ 60098:38
+rejected @ 60098:30
+Promise.then
+step @ 60098:31
+eval @ 60098:32
+__awaiter @ 60098:28
+handleSubmitForReview @ ManageDocumentsData.tsx:793
+onClickOfYes @ ManageDocuments.tsx:1671
+onClick @ CustomModal.tsx:153
+BaseButton._this._onClick @ drug-management-system-web-part.js:6940
+Ve @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+wa @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ea @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ue @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ta @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Zt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Xt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Pe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Yt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102Understand this warning
+drug-management-system-web-part.js:155733  POST https://redgreens.sharepoint.com/sites/DMS/_api/web/lists/getByTitle('DMS%20Documents')/items(26) 423 (Locked)
+retry @ drug-management-system-web-part.js:155733
+(anonymous) @ drug-management-system-web-part.js:155755
+(anonymous) @ drug-management-system-web-part.js:154808
+(anonymous) @ drug-management-system-web-part.js:155196
+(anonymous) @ drug-management-system-web-part.js:156646
+setTimeout
+execute @ drug-management-system-web-part.js:156617
+start @ drug-management-system-web-part.js:155230
+post @ drug-management-system-web-part.js:156474
+op @ drug-management-system-web-part.js:156486
+spPost @ drug-management-system-web-part.js:162923
+update @ drug-management-system-web-part.js:162100
+eval @ Service.ts:201
+step @ 48378:51
+eval @ 48378:32
+eval @ 48378:26
+__awaiter @ 48378:22
+Service.updateItem @ Service.ts:199
+eval @ ManageDocumentsData.tsx:824
+step @ 60098:57
+eval @ 60098:38
+rejected @ 60098:30
+Promise.then
+step @ 60098:31
+eval @ 60098:32
+__awaiter @ 60098:28
+handleSubmitForReview @ ManageDocumentsData.tsx:793
+onClickOfYes @ ManageDocuments.tsx:1671
+onClick @ CustomModal.tsx:153
+BaseButton._this._onClick @ drug-management-system-web-part.js:6940
+Ve @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+wa @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ea @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ue @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ta @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Zt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Xt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Pe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Yt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102Understand this error
+Service.ts:204 Error in updating item in -DMS Documents
+ManageDocumentsData.tsx:837 Failed to submit document: HttpRequestError: Error making HttpClient request in queryable [423]  ::> {"odata.error":{"code":"-2147018894, Microsoft.SharePoint.SPException","message":{"lang":"en-US","value":"The file \"https://redgreens.sharepoint.com/sites/DMS/DMSDocuments/Drug1/Template12.docx\" is locked for shared use by admin@redgreens.in."}}}
+    at HttpRequestError.init (drug-management-system-web-part.js:156299:16)
+    at async Proxy.errorCheck (drug-management-system-web-part.js:156248:15)
+    at async drug-management-system-web-part.js:156649:50
+eval @ ManageDocumentsData.tsx:837
+step @ 60098:57
+eval @ 60098:38
+rejected @ 60098:30
+Promise.then
+step @ 60098:31
+rejected @ 60098:30
+Promise.then
+step @ 60098:31
+eval @ 60098:32
+__awaiter @ 60098:28
+handleSubmitForReview @ ManageDocumentsData.tsx:793
+onClickOfYes @ ManageDocuments.tsx:1671
+onClick @ CustomModal.tsx:153
+BaseButton._this._onClick @ drug-management-system-web-part.js:6940
+Ve @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Qe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+wa @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ea @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ue @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Ta @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Zt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Xt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+(anonymous) @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:100
+Ki @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Pe @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102
+Yt @ sp-pages-assembly_en-us_c04d45769b9cb813ae65c54727c9e9f1.js:102Understand this error
