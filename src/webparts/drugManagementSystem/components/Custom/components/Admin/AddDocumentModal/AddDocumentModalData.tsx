@@ -547,7 +547,6 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       const absoluteFileUrl = `${context.pageContext.web.absoluteUrl}${targetUrl}`;
       await provider.updateItem(
         {
-          Title: artifactName,
           CategoryId: formData.categoryId || null,
           TemplateId: formData.templateId || null,
           DrugId: formData.drugId || null,
@@ -556,8 +555,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           CTDModule: ctdModuleValue,
           Submodule: submoduleValue,
           Status: 'Draft',
-          IsEmailSend: true,
-          Version: 1,
+          IsEmailSend: '1',
+          DocumentVersion: 1,
           ApproverId: formData.approverId || null,
           Comments: commentsPayload.length > 0 ? JSON.stringify(commentsPayload) : '',
           SharePointURL: { Url: absoluteFileUrl, Description: artifactName }
