@@ -57,8 +57,16 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         (userEmail !== '' && String(d.author || '').toLowerCase().includes(userEmail))
       );
     } else if (activeTab === 'assignedToMe') {
+      const currentLoginName = String((currentUser as any)?.loginName || '').toLowerCase();
       list = list.filter(d =>
+        // 1. SharePoint user ID match (most reliable)
         (currentUserId > 0 && d.approverId === currentUserId) ||
+        // 2. Email extracted from person field's LoginName claim
+        (userEmail !== '' && d.approverLoginName === userEmail) ||
+        // 3. loginName claim match (e.g. "i:0#.f|membership|admin@tenant.com")
+        (currentLoginName !== '' && d.approverLoginName !== '' &&
+          (currentLoginName.endsWith(d.approverLoginName || '') || d.approverLoginName === currentLoginName)) ||
+        // 4. Display name includes email (fallback for plain-text name fields)
         (userEmail !== '' && String(d.approver || '').toLowerCase().includes(userEmail))
       );
     }
@@ -296,6 +304,13 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     reviewerId: parseLookupId(item.ReviewerId ?? item.Reviewer),
     approver: parseLookupText(item.Approver),
     approverId: parseLookupId(item.ApproverId ?? item.Approver),
+    // Extract email from LoginName (e.g. "i:0#.f|membership|admin@tenant.com" → "admin@tenant.com")
+    approverLoginName: (() => {
+      const raw = item.Approver?.LoginName || item.Approver?.EMail || item.Approver?.Email || '';
+      if (!raw) return '';
+      const parts = raw.split('|');
+      return parts[parts.length - 1]?.toLowerCase() || '';
+    })(),
     comments: parseComments(item.Comments),
     ctdFolder: item.CTDFolder || '',
     ctdModule: item.CTDModule || '',

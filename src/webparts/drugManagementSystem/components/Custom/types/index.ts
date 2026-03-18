@@ -61,6 +61,7 @@ export interface Document {
   reviewerId?: number;
   approver?: string;
   approverId?: number;
+  approverLoginName?: string;
   comments?: Comment[];
   ctdFolder?: string;
   ctdModule?: string;
