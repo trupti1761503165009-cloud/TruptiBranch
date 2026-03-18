@@ -1,0 +1,159 @@
+eSignature Workflow & Document Mapping Requirements
+1. eSignature Workflow Logic
+
+I have implemented a signature workflow for documents, but I need clarity on the correct approach.
+
+Questions:
+
+Should the eSignature process trigger when:
+
+Document status = “Signature Pending”?
+
+Or should it be handled differently?
+
+Please define the correct workflow scenario:
+
+When should the eSignature process start?
+
+What conditions should trigger it?
+
+2. eSignature List Structure
+
+I have already created an eSignature SharePoint list.
+
+Requirement:
+
+Please review and confirm:
+
+Is the list structure correct for handling signature workflow?
+
+Are additional fields required (e.g., Document ID, Status, Signer, Signed Date, etc.)?
+
+3. Signed Document Storage & Mapping
+
+After signing:
+
+The signed document is stored in a library.
+
+Concern:
+
+How do we identify and map the document to:
+
+GMP
+
+TMF
+
+eCTD
+
+Requirement:
+
+Define:
+
+How to track document type (GMP/TMF/eCTD)
+
+How to store signed documents in the correct folder structure
+
+4. Folder Structure & Data Mapping
+
+I am unsure how documents should be placed in folders.
+
+Requirement:
+
+Based on Project Documents (Excel data):
+
+Explain how:
+
+eCTD Modules & Subsections are selected
+
+TMF categories are selected
+
+GMP categories/templates are selected
+
+5. Document Creation Flow
+Clarification Required:
+
+When creating a document:
+
+User selects:
+
+eCTD Module / Subsection OR
+
+TMF Category OR
+
+GMP Category
+
+Then selects a Template
+
+Document is created
+
+Questions:
+
+Should the folder structure be created immediately at document creation time?
+OR
+
+Should the document be placed in the folder only after it is finalized/signed?
+
+6. Expected End-to-End Scenario (Need Clarification)
+
+Please define a proper flow like:
+
+Select Category (GMP / TMF / eCTD)
+
+Select Template
+
+Create Document
+
+Save (Draft)
+
+Submit → Approver
+
+Approve → Signature Pending
+
+Signed → Final Document Stored in Folder
+
+7. Code Review Requirement
+
+Based on my current implementation:
+
+Is everything aligned correctly with the expected workflow?
+
+Are there any missing steps or incorrect logic?
+
+8. Comments & Signed Documents Handling
+Current Concern:
+
+After signing:
+
+Two files are being created:
+
+Signed Document
+
+Comments Document
+
+Requirement:
+
+Confirm correct behavior:
+
+Only the Signed Document should be stored in the final folder
+
+The Comments file should NOT be stored in the final document library
+
+9. Sample Scenarios Needed
+
+Please provide clear sample scenarios for:
+
+GMP document flow
+
+TMF document flow
+
+eCTD document flow
+
+Including:
+
+Selection process
+
+Template usage
+
+Folder creation
+
+Final storage location
