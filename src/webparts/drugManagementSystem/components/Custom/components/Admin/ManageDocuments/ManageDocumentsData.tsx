@@ -662,6 +662,14 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     );
   };
 
+  /**
+   * Q3/Q4/Q8/Q9: Create signed document copy
+   * - Q8: Only ONE file saved — the signed/final PDF (no "Commented" copy)
+   * - Q3/Q4: Saved in SignedDocuments/[DocumentType]/[DrugName]/[CTDFolder]/
+   *   • eCTD: SignedDocuments/eCTD/[DrugName]/Module X/[filename]-Signed.ext
+   *   • TMF:  SignedDocuments/TMF/[DrugName]/Zone X/[filename]-Signed.ext
+   *   • GMP:  SignedDocuments/GMP/[DrugName]/[ModelName]/[filename]-Signed.ext
+   */
   const createSignedCopies = async (doc: Document, signatureNote: string) => {
     if (!provider || !context) return;
     const fileRef = doc.fileRef || doc.sharePointUrl;
@@ -675,51 +683,68 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     const ext = dotIndex > -1 ? baseName.substring(dotIndex) : '';
 
     const buffer = await provider.getFileContents(serverRelative);
-    const commentedName = `${base}-Commented${ext}`;
-    const finalName = `${base}-Final-Signed${ext}`;
+
+    // Q8: Only ONE signed file — no "Commented" copy
+    const signedFileName = `${base}-Signed${ext}`;
+
+    // Q3/Q4: Resolve document type for folder structure
+    const documentType = doc.ctdFolder
+      ? (doc.ctdFolder.startsWith('Zone') || doc.ctdFolder.startsWith('TMF') ? 'TMF'
+        : doc.ctdFolder.startsWith('GMP') || doc.ctdModule?.startsWith('GMP') ? 'GMP'
+        : 'eCTD')
+      : 'eCTD';
+
+    // Q4/Q9: Build type-specific folder segments
+    // eCTD: [Module]/[SubSection]  |  TMF: [Zone]/[Section]  |  GMP: [ModelName]
+    const drugFolder = doc.drugName
+      ? doc.drugName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 50)
+      : 'Unknown Drug';
+    const moduleSegment = doc.ctdModule || doc.ctdFolder || 'Uncategorized';
+    const submoduleSegment = doc.submodule || '';
 
     const serverRelativeUrl = String(context.pageContext.web.serverRelativeUrl || '');
     const libraryRoot = `${serverRelativeUrl.replace(/\/$/, '')}/${ListNames.SignedDocuments}`;
-    const moduleSegment = doc.ctdModule || doc.ctdFolder || 'Uncategorized';
-    const submoduleSegment = doc.submodule || '';
-    const targetFolder = await ensureFolderPath(libraryRoot, [moduleSegment, submoduleSegment]);
 
-    await provider.uploadFiles(`${targetFolder}/${commentedName}`, buffer, 'application/octet-stream');
-    await provider.uploadFiles(`${targetFolder}/${finalName}`, buffer, 'application/octet-stream');
+    // Folder path: SignedDocuments/[Type]/[DrugName]/[Module]/[Submodule]
+    const folderSegments = [documentType, drugFolder, moduleSegment, submoduleSegment].filter(Boolean);
+    const targetFolder = await ensureFolderPath(libraryRoot, folderSegments);
 
-    const updateMetadata = async (fileName: string, status: string) => {
-      const camlQuery = new CamlBuilder()
-        .View(['ID', 'FileLeafRef', 'FileRef', 'SharePointURL'])
-        .RowLimit(1, true)
-        .Query()
-        .Where()
-        .TextField('FileLeafRef')
-        .EqualTo(fileName);
-      const items = await provider.getItemsByCAMLQuery(ListNames.SignedDocuments, camlQuery.ToString());
-      if (items && items[0]) {
-        const fileUrl = `${context.pageContext.web.absoluteUrl}${items[0].FileRef || ''}`;
-        await provider.updateItem(
-          {
-            Title: doc.name,
-            CategoryId: doc.categoryId,
-            TemplateId: doc.templateId,
-            CTDFolder: doc.ctdFolder,
-            CTDModule: doc.ctdModule,
-            Submodule: doc.submodule,
-            Status: status,
-            ApproverId: doc.approverId,
-            IsEmailSend: true,
-            Comments: JSON.stringify(doc.comments || []),
-            SharePointURL: { Url: fileUrl, Description: fileName }
-          },
-          ListNames.SignedDocuments,
-          items[0].ID
-        );
-      }
-    };
+    // Upload the single signed copy
+    await provider.uploadFiles(`${targetFolder}/${signedFileName}`, buffer, 'application/octet-stream');
 
-    await updateMetadata(commentedName, 'Signed');
-    await updateMetadata(finalName, 'Final');
+    // Update metadata on the uploaded file
+    const camlQuery = new CamlBuilder()
+      .View(['ID', 'FileLeafRef', 'FileRef', 'SharePointURL'])
+      .RowLimit(1, true)
+      .Query()
+      .Where()
+      .TextField('FileLeafRef')
+      .EqualTo(signedFileName);
+    const items = await provider.getItemsByCAMLQuery(ListNames.SignedDocuments, camlQuery.ToString());
+    if (items && items[0]) {
+      const fileUrl = `${context.pageContext.web.absoluteUrl}${items[0].FileRef || ''}`;
+      await provider.updateItem(
+        {
+          Title: doc.name,
+          CategoryId: doc.categoryId,
+          TemplateId: doc.templateId,
+          CTDFolder: doc.ctdFolder,
+          CTDModule: doc.ctdModule,
+          Submodule: doc.submodule,
+          DocumentType: documentType,
+          DrugId: doc.drugId,
+          Status: 'Final',
+          ApproverId: doc.approverId,
+          IsEmailSend: true,
+          Comments: JSON.stringify(doc.comments || []),
+          SharePointURL: { Url: fileUrl, Description: signedFileName },
+          SignedBy: signatureNote,
+          SignedDate: new Date().toISOString()
+        },
+        ListNames.SignedDocuments,
+        items[0].ID
+      );
+    }
   };
 
   const handleSubmitForReview = async () => {
@@ -757,33 +782,48 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     if (!viewingDocument || !signature) return;
     setIsLoading(true);
     try {
+      // Step 1: Mark document as Signed in DMSDocuments
       await updateSignatureStatus(viewingDocument, 'Signed', signature);
 
-      // REQ 5: Auto-create eSignature entry when document reaches Signed status
+      // Step 2: Update the EXISTING eSignature entry (created in initiateAdobeSign)
+      // Do NOT create a new one — avoid duplicates (Q8)
       if (provider) {
         try {
-          const eSignPayload = {
-            Title: viewingDocument.name,
-            FilePath: viewingDocument.fileRef || viewingDocument.sharePointUrl,
-            FileName: viewingDocument.fileName || (viewingDocument.fileRef || '').split('/').pop() || viewingDocument.name,
-            SignerEmail: viewingDocument.reviewer || viewingDocument.approver || '',
-            ApproverEmail: viewingDocument.approver || '',
-            SignatureStatus: 'Signed',
-            DocumentId: viewingDocument.id
-          };
-          await provider.createItem(eSignPayload, ListNames.eSignature);
+          const camlQuery = new CamlBuilder()
+            .View(['ID', 'SignatureStatus'])
+            .RowLimit(1, true)
+            .Query()
+            .Where()
+            .NumberField('DocumentId')
+            .EqualTo(viewingDocument.id);
+          const eSignItems = await provider.getItemsByCAMLQuery(ListNames.eSignature, camlQuery.ToString());
+          if (eSignItems && eSignItems[0]) {
+            await provider.updateItem(
+              {
+                SignatureStatus: 'Signed',
+                SignatureCompletedOn: new Date().toISOString(),
+                SignedBy: signature
+              },
+              ListNames.eSignature,
+              eSignItems[0].ID
+            );
+          }
         } catch (eSignError) {
-          console.warn('Failed to create eSignature entry (non-fatal):', eSignError);
+          console.warn('Failed to update eSignature entry (non-fatal):', eSignError);
         }
       }
 
+      // Step 3: Q8 — Save ONLY the signed document (not a comments copy)
       await createSignedCopies(viewingDocument, signature);
+
+      // Step 4: Move to Final status
       await updateSignatureStatus(viewingDocument, 'Final', signature);
+
       await loadData();
       setIsSignatureModalOpen(false);
       setSignature('');
       setIsDocPanelOpen(false);
-      setSuccessMessage('Document signed and finalized successfully.');
+      setSuccessMessage('Document signed and finalized successfully. The signed copy has been saved.');
     } catch (error) {
       console.error('Failed to finalize signature:', error);
       setErrorMessage('Unable to finalize document signature.');
@@ -907,32 +947,65 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     }
   };
 
+  /**
+   * Q1/Q2/Q5: eSignature Workflow
+   * Triggered when: user clicks "Initiate Adobe Sign" on an Approved document.
+   * Creates eSignature list entry → Power Automate Flow 1 picks it up
+   * → Adobe Sign sends agreement to Signer and Approver
+   * → When all sign, Power Automate Flow 2 saves signed PDF to SignedDocuments library
+   * → DMS polls or webhook updates document status to Signed → Final
+   *
+   * Q2: eSignature List Fields:
+   *   Title, FilePath (server-relative), FileName (with ext), SignerEmail, ApproverEmail,
+   *   SignatureStatus ('Pending' triggers PA Flow 1), DocumentId, DocumentType (GMP/TMF/eCTD),
+   *   CTDFolder, DrugName, DrugId
+   */
   const initiateAdobeSign = async (doc: Document) => {
     if (!provider || !doc) return;
     setIsLoading(true);
     try {
-      const payload = {
+      // Resolve server-relative file path
+      const fileRef = doc.fileRef || doc.sharePointUrl || '';
+      const serverRelative = fileRef.startsWith('http')
+        ? new URL(fileRef).pathname
+        : fileRef;
+      const fileName = doc.fileName || serverRelative.split('/').pop() || `${doc.name}.docx`;
+
+      // Q2: Full eSignature list payload with all required fields
+      const eSignPayload = {
         Title: doc.name,
-        FilePath: doc.fileRef || doc.sharePointUrl,
-        FileName: doc.fileName || (doc.fileRef || doc.sharePointUrl || '').split('/').pop() || doc.name,
-        SignerEmail: doc.reviewer || '', 
-        ApproverEmail: doc.approver || '', 
-        SignatureStatus: 'Draft' // Power Automate Flow A will pick this up and change to 'Sent'
+        FilePath: serverRelative,            // server-relative URL — PA Flow uses this to get file content
+        FileName: fileName,                  // actual filename with extension
+        SignerEmail: doc.reviewer || '',     // primary signer (reviewer)
+        ApproverEmail: doc.approver || '',   // approver who approved the document
+        SignatureStatus: 'Pending',          // 'Pending' triggers Power Automate Flow 1
+        DocumentId: doc.id,                  // SP item ID in DMSDocuments list
+        DocumentType: doc.ctdFolder          // resolves mapping type context
+          ? (doc.ctdFolder.startsWith('Zone') || doc.ctdFolder.startsWith('TMF') ? 'TMF'
+            : doc.ctdFolder.startsWith('GMP') || doc.ctdModule?.startsWith('GMP') ? 'GMP'
+            : 'eCTD')
+          : 'eCTD',
+        CTDFolder: doc.ctdFolder || '',      // folder path for signed doc storage
+        CTDModule: doc.ctdModule || '',
+        DrugName: doc.drugName || '',
+        DrugId: doc.drugId || null,
+        InitiatedBy: currentUser?.displayName || '',
+        InitiatedDate: new Date().toISOString()
       };
 
-      await provider.createItem(payload, ListNames.eSignature);
-      
-      // Update original document status to reflect e-signature initiation
+      await provider.createItem(eSignPayload, ListNames.eSignature);
+
+      // Update original document status → 'Pending for Signature'
       const auditLog = {
         id: (doc.comments?.length || 0) + 1,
         author: 'System',
-        text: `Adobe Sign process initiated by ${currentUser?.displayName || 'Unknown'}`,
+        text: `Adobe Sign process initiated by ${currentUser?.displayName || 'Unknown'}. Awaiting signatures from: ${eSignPayload.SignerEmail || '(not set)'}.`,
         timestamp: new Date().toISOString()
       };
       const nextComments = [...(doc.comments || []), auditLog];
 
       await provider.updateItem(
-        { 
+        {
           Status: 'Pending for Signature',
           IsEmailSend: true,
           Comments: JSON.stringify(nextComments)
@@ -943,7 +1016,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
 
       await loadData();
       setIsDocPanelOpen(false);
-      setSuccessMessage('Adobe Sign process initiated successfully.');
+      setSuccessMessage('Adobe Sign process initiated. Signers will receive an email shortly.');
     } catch (error) {
       console.error('Failed to initiate Adobe Sign:', error);
       setErrorMessage('Unable to initiate Adobe Sign process.');
