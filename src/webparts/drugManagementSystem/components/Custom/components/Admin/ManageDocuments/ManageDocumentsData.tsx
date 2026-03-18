@@ -188,6 +188,18 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     return '';
   };
 
+  const parseUrlDescription = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'object') {
+      return value.Description ?? value.description ?? '';
+    }
+    if (typeof value === 'string') {
+      const parts = value.split(',');
+      return parts.length > 1 ? parts.slice(1).join(',').trim() : '';
+    }
+    return '';
+  };
+
   const parseWordComments = async (buffer: ArrayBuffer): Promise<Comment[]> => {
     const comments: Comment[] = [];
     const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -239,11 +251,20 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
 
   const stripExt = (s: string) => s.replace(/\.[^/.]+$/, '') || s;
 
-  const mapDocumentItem = (item: any): Document => ({
+  const mapDocumentItem = (item: any): Document => {
+    // Priority: SharePointURL.Description (actual artifact/template name set at creation)
+    //           → item.Title (if different from file name)
+    //           → stripExt(FileLeafRef) (last resort)
+    const urlDesc = parseUrlDescription(item.SharePointURL);
+    const resolvedName = urlDesc && urlDesc.trim()
+      ? urlDesc.trim()
+      : (item.Title && item.Title !== item.FileLeafRef && item.Title !== stripExt(item.FileLeafRef || ''))
+        ? item.Title
+        : stripExt(item.FileLeafRef || item.Title || 'Untitled');
+
+    return ({
     id: item.ID,
-    name: (item.Title && item.Title !== item.FileLeafRef && item.Title !== stripExt(item.FileLeafRef || ''))
-      ? item.Title
-      : stripExt(item.FileLeafRef || item.Title || 'Untitled'),
+    name: resolvedName,
     fileName: item.FileLeafRef || '',
     fileRef: item.FileRef || '',
     category: parseLookupText(item.Category),
@@ -271,6 +292,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
     isDeleted: !!item.IsDeleted
   });
+  };
 
   const buildCTDFolderTree = (items: any[]): CTDFolder[] => {
     const nodes: CTDFolder[] = items.map((item: any) => ({

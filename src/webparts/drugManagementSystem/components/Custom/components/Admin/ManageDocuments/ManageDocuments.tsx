@@ -1325,8 +1325,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                             src={getWordEmbedUrl(viewingDocument)}
                             style={{ width: '100%', height: '70vh', border: '1px solid #E0E0E0', borderRadius: 4 }}
                             title={`Preview: ${viewingDocument.name}`}
-                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-                            onError={() => {/* handled by SharePoint internally */}}
+                            allowFullScreen
                           />
                           <div style={{ marginTop: 8, textAlign: 'right' }}>
                             <DefaultButton
