@@ -34,6 +34,7 @@ export interface Document {
   sharePointUrl?: string;
   isDeleted?: boolean;
   isEmailSend?: boolean;
+  uniqueId?: string;
 }
 
 export interface Comment {

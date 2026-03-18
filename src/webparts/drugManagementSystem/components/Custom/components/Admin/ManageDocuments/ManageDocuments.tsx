@@ -12,7 +12,7 @@ import { ManageDocumentsData, type DateFilter } from './ManageDocumentsData';
 import ReactDropdown, { type IReactDropOptionProps } from '../../../../Common/ReactSelectDropdown';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faChevronRight, faClockRotateLeft, faDownload, faEye, faFileExport, faFolder, faFolderOpen, faPenToSquare, faPlus, faTrashCan, faFileLines, faClock, faCheckDouble, faFileSignature, faArrowsRotate, faArrowUpRightFromSquare, faPaperPlane, faXmark, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faChevronRight, faClockRotateLeft, faDownload, faEye, faFileExport, faFolder, faFolderOpen, faPenToSquare, faPlus, faTrashCan, faFileLines, faClock, faCheckDouble, faFileSignature, faArrowsRotate, faArrowUpRightFromSquare, faPaperPlane, faXmark, faCheck, faComments } from '@fortawesome/free-solid-svg-icons';
 import { CreateDocumentPage } from '../CreateDocumentPage/CreateDocumentPage';
 import { Loader } from '../../../../Common/Loader/Loader';
 import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/MessageDialog';
@@ -140,22 +140,32 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   // REQ 10: Word embed URL — edit mode for Draft/Rejected authors, view mode otherwise
   const getWordEmbedUrl = (doc: Document, forceViewMode = false): string => {
-    if (!spContext || !doc.fileRef) return '';
-    const serverRelative = doc.fileRef.startsWith('http')
-      ? new URL(doc.fileRef).pathname
-      : doc.fileRef;
-    // Use encodeURI (not encodeURIComponent) — preserves "/" chars that SharePoint requires
-    const encodedUrl = encodeURI(serverRelative);
+    if (!spContext) return '';
     const canEditInline = !forceViewMode && isCurrentUserAuthor &&
       (doc.status === 'Draft' || doc.status === 'Rejected');
     const action = canEditInline ? 'edit' : 'embedview';
-    // Use WopiFrame.aspx for reliable embedding across tenants
+
+    // Best approach: Doc.aspx with UniqueId GUID (most reliable for SP Online)
+    if (doc.uniqueId) {
+      const guid = doc.uniqueId.replace(/^\{|\}$/g, '');
+      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=%7B${guid}%7D&action=${action}`;
+    }
+
+    // Fallback: WopiFrame.aspx with server-relative URL
+    if (!doc.fileRef) return '';
+    const serverRelative = doc.fileRef.startsWith('http')
+      ? new URL(doc.fileRef).pathname
+      : doc.fileRef;
+    const encodedUrl = encodeURI(serverRelative);
     return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodedUrl}&action=${action}`;
   };
 
   // REQ 4: Confirmation dialog state for Submit and Approve
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = React.useState(false);
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = React.useState(false);
+  // Modal state for Comments and Version History
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = React.useState(false);
 
   const hideFolderSidebar: boolean = !!(props.hideFolderSidebar);
   const hideAddButton: boolean = !!(props.hideAddButton);
@@ -1202,13 +1212,22 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </PrimaryButton>
               )}
 
-              {/* History button */}
+              {/* Comments modal button */}
               <DefaultButton
-                onClick={() => { /* scroll to version history */ }}
+                onClick={() => setIsCommentsModalOpen(true)}
+                styles={{ root: { borderColor: '#1300a6', color: '#1300a6' } }}
+              >
+                <FontAwesomeIcon icon={faComments} style={{ marginRight: 6 }} />
+                Comments
+              </DefaultButton>
+
+              {/* Version History modal button */}
+              <DefaultButton
+                onClick={() => setIsHistoryModalOpen(true)}
                 styles={{ root: { borderColor: '#546e7a', color: '#546e7a' } }}
               >
                 <FontAwesomeIcon icon={faClockRotateLeft} style={{ marginRight: 6 }} />
-                History
+                Version History
               </DefaultButton>
             </div>
 
@@ -1359,111 +1378,138 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </>
               )}
 
-              {/* REQ 1: Comments Section — filter out system-generated comments */}
-              <div className="ms-Grid-row" style={{ marginTop: 24 }}>
-                <div className="ms-Grid-col ms-sm12">
-                  <div className="form-section-header">Comments</div>
-                </div>
-              </div>
-
-              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
-                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-                  <div className="detail-item">
-                    <div className="detail-label">User Comments</div>
-                    <div className="detail-value">
-                      {(() => {
-                        const userComments = (viewingDocument.comments || []).filter(
-                          c => c.author && c.author.toLowerCase() !== 'system'
-                        );
-                        return userComments.length > 0 ? (
-                          <ul style={{ margin: 0, paddingLeft: 16 }}>
-                            {userComments.map((comment) => (
-                              <li key={comment.id} style={{ marginBottom: 6 }}>
-                                <strong>{comment.author}:</strong> {comment.text}
-                                {comment.timestamp && (
-                                  <span style={{ marginLeft: 8, fontSize: 11, color: '#888' }}>
-                                    {new Date(comment.timestamp).toLocaleString()}
-                                  </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span style={{ color: '#999', fontStyle: 'italic' }}>No user comments</span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-                  <div className="detail-item">
-                    <div className="detail-label">Reviewer Comments (from Word)</div>
-                    <div className="detail-value">
-                      {reviewerCommentError && <div className="field-error">{reviewerCommentError}</div>}
-                      {reviewerComments.length > 0 ? (
-                        <ul style={{ margin: 0, paddingLeft: 16 }}>
-                          {reviewerComments.map((comment) => (
-                            <li key={comment.id} style={{ marginBottom: 6 }}>
-                              <strong>{comment.author}:</strong> {comment.text}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <span style={{ color: '#999', fontStyle: 'italic' }}>No reviewer comments</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Version History */}
-              <div className="ms-Grid-row" style={{ marginTop: 24 }}>
-                <div className="ms-Grid-col ms-sm12">
-                  <div className="form-section-header">
-                    <FontAwesomeIcon icon={faClockRotateLeft} style={{ marginRight: 8 }} />
-                    Version History
-                  </div>
-                </div>
-              </div>
-
-              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
-                <div className="ms-Grid-col ms-sm12">
-                  <div className="table-wrapper">
-                    <table className="version-table">
-                      <thead>
-                        <tr>
-                          <th>Version</th>
-                          <th>Modified By</th>
-                          <th>Modified Date</th>
-                          <th>Changes</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {versionHistory.map(version => (
-                          <tr key={version.id ?? version.version}>
-                            <td>v{version.version}</td>
-                            <td>{version.modifiedBy}</td>
-                            <td>{version.modifiedDate}</td>
-                            <td>{version.changes}</td>
-                            <td>
-                              <DefaultButton onClick={() => version.id !== undefined && handleCompareVersion(version.id)}>
-                                <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
-                                Compare
-                              </DefaultButton>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
         )}
       </Panel>
+
+      {/* Comments Modal */}
+      {viewingDocument && (
+        <Panel
+          isOpen={isCommentsModalOpen}
+          onDismiss={() => setIsCommentsModalOpen(false)}
+          type={PanelType.medium}
+          headerText="Comments"
+          closeButtonAriaLabel="Close"
+          isLightDismiss
+        >
+          <div style={{ padding: '16px 0' }}>
+            <div style={{ marginBottom: 24 }}>
+              <div className="form-section-header" style={{ marginBottom: 12 }}>DMS Comments</div>
+              {(() => {
+                const userComments = (viewingDocument.comments || []).filter(
+                  c => c.author && c.author.toLowerCase() !== 'system'
+                );
+                return userComments.length > 0 ? (
+                  <div>
+                    {userComments.map((comment) => (
+                      <div key={comment.id} style={{
+                        background: '#f5f7ff', borderRadius: 8, padding: '10px 14px',
+                        marginBottom: 10, borderLeft: '4px solid #1300a6'
+                      }}>
+                        <div style={{ fontWeight: 600, color: '#1300a6', marginBottom: 4 }}>
+                          {comment.author}
+                          {comment.timestamp && (
+                            <span style={{ fontWeight: 400, fontSize: 12, color: '#888', marginLeft: 10 }}>
+                              {new Date(comment.timestamp).toLocaleString('en-GB', {
+                                day: '2-digit', month: 'short', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ color: '#333', fontSize: 14 }}>{comment.text}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ color: '#999', fontStyle: 'italic' }}>No DMS comments yet</span>
+                );
+              })()}
+            </div>
+
+            <div>
+              <div className="form-section-header" style={{ marginBottom: 12 }}>
+                Reviewer Comments (from Word document)
+              </div>
+              {reviewerCommentError && <div className="field-error" style={{ marginBottom: 8 }}>{reviewerCommentError}</div>}
+              {reviewerComments.length > 0 ? (
+                <div>
+                  {reviewerComments.map((comment) => (
+                    <div key={comment.id} style={{
+                      background: '#fff8e1', borderRadius: 8, padding: '10px 14px',
+                      marginBottom: 10, borderLeft: '4px solid #f9a825'
+                    }}>
+                      <div style={{ fontWeight: 600, color: '#e65100', marginBottom: 4 }}>
+                        {comment.author}
+                        {comment.timestamp && (
+                          <span style={{ fontWeight: 400, fontSize: 12, color: '#888', marginLeft: 10 }}>
+                            {new Date(comment.timestamp).toLocaleString('en-GB', {
+                              day: '2-digit', month: 'short', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit'
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ color: '#333', fontSize: 14 }}>{comment.text}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span style={{ color: '#999', fontStyle: 'italic' }}>No reviewer comments in document</span>
+              )}
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      {/* Version History Modal */}
+      {viewingDocument && (
+        <Panel
+          isOpen={isHistoryModalOpen}
+          onDismiss={() => setIsHistoryModalOpen(false)}
+          type={PanelType.large}
+          headerText="Version History"
+          closeButtonAriaLabel="Close"
+          isLightDismiss
+        >
+          <div style={{ padding: '16px 0' }}>
+            {versionHistory.length === 0 ? (
+              <span style={{ color: '#999', fontStyle: 'italic' }}>No version history available</span>
+            ) : (
+              <div className="table-wrapper">
+                <table className="version-table">
+                  <thead>
+                    <tr>
+                      <th>Version</th>
+                      <th>Modified By</th>
+                      <th>Modified Date</th>
+                      <th>Changes</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {versionHistory.map(version => (
+                      <tr key={version.id ?? version.version}>
+                        <td>v{version.version}</td>
+                        <td>{version.modifiedBy}</td>
+                        <td>{version.modifiedDate}</td>
+                        <td>{version.changes}</td>
+                        <td>
+                          <DefaultButton onClick={() => version.id !== undefined && handleCompareVersion(version.id)}>
+                            <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
+                            Compare
+                          </DefaultButton>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Panel>
+      )}
 
       {/* REQ 4: Submit Confirmation Dialog */}
       <CustomModal
