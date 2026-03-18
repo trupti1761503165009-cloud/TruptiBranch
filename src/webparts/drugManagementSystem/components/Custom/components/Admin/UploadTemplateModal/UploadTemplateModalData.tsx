@@ -217,7 +217,7 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
     } = {};
 
     if (!editMode && !formData.name.trim()) nextErrors.name = 'Template Name is required.';
-    if (!formData.version.trim()) nextErrors.version = 'Version No. is required.';
+    // if (!formData.version.trim()) nextErrors.version = 'Version No. is required.';
     if (!editMode && selectedFiles.length === 0) nextErrors.file = 'Upload File is required.';
 
     if (!editMode) {
