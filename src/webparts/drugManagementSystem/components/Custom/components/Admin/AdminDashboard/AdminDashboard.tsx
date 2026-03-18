@@ -422,7 +422,7 @@ export const AdminDashboard: React.FC = () => {
         onClickOfYes={async () => {
           if (approvalModal.doc && approvalModal.action) {
             const newStatus = approvalModal.action === 'approve' ? 'Approved' : 'Rejected';
-            await handleUpdateDocument(approvalModal.doc.id, { Status: newStatus, IsEmailSend: true });
+            await handleUpdateDocument(approvalModal.doc.id, { Status: newStatus, IsEmailSend: '1' });
             setApprovalModal({ open: false, doc: null, action: null });
           }
         }}

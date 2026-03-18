@@ -276,7 +276,7 @@ export function AdminDashboardData() {
         await provider.updateItem(
           {
             Status: 'Final',
-            IsEmailSend: true,
+            IsEmailSend: '1',
             ApproverId: currentUser?.userId || null
           },
           ListNames.DMSDocuments,

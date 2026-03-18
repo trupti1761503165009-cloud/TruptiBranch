@@ -307,7 +307,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     createdDate: item.Created ? new Date(item.Created).toISOString().split('T')[0] : '',
     sentBy: parseLookupText(item.SentBy),
     sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
-    isDeleted: !!item.IsDeleted,
+    isDeleted: item.IsDeleted === true || item.IsDeleted === 1 || item.IsDeleted === '1' || item.IsDeleted === 'true',
     uniqueId: item.UniqueId ? String(item.UniqueId).replace(/^\{|\}$/g, '') : undefined
   });
   };
@@ -662,7 +662,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         await provider.updateItem(
           {
             Status: newStatus,
-            IsEmailSend: true,
+            IsEmailSend: '1',
             Comments: JSON.stringify(nextComments)
           },
           ListNames.DMSDocuments,
