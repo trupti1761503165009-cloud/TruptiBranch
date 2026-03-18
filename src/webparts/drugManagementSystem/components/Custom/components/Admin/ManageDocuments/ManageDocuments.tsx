@@ -144,11 +144,13 @@ export const ManageDocuments: React.FC<any> = (props) => {
     const serverRelative = doc.fileRef.startsWith('http')
       ? new URL(doc.fileRef).pathname
       : doc.fileRef;
-    const encodedUrl = encodeURIComponent(serverRelative);
+    // Use encodeURI (not encodeURIComponent) — preserves "/" chars that SharePoint requires
+    const encodedUrl = encodeURI(serverRelative);
     const canEditInline = !forceViewMode && isCurrentUserAuthor &&
       (doc.status === 'Draft' || doc.status === 'Rejected');
     const action = canEditInline ? 'edit' : 'embedview';
-    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=${action}`;
+    // Use WopiFrame.aspx for reliable embedding across tenants
+    return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodedUrl}&action=${action}`;
   };
 
   // REQ 4: Confirmation dialog state for Submit and Approve
@@ -459,6 +461,17 @@ export const ManageDocuments: React.FC<any> = (props) => {
       }
     },
     {
+      key: 'drugName',
+      name: 'DRUG',
+      fieldName: 'drugName',
+      minWidth: 140,
+      maxWidth: 200,
+      isSortingRequired: true,
+      onRender: (doc: Document) => (
+        <span style={{ color: '#555' }}>{doc.drugName || '—'}</span>
+      )
+    },
+    {
       key: 'category',
       name: 'CATEGORY',
       fieldName: 'category',
@@ -479,12 +492,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
       key: 'status',
       name: 'STATUS',
       fieldName: 'status',
-      minWidth: 140,
-      maxWidth: 200,
+      minWidth: 150,
+      maxWidth: 210,
       isSortingRequired: true,
-      onRender: (doc: Document) => (
-        <span className={`status-badge status-${doc.status.toLowerCase().replace(/\s+/g, '-')}`}>{doc.status}</span>
-      )
+      onRender: (doc: Document) => {
+        const s = doc.status || 'Draft';
+        const cls = s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        return <span className={`status-badge status-${cls}`}>{s}</span>;
+      }
     },
     {
       key: 'version',
@@ -1222,13 +1237,34 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
                     <div className="detail-label">Document Name</div>
-                    <div className="detail-value">{viewingDocument.name}</div>
+                    <div className="detail-value" style={{ fontWeight: 600, color: '#1300a6' }}>{viewingDocument.name}</div>
                   </div>
                 </div>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
+                    <div className="detail-label">Drug</div>
+                    <div className="detail-value" style={{ fontWeight: 600, color: '#00695c' }}>{viewingDocument.drugName || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
                     <div className="detail-label">Category</div>
-                    <div className="detail-value">{viewingDocument.category}</div>
+                    <div className="detail-value">{viewingDocument.category || 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Status</div>
+                    <div className="detail-value">
+                      {(() => {
+                        const s = viewingDocument.status || 'Draft';
+                        const cls = s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        return <span className={`status-badge status-${cls}`}>{s}</span>;
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1242,12 +1278,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </div>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
-                    <div className="detail-label">Status</div>
-                    <div className="detail-value">
-                      <span className={`status-badge status-${viewingDocument.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                        {viewingDocument.status}
-                      </span>
-                    </div>
+                    <div className="detail-label">Version</div>
+                    <div className="detail-value">v{viewingDocument.version || 1}</div>
                   </div>
                 </div>
               </div>
@@ -1255,14 +1287,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
               <div className="ms-Grid-row" style={{ marginTop: 16 }}>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
-                    <div className="detail-label">Version</div>
-                    <div className="detail-value">v{viewingDocument.version || 1}</div>
+                    <div className="detail-label">Author</div>
+                    <div className="detail-value">{viewingDocument.author || 'N/A'}</div>
                   </div>
                 </div>
                 <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
                   <div className="detail-item">
-                    <div className="detail-label">Author</div>
-                    <div className="detail-value">{viewingDocument.author || 'N/A'}</div>
+                    <div className="detail-label">Approver</div>
+                    <div className="detail-value">{viewingDocument.approver || 'N/A'}</div>
                   </div>
                 </div>
               </div>
@@ -1276,8 +1308,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </div>
               </div> */}
 
-              {/* Word Document Embed */}
-              {viewingDocument.fileRef && getWordEmbedUrl(viewingDocument) && (
+              {/* Word Document Embed with error fallback */}
+              {viewingDocument.fileRef && (
                 <>
                   <div className="ms-Grid-row" style={{ marginTop: 24 }}>
                     <div className="ms-Grid-col ms-sm12">
@@ -1286,11 +1318,43 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   </div>
                   <div className="ms-Grid-row" style={{ marginTop: 12 }}>
                     <div className="ms-Grid-col ms-sm12">
-                      <iframe
-                        src={getWordEmbedUrl(viewingDocument)}
-                        style={{ width: '100%', height: '70vh', border: '1px solid #E0E0E0', borderRadius: 4 }}
-                        title={`Preview: ${viewingDocument.name}`}
-                      />
+                      {getWordEmbedUrl(viewingDocument) ? (
+                        <div style={{ position: 'relative' }}>
+                          <iframe
+                            key={viewingDocument.id}
+                            src={getWordEmbedUrl(viewingDocument)}
+                            style={{ width: '100%', height: '70vh', border: '1px solid #E0E0E0', borderRadius: 4 }}
+                            title={`Preview: ${viewingDocument.name}`}
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+                            onError={() => {/* handled by SharePoint internally */}}
+                          />
+                          <div style={{ marginTop: 8, textAlign: 'right' }}>
+                            <DefaultButton
+                              href={`${spContext?.pageContext?.web?.absoluteUrl}${viewingDocument.fileRef.startsWith('/') ? viewingDocument.fileRef : '/' + viewingDocument.fileRef}`}
+                              target="_blank"
+                              styles={{ root: { fontSize: 13, borderColor: '#1300a6', color: '#1300a6' } }}
+                            >
+                              <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
+                              Open in SharePoint (if preview fails)
+                            </DefaultButton>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          padding: 32, textAlign: 'center', background: '#f5f5f5',
+                          borderRadius: 8, border: '1px dashed #ccc', color: '#666'
+                        }}>
+                          <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 24, marginBottom: 12, display: 'block', margin: '0 auto 12px' }} />
+                          <p style={{ margin: '0 0 12px', fontSize: 14 }}>Document preview is not available in this context.</p>
+                          <DefaultButton
+                            href={viewingDocument.sharePointUrl || viewingDocument.fileRef}
+                            target="_blank"
+                            styles={{ root: { borderColor: '#1300a6', color: '#1300a6' } }}
+                          >
+                            Open Document in SharePoint
+                          </DefaultButton>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>

@@ -460,6 +460,32 @@
   color: #7b1fa2;
 }
 
+/* All workflow status badges */
+.status-badge.status-pending-approval {
+  background: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffe082;
+}
+
+.status-badge.status-pending-for-signature {
+  background: #ede7f6;
+  color: #6200ea;
+  border: 1px solid #ce93d8;
+}
+
+.status-badge.status-signed {
+  background: #e0f7fa;
+  color: #00796b;
+  border: 1px solid #80cbc4;
+}
+
+.status-badge.status-final {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+  font-weight: 700;
+}
+
 /* Buttons */
 .btn {
   padding: 8px 16px;
