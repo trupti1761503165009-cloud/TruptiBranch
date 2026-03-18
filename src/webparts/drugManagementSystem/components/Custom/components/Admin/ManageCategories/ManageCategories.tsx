@@ -889,7 +889,7 @@ export const ManageCategories: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           columns={hierarchyColumns}
           items={currentItems}

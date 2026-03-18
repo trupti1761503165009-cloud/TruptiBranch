@@ -336,7 +336,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* ===== SECTION 3: Documents Grid ===== */}
-      <div style={{ marginBottom: 16 }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={sortedDocuments}
           columns={recentDocumentsColumns}
@@ -388,7 +388,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* ===== SECTION 4: Users Grid ===== */}
-      <div>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={recentUsers}
           columns={recentUsersColumns}

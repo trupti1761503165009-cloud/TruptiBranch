@@ -493,7 +493,7 @@ export const ManageTemplates: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={filteredTemplates}
           columns={columns}

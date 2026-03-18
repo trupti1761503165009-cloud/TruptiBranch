@@ -8,7 +8,7 @@ import { CustomModal } from '../../../../Common/CustomModal';
 import ReactDropdown, { type IReactDropOptionProps } from '../../../../Common/ReactSelectDropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faEye, faPenToSquare, faTrashCan, faUser, faUsers, faUserShield, faUserTie, faUserCheck, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
-import {MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
+import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
 import { UserPermissionsData } from './UserPermissionsData';
 import { MessageDialog, type MessageType } from '../../../../Common/Dialogs/MessageDialog';
 import { FormActions } from '../../../../Common/FormActions/FormActions';
@@ -346,11 +346,12 @@ export const UserPermissions: React.FC<any> = (props) => {
       </div>
 
       {/* ===== SECTION 4: Grid ===== */}
-      <div className="boxCard" style={{ padding: 0, margin: 0, minHeight: 'auto' }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={displayedUsers}
           columns={columns}
           reRenderComponent={true}
+          searchable={true}
           isPagination={true}
           onSelectedItem={(items: User[]) => setSelectedIds(items.map(i => i.id))}
           isAddNew={true}

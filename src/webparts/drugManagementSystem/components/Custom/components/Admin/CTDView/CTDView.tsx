@@ -198,7 +198,7 @@ export const CTDView: React.FC = () => {
 
       {/* Hierarchy View */}
       {viewMode === 'hierarchy' && !selectedModule && (
-        <div className="boxCard" style={{ padding: 0 }}>
+        <div className="boxCard">
           <MemoizedDataGridComponent
             items={modules.map(m => ({
               id: m.id,
@@ -272,7 +272,7 @@ export const CTDView: React.FC = () => {
 
       {/* Section View - inside a module */}
       {viewMode === 'hierarchy' && selectedModule && !selectedSection && currentModule && (
-        <div className="boxCard" style={{ padding: 0 }}>
+        <div className="boxCard">
           <MemoizedDataGridComponent
             items={currentModule.sections.map(s => ({
               id: s.id,
@@ -328,7 +328,7 @@ export const CTDView: React.FC = () => {
 
       {/* Document View - inside a section */}
       {viewMode === 'hierarchy' && selectedSection && currentSection && (
-        <div className="boxCard" style={{ padding: 0 }}>
+        <div className="boxCard">
           <MemoizedDataGridComponent
             items={getDocumentsForView()}
             columns={documentColumns}
@@ -343,7 +343,7 @@ export const CTDView: React.FC = () => {
 
       {/* Flat List View */}
       {viewMode === 'flat' && (
-        <div className="boxCard" style={{ padding: 0 }}>
+        <div className="boxCard">
           <MemoizedDataGridComponent
             items={flatDocuments}
             columns={[
