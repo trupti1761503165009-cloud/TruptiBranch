@@ -796,16 +796,22 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     try {
       const fileRef = viewingDocument.sharePointUrl || (viewingDocument as any).fileRef || '';
       if (fileRef) {
-        let serverRelPath = fileRef.startsWith('http')
-          ? new URL(fileRef).pathname
-          : fileRef;
-        // Fix doubled site path that may exist in older documents
-        // e.g. /sites/DMS/sites/DMS/DMSDocuments/... → /sites/DMS/DMSDocuments/...
-        const siteRel = context?.pageContext?.web?.serverRelativeUrl?.replace(/\/$/, '') || '';
-        if (siteRel && serverRelPath.startsWith(`${siteRel}${siteRel}`)) {
-          serverRelPath = serverRelPath.slice(siteRel.length);
+        try {
+          let serverRelPath = fileRef.startsWith('http')
+            ? new URL(fileRef).pathname
+            : fileRef;
+          // Fix doubled site path that may exist in older documents
+          // e.g. /sites/DMS/sites/DMS/DMSDocuments/... → /sites/DMS/DMSDocuments/...
+          const siteRel = context?.pageContext?.web?.serverRelativeUrl?.replace(/\/$/, '') || '';
+          if (siteRel && serverRelPath.startsWith(`${siteRel}${siteRel}`)) {
+            serverRelPath = serverRelPath.slice(siteRel.length);
+          }
+          await provider.checkInFile(serverRelPath);
+        } catch (checkInErr: any) {
+          // File may be open in Word Online (locked). This is non-fatal for submission —
+          // metadata (status) can still be updated independently of the file lock.
+          console.warn('[handleSubmitForReview] checkInFile skipped (non-fatal):', checkInErr?.message);
         }
-        await provider.checkInFile(serverRelPath);
       }
 
       const auditLog = {
@@ -1257,6 +1263,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     isRejectModalOpen,
 
     // setters
+    setViewingDocument,
     setSelectedIds,
     setCurrentPage,
     setSearchTerm,

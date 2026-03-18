@@ -63,6 +63,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
     reviewerComments,
     reviewerCommentError,
 
+    setViewingDocument,
     setSelectedIds,
     setCurrentPage,
     setSearchTerm,
@@ -573,24 +574,58 @@ export const ManageDocuments: React.FC<any> = (props) => {
     {
       key: 'actions',
       name: 'ACTIONS',
-      minWidth: 100,
-      maxWidth: 120,
-      onRender: (doc: Document) => (
-        <div style={{ display: 'flex', gap: 12 }}>
-          <TooltipHost content="View Details">
-            <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#1E88E5' }}>
-              <FontAwesomeIcon icon={faEye} />
-            </Link>
-          </TooltipHost>
-          {doc.sharePointUrl && (
-            <TooltipHost content="Open Document">
-              <Link href={doc.sharePointUrl} target="_blank" style={{ fontSize: 16, color: '#43A047' }}>
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+      minWidth: 160,
+      maxWidth: 220,
+      onRender: (doc: Document) => {
+        const userEmail = String(currentUser?.email || currentUser?.loginName || '').toLowerCase();
+        const userId = currentUser?.id || 0;
+        const isRowAuthor =
+          (userId > 0 && doc.authorId === userId) ||
+          (userEmail !== '' && String(doc.author || '').toLowerCase().includes(userEmail));
+        const canSubmitRow = isRowAuthor && (doc.status === 'Draft' || doc.status === 'Rejected');
+        return (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <TooltipHost content="View Details">
+              <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#1E88E5' }}>
+                <FontAwesomeIcon icon={faEye} />
               </Link>
             </TooltipHost>
-          )}
-        </div>
-      )
+            {doc.sharePointUrl && (
+              <TooltipHost content="Open Document">
+                <Link href={doc.sharePointUrl} target="_blank" style={{ fontSize: 16, color: '#43A047' }}>
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canSubmitRow && (
+              <TooltipHost content={doc.status === 'Rejected' ? 'Resubmit for Approval' : 'Submit for Approval'}>
+                <Link
+                  onClick={() => { setViewingDocument(doc); setIsSubmitConfirmOpen(true); }}
+                  style={{ fontSize: 16, color: doc.status === 'Rejected' ? '#F57C00' : '#1565C0' }}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                </Link>
+              </TooltipHost>
+            )}
+            <TooltipHost content="Comments">
+              <Link
+                onClick={() => { setViewingDocument(doc); setIsCommentsModalOpen(true); }}
+                style={{ fontSize: 16, color: '#1300a6' }}
+              >
+                <FontAwesomeIcon icon={faComments} />
+              </Link>
+            </TooltipHost>
+            <TooltipHost content="Version History">
+              <Link
+                onClick={() => { setViewingDocument(doc); setIsHistoryModalOpen(true); }}
+                style={{ fontSize: 16, color: '#546e7a' }}
+              >
+                <FontAwesomeIcon icon={faClockRotateLeft} />
+              </Link>
+            </TooltipHost>
+          </div>
+        );
+      }
     },
   ];
 
