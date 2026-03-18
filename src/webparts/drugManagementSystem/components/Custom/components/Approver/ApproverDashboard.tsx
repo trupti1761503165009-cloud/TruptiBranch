@@ -148,7 +148,7 @@ export const ApproverDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="boxCard" style={{ padding: 0 }}>
+      <div className="boxCard">
         <MemoizedDataGridComponent
           items={filteredDocuments}
           columns={columns}
