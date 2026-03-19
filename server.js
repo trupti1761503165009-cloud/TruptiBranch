@@ -742,7 +742,10 @@ function AddTemplateMappingForm({ onClose, onSave, editData, templates }) {
         ),
         React.createElement('div', {className:'fg'},
           React.createElement('label', {className:'fl'}, 'Category'),
-          React.createElement('input', {className:'fi', value:form.category, onChange:e=>setForm({...form,category:e.target.value}), placeholder:'e.g., Clinical Study Report'})
+          React.createElement('select', {className:'fi', value:form.category, onChange:e=>setForm({...form,category:e.target.value})},
+            [React.createElement('option',{key:'',value:''},'-- Select Category --'),
+             ...CATEGORIES.filter(c=>c.status==='Active').map(c=>React.createElement('option',{key:c.id,value:c.name},c.name))]
+          )
         ),
         React.createElement('div', {className:'fg'},
           React.createElement('label', {className:'fl'}, 'Country', React.createElement('span',{className:'req'},' *')),
