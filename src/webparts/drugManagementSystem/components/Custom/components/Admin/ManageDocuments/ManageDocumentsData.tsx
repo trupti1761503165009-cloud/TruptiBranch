@@ -371,6 +371,18 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     return nodes.filter(node => !node.parentId);
   };
 
+  // Flatten a CTDFolder tree to a single array (for building ID sets)
+  const flattenCTDFolders = (nodes: CTDFolder[]): CTDFolder[] => {
+    const result: CTDFolder[] = [];
+    const stack = [...nodes];
+    while (stack.length) {
+      const node = stack.pop()!;
+      result.push(node);
+      if (node.children?.length) stack.push(...node.children);
+    }
+    return result;
+  };
+
   const loadData = async () => {
     if (!provider) {
       // No provider available - return empty data
@@ -468,7 +480,9 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       setDocuments(mappedDocs);
       setCtdFolders(buildCTDFolderTree(folders || []));
       setTmfFolders(buildCTDFolderTree(tmf || []));
-      setGmpFolders(buildCTDFolderTree(gmp || []));
+      // GMP models have no FolderId column — use Title as key so it matches
+      // the modelName stored in ctdFolder/ctdModule on GMP documents.
+      setGmpFolders(buildCTDFolderTree((gmp || []).map((item: any) => ({ ...item, FolderId: item.Title }))));
       setCategories(
         (cats || []).map((item: any) => ({
           id: item.ID,
@@ -613,8 +627,21 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     setSelectedSubfolder(null);
     setCurrentPage(1);
     setSearchTerm('');
-    const selected = drugId ? drugs.find(d => d.id === drugId) : undefined;
-    if (selected?.ctdStructure) setCtdStructure(selected.ctdStructure);
+    if (!drugId) return;
+    // Auto-detect structure type from documents belonging to this drug.
+    // GMP folder node folderId = model name; TMF folderId = FolderId code.
+    const drugDocs = documents.filter(d => d.drugId === drugId);
+    const gmpIds = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
+    const tmfIds = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+    const hasGmp = drugDocs.some(d =>
+      (d.ctdFolder && gmpIds.has(d.ctdFolder)) ||
+      (d.ctdModule && gmpIds.has(d.ctdModule))
+    );
+    const hasTmf = !hasGmp && drugDocs.some(d =>
+      (d.ctdFolder && tmfIds.has(d.ctdFolder)) ||
+      (d.ctdModule && tmfIds.has(d.ctdModule))
+    );
+    setCtdStructure(hasGmp ? 'gmp' : hasTmf ? 'tmf' : 'ectd');
   };
 
   const handleViewDocument = async (doc: Document) => {
@@ -765,12 +792,14 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     // Q8: Only ONE signed file — no "Commented" copy
     const signedFileName = `${base}-Signed${ext}`;
 
-    // Q3/Q4: Resolve document type for folder structure
-    const documentType = doc.ctdFolder
-      ? (doc.ctdFolder.startsWith('Zone') || doc.ctdFolder.startsWith('TMF') ? 'TMF'
-        : doc.ctdFolder.startsWith('GMP') || doc.ctdModule?.startsWith('GMP') ? 'GMP'
-        : 'eCTD')
-      : 'eCTD';
+    // Q3/Q4: Resolve document type from folder ID sets (not fragile name prefixes)
+    const _gmpIds = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
+    const _tmfIds = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+    const _inGmp = (v?: string) => !!(v && _gmpIds.has(v));
+    const _inTmf = (v?: string) => !!(v && _tmfIds.has(v));
+    const documentType =
+      _inTmf(doc.ctdFolder) || _inTmf(doc.ctdModule) ? 'TMF' :
+      _inGmp(doc.ctdFolder) || _inGmp(doc.ctdModule) ? 'GMP' : 'eCTD';
 
     // Q4/Q9: Build type-specific folder segments
     // eCTD: [Module]/[SubSection]  |  TMF: [Zone]/[Section]  |  GMP: [ModelName]
@@ -1087,11 +1116,13 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         ApproverEmail: doc.approver || '',   // approver who approved the document
         SignatureStatus: 'Pending',          // 'Pending' triggers Power Automate Flow 1
         DocumentId: doc.id,                  // SP item ID in DMSDocuments list
-        DocumentType: doc.ctdFolder          // resolves mapping type context
-          ? (doc.ctdFolder.startsWith('Zone') || doc.ctdFolder.startsWith('TMF') ? 'TMF'
-            : doc.ctdFolder.startsWith('GMP') || doc.ctdModule?.startsWith('GMP') ? 'GMP'
-            : 'eCTD')
-          : 'eCTD',
+        DocumentType: (() => {            // resolves mapping type using folder ID sets
+          const gmpSet = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
+          const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+          if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
+          if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+          return 'eCTD';
+        })(),
         CTDFolder: doc.ctdFolder || '',      // folder path for signed doc storage
         CTDModule: doc.ctdModule || '',
         DrugName: doc.drugName || '',
