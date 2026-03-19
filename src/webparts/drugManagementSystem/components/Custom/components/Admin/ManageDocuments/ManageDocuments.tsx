@@ -121,9 +121,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!viewingDocument || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+    const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+    const docAuthor = String(viewingDocument.author || '').toLowerCase().trim();
+    const docSentBy = String((viewingDocument as any).sentBy || '').toLowerCase().trim();
     return (
       (userId > 0 && viewingDocument.authorId === userId) ||
-      (userEmail !== '' && String(viewingDocument.author || '').toLowerCase().includes(userEmail))
+      (userId > 0 && (viewingDocument as any).sentById === userId) ||
+      (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
+      (displayName !== '' && (docAuthor === displayName || docSentBy === displayName))
     );
   }, [viewingDocument, currentUser]);
 
@@ -132,13 +137,15 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!viewingDocument || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
-    return (
-      canApprove && (
-        (userId > 0 && viewingDocument.approverId === userId) ||
-        (userEmail !== '' && String(viewingDocument.approver || '').toLowerCase().includes(userEmail)) ||
-        !viewingDocument.approverId // if no approver assigned, any approver-role user can act
-      )
-    );
+    const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+    const docApprover = String(viewingDocument.approver || '').toLowerCase().trim();
+    const isDocLevelApprover =
+      (userId > 0 && viewingDocument.approverId === userId) ||
+      (userEmail !== '' && docApprover.includes(userEmail)) ||
+      (displayName !== '' && docApprover === displayName);
+    // Allow if: explicitly assigned as approver on this document (regardless of global role)
+    // OR: has global canApprove role and no specific approver is assigned
+    return isDocLevelApprover || (canApprove && !viewingDocument.approverId);
   }, [viewingDocument, currentUser, canApprove]);
 
   // REQ 10: Word embed URL — edit mode for Draft/Rejected authors, view mode otherwise
@@ -534,16 +541,40 @@ export const ManageDocuments: React.FC<any> = (props) => {
       isSortingRequired: true
     },
     {
-      key: 'ctdFolder',
-      name: 'CTD FOLDER',
-      fieldName: 'ctdFolder',
-      minWidth: 140,
-      maxWidth: 220,
+      key: 'mappingType',
+      name: 'MAPPING TYPE',
+      fieldName: 'mappingType',
+      minWidth: 110,
+      maxWidth: 150,
       isSortingRequired: true,
-      onRender: (doc: Document) => {
-        const key = doc.ctdFolder || doc.ctdModule || '';
-        return <span>{folderLabelMap.get(key) || key || 'N/A'}</span>;
-      }
+      onRender: (doc: Document) => <span>{doc.mappingType || '—'}</span>
+    },
+    {
+      key: 'ectdSection',
+      name: 'eCTD SECTION',
+      fieldName: 'ectdSection',
+      minWidth: 130,
+      maxWidth: 200,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.ectdSection || '—'}</span>
+    },
+    {
+      key: 'gmpModel',
+      name: 'GMP MODEL',
+      fieldName: 'gmpModel',
+      minWidth: 120,
+      maxWidth: 180,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.gmpModel || '—'}</span>
+    },
+    {
+      key: 'tmfZone',
+      name: 'TMF ZONE',
+      fieldName: 'tmfZone',
+      minWidth: 110,
+      maxWidth: 170,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.tmfZone || '—'}</span>
     },
     {
       key: 'status',
@@ -583,12 +614,20 @@ export const ManageDocuments: React.FC<any> = (props) => {
       onRender: (doc: Document) => {
         const userEmail = String(currentUser?.email || currentUser?.loginName || '').toLowerCase();
         const userId = currentUser?.id || 0;
+        const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+        const docAuthor = String(doc.author || '').toLowerCase().trim();
+        const docSentBy = String((doc as any).sentBy || '').toLowerCase().trim();
+        const docApprover = String(doc.approver || '').toLowerCase().trim();
         const isRowAuthor =
           (userId > 0 && doc.authorId === userId) ||
-          (userEmail !== '' && String(doc.author || '').toLowerCase().includes(userEmail));
+          (userId > 0 && (doc as any).sentById === userId) ||
+          (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
+          (displayName !== '' && (docAuthor === displayName || docSentBy === displayName));
         const isRowApprover = canApprove ||
+          activeTab === 'assignedToMe' ||
           (userId > 0 && doc.approverId === userId) ||
-          (userEmail !== '' && String(doc.approver || '').toLowerCase().includes(userEmail));
+          (userEmail !== '' && docApprover.includes(userEmail)) ||
+          (displayName !== '' && docApprover === displayName);
         // Admin can perform any workflow action; otherwise check role
         const canSubmitRow  = (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
         const canApproveRow = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
@@ -639,7 +678,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             )}
             <TooltipHost content="Comments">
               <Link
-                onClick={() => { setViewingDocument(doc); setIsCommentsModalOpen(true); }}
+                onClick={() => { void handleViewDocument(doc).then(() => setIsCommentsModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#1300a6' }}
               >
                 <FontAwesomeIcon icon={faComments} />
@@ -647,7 +686,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             </TooltipHost>
             <TooltipHost content="Version History">
               <Link
-                onClick={() => { setViewingDocument(doc); setIsHistoryModalOpen(true); }}
+                onClick={() => { void handleViewDocument(doc).then(() => setIsHistoryModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#546e7a' }}
               >
                 <FontAwesomeIcon icon={faClockRotateLeft} />
@@ -659,22 +698,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
     },
   ];
 
-  const assignedToMeColumns = [
-    ...documentColumns.filter(c => c.key !== 'status'),
-    {
-      key: 'status',
-      name: 'STATUS',
-      fieldName: 'status',
-      minWidth: 140,
-      maxWidth: 200,
-      isSortingRequired: true,
-      onRender: (doc: Document) => (
-        <span className={`status-badge status-${doc.status.toLowerCase().replace(/\s+/g, '-')}`} style={{ fontWeight: 'bold' }}>{doc.status}</span>
-      )
-    }
-  ];
-
-  const effectiveColumns = activeTab === 'assignedToMe' ? assignedToMeColumns : documentColumns;
+  const effectiveColumns = documentColumns;
 
 
 
@@ -1474,6 +1498,38 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </div>
               </div> */}
 
+              {/* Mapping Type Details */}
+              {viewingDocument.mappingType && viewingDocument.mappingType !== 'None' && (
+                <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                  <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                    <div className="detail-item">
+                      <div className="detail-label">Mapping Type</div>
+                      <div className="detail-value">{viewingDocument.mappingType}</div>
+                    </div>
+                  </div>
+                  <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                    {viewingDocument.mappingType === 'eCTD' && (
+                      <div className="detail-item">
+                        <div className="detail-label">eCTD Section</div>
+                        <div className="detail-value">{viewingDocument.ectdSection || '—'}</div>
+                      </div>
+                    )}
+                    {viewingDocument.mappingType === 'GMP' && (
+                      <div className="detail-item">
+                        <div className="detail-label">GMP Model</div>
+                        <div className="detail-value">{viewingDocument.gmpModel || '—'}</div>
+                      </div>
+                    )}
+                    {viewingDocument.mappingType === 'TMF' && (
+                      <div className="detail-item">
+                        <div className="detail-label">TMF Zone</div>
+                        <div className="detail-value">{viewingDocument.tmfZone || '—'}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Document File — clickable row like View Template */}
               {(viewingDocument.fileName || viewingDocument.fileRef || viewingDocument.sharePointUrl) && (
                 <div className="ms-Grid-row" style={{ marginTop: 20 }}>
@@ -1788,6 +1844,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <div className="form-group">
               <label className="form-label">Category</label>
               <ReactDropdown
+                key={`editCat-${editingDocument?.id ?? 0}`}
                 name="editCategory"
                 options={editCategoryOptions}
                 defaultOption={editCategoryOptions.find(o => o.value === editForm.categoryId) || null}
@@ -1800,6 +1857,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <div className="form-group">
               <label className="form-label">Status</label>
               <ReactDropdown
+                key={`editStatus-${editingDocument?.id ?? 0}`}
                 name="status"
                 options={statusOptions.filter(opt => opt.value !== 'All')}
                 defaultOption={statusOptions.find(o => o.value === editForm.status) ?? statusOptions[1]}

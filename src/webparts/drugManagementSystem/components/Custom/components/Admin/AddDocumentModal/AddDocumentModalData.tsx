@@ -217,7 +217,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     setDrugs((drugItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
     setCountries(
       (countryItems || [])
-        .filter((item: any) => item.Status === 'Active')
+        .filter((item: any) => !item.Status || item.Status === 'Active')
         .map((item: any) => ({ id: item.ID, name: item.Title }))
     );
 
@@ -563,6 +563,31 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       // and includes the site path (e.g. /sites/DMS/...). Concatenating with
       // absoluteUrl (https://tenant.sharepoint.com/sites/DMS) would double the path.
       const absoluteFileUrl = `${new URL(context.pageContext.web.absoluteUrl).origin}${targetUrl}`;
+      // Build dedicated mapping-type fields for the new SP columns
+      const mappingFields: Record<string, string> = { MappingType: mappingType };
+      if (mappingType === 'eCTD') {
+        const byId = new Map(modules.map(m => [m.id, m]));
+        const leafId = formData.submoduleId || formData.moduleId;
+        const chain: FolderItem[] = [];
+        let n = leafId ? byId.get(leafId) : undefined;
+        while (n) { chain.push(n); if (!n.parentId) break; n = byId.get(n.parentId); }
+        chain.reverse();
+        mappingFields.ECTDSection = chain.length > 0 ? chain[0].name : (formData.moduleId || '');
+        mappingFields.ECTDSubsection = chain.length > 1 ? chain[chain.length - 1].name : (formData.submoduleId || '');
+      } else if (mappingType === 'GMP') {
+        const gmpModel = gmpModels.find(g => g.id === formData.moduleId);
+        mappingFields.GMPModel = gmpModel?.name || formData.moduleId || '';
+      } else if (mappingType === 'TMF') {
+        const byId = new Map(tmfFolders.map(m => [m.id, m]));
+        const leafId = formData.submoduleId || formData.moduleId;
+        const chain: FolderItem[] = [];
+        let n = leafId ? byId.get(leafId) : undefined;
+        while (n) { chain.push(n); if (!n.parentId) break; n = byId.get(n.parentId); }
+        chain.reverse();
+        mappingFields.TMFZone = chain.length > 0 ? chain[0].name : (formData.moduleId || '');
+        mappingFields.TMFSection = chain.length > 1 ? chain[chain.length - 1].name : (formData.submoduleId || '');
+      }
+
       await provider.updateItem(
         {
           CategoryId: formData.categoryId || null,
@@ -578,7 +603,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           ApproverId: formData.approverId || null,
           SentById: (currentUser as any)?.userId || (currentUser as any)?.Id || null,
           Comments: commentsPayload.length > 0 ? JSON.stringify(commentsPayload) : '',
-          SharePointURL: { Url: absoluteFileUrl, Description: artifactName }
+          SharePointURL: { Url: absoluteFileUrl, Description: artifactName },
+          ...mappingFields
         },
         ListNames.DMSDocuments,
         Number(createdId)

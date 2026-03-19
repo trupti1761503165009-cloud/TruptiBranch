@@ -1,0 +1,288 @@
+  {viewingDocument && (
+          <div style={{ padding: '16px 0' }}>
+            {/* REQ 3: Action Buttons at TOP */}
+            <div style={{
+              display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
+              padding: '12px 0 16px', borderBottom: '2px solid #eef2ff', marginBottom: 16
+            }}>
+              {/* Close */}
+              <DefaultButton
+                onClick={() => { setIsDocPanelOpen(false); setReviewerComments([]); setReviewerCommentError(''); }}
+              >
+                Close
+              </DefaultButton>
+
+              {/* View Document externally */}
+              {viewingDocument.sharePointUrl && (
+                <DefaultButton
+                  href={viewingDocument.sharePointUrl}
+                  target="_blank"
+                  styles={{ root: { borderColor: '#1E88E5', color: '#1E88E5' }, rootHovered: { background: '#E3F2FD' } }}
+                >
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
+                  Open in SharePoint
+                </DefaultButton>
+              )}
+
+              {/* REQ 2+4: AUTHOR — Submit (Draft only, creator only, with confirm) */}
+              {isCurrentUserAuthor && viewingDocument.status === 'Draft' && (
+                <PrimaryButton
+                  onClick={() => setIsSubmitConfirmOpen(true)}
+                  styles={{ root: { background: '#1E88E5', borderColor: '#1E88E5' }, rootHovered: { background: '#1565C0' } }}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                  Submit for Approval
+                </PrimaryButton>
+              )}
+
+              {/* REQ 2+4: AUTHOR — Resubmit after Rejection */}
+              {isCurrentUserAuthor && viewingDocument.status === 'Rejected' && (
+                <PrimaryButton
+                  onClick={() => setIsSubmitConfirmOpen(true)}
+                  styles={{ root: { background: '#F57C00', borderColor: '#F57C00' }, rootHovered: { background: '#E65100' } }}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} style={{ marginRight: 6 }} />
+                  Resubmit for Approval
+                </PrimaryButton>
+              )}
+
+              {/* REQ 2+4: APPROVER — Reject (Pending Approval, assigned approver only, with confirm) */}
+              {isCurrentUserApprover && viewingDocument.status === 'Pending Approval' && (
+                <DefaultButton
+                  onClick={handleReject}
+                  styles={{ root: { background: '#d32f2f', borderColor: '#d32f2f', color: '#fff' }, rootHovered: { background: '#c62828', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faXmark} style={{ marginRight: 6 }} />
+                  Reject
+                </DefaultButton>
+              )}
+
+              {/* REQ 2+4: APPROVER — Approve (Pending Approval, assigned approver only, with confirm) */}
+              {isCurrentUserApprover && viewingDocument.status === 'Pending Approval' && (
+                <PrimaryButton
+                  onClick={() => setIsApproveConfirmOpen(true)}
+                  styles={{ root: { background: '#2e7d32', borderColor: '#2e7d32' }, rootHovered: { background: '#1b5e20' } }}
+                >
+                  <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
+                  Approve
+                </PrimaryButton>
+              )}
+
+              {/* Initiate Adobe Sign when Approved */}
+              {viewingDocument.status === 'Approved' && (
+                <PrimaryButton
+                  onClick={() => initiateAdobeSign(viewingDocument)}
+                  styles={{ root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' }, rootHovered: { background: '#3700B3', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                  Initiate Adobe Sign
+                </PrimaryButton>
+              )}
+
+              {/* Sign Document when Pending for Signature */}
+              {viewingDocument.status === 'Pending for Signature' && (
+                <PrimaryButton
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  styles={{ root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' }, rootHovered: { background: '#3700B3', color: '#fff' } }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
+                  Sign Document
+                </PrimaryButton>
+              )}
+
+              {/* Comments modal button */}
+              <DefaultButton
+                onClick={() => setIsCommentsModalOpen(true)}
+                styles={{ root: { borderColor: '#1300a6', color: '#1300a6' } }}
+              >
+                <FontAwesomeIcon icon={faComments} style={{ marginRight: 6 }} />
+                Comments
+              </DefaultButton>
+
+              {/* Version History modal button */}
+              <DefaultButton
+                onClick={() => setIsHistoryModalOpen(true)}
+                styles={{ root: { borderColor: '#546e7a', color: '#546e7a' } }}
+              >
+                <FontAwesomeIcon icon={faClockRotateLeft} style={{ marginRight: 6 }} />
+                Version History
+              </DefaultButton>
+            </div>
+
+            {/* Workflow Status */}
+            <div className="workflow-breadcrumb" style={{ marginBottom: 24 }}>
+              {getWorkflowSteps(viewingDocument.status).map((step, index) => (
+                <React.Fragment key={step.label}>
+                  <div className={`workflow-step ${step.completed ? 'completed' : ''} ${step.active ? 'active' : ''}`}>
+                    {step.completed && <span className="step-check">✓</span>}
+                    <span className="step-label">{step.label}</span>
+                  </div>
+                  {index < getWorkflowSteps(viewingDocument.status).length - 1 && <div className="workflow-arrow">→</div>}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Document Details using ms-Grid */}
+            <div className="ms-Grid">
+              {/* <div className="ms-Grid-row">
+                <div className="ms-Grid-col ms-sm12">
+                  <div className="form-section-header">Document Information</div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Document Name</div>
+                    <div className="detail-value" style={{ fontWeight: 600, color: '#1300a6' }}>{viewingDocument.name}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Drug</div>
+                    <div className="detail-value" style={{ fontWeight: 600, color: '#00695c' }}>{viewingDocument.drugName || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Category</div>
+                    <div className="detail-value">{viewingDocument.category || 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Status</div>
+                    <div className="detail-value">
+                      {(() => {
+                        const s = viewingDocument.status || 'Draft';
+                        const cls = s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        return <span className={`status-badge status-${cls}`}>{s}</span>;
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">CTD Folder</div>
+                    <div className="detail-value">{folderLabelMap.get(viewingDocument.ctdFolder || '') || viewingDocument.ctdFolder || 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Version</div>
+                    <div className="detail-value">v{viewingDocument.version || 1}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Author</div>
+                    <div className="detail-value">{viewingDocument.author || 'N/A'}</div>
+                  </div>
+                </div>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Approver</div>
+                    <div className="detail-value">{viewingDocument.approver || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                  <div className="detail-item">
+                    <div className="detail-label">Last Modified</div>
+                    <div className="detail-value">{viewingDocument.lastModified}</div>
+                  </div>
+                </div>
+              </div> */}
+
+              {/* Document File — clickable row like View Template */}
+              {(viewingDocument.fileName || viewingDocument.fileRef || viewingDocument.sharePointUrl) && (
+                <div className="ms-Grid-row" style={{ marginTop: 20 }}>
+                  <div className="ms-Grid-col ms-sm12 ms-md6">
+                    <div className="formLabel" style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Document File</div>
+                    <a
+                      href={viewingDocument.sharePointUrl || viewingDocument.fileRef || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 14px', background: '#f4f6fb',
+                        borderRadius: 6, border: '1px solid #d0d7e5', cursor: 'pointer'
+                      }}>
+                        <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 20, color: '#1300a6' }} />
+                        <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
+                          {viewingDocument.fileName || viewingDocument.name}
+                        </span>
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 13, color: '#1300a6' }} />
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Word Document Embed with error fallback */}
+              {viewingDocument.fileRef && (
+                <>
+                  <div className="ms-Grid-row" style={{ marginTop: 24 }}>
+                    <div className="ms-Grid-col ms-sm12">
+                      <div className="form-section-header">Document Preview</div>
+                    </div>
+                  </div>
+                  <div className="ms-Grid-row" style={{ marginTop: 12 }}>
+                    <div className="ms-Grid-col ms-sm12">
+                      {getWordEmbedUrl(viewingDocument) ? (
+                        <div style={{ position: 'relative' }}>
+                          <iframe
+                            key={viewingDocument.id}
+                            src={getWordEmbedUrl(viewingDocument)}
+                            style={{ width: '100%', height: '70vh', border: '1px solid #E0E0E0', borderRadius: 4 }}
+                            title={`Preview: ${viewingDocument.name}`}
+                            allowFullScreen
+                          />
+                          <div style={{ marginTop: 8, textAlign: 'right' }}>
+                            <DefaultButton
+                              href={`${spContext?.pageContext?.web?.absoluteUrl}${viewingDocument.fileRef.startsWith('/') ? viewingDocument.fileRef : '/' + viewingDocument.fileRef}`}
+                              target="_blank"
+                              styles={{ root: { fontSize: 13, borderColor: '#1300a6', color: '#1300a6' } }}
+                            >
+                              <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ marginRight: 6 }} />
+                              Open in SharePoint (if preview fails)
+                            </DefaultButton>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          padding: 32, textAlign: 'center', background: '#f5f5f5',
+                          borderRadius: 8, border: '1px dashed #ccc', color: '#666'
+                        }}>
+                          <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 24, marginBottom: 12, display: 'block', margin: '0 auto 12px' }} />
+                          <p style={{ margin: '0 0 12px', fontSize: 14 }}>Document preview is not available in this context.</p>
+                          <DefaultButton
+                            href={viewingDocument.sharePointUrl || viewingDocument.fileRef}
+                            target="_blank"
+                            styles={{ root: { borderColor: '#1300a6', color: '#1300a6' } }}
+                          >
+                            Open Document in SharePoint
+                          </DefaultButton>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
+        )}
