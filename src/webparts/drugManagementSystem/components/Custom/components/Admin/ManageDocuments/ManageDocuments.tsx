@@ -148,11 +148,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
     return isDocLevelApprover || (canApprove && !viewingDocument.approverId);
   }, [viewingDocument, currentUser, canApprove]);
 
-  // REQ 10: Word embed URL — edit mode for Draft/Rejected authors, view mode otherwise
+  // REQ 10: Word embed URL
+  // Edit mode:  author on Draft/Rejected  OR  approver on Pending Approval
+  // View mode:  author on Pending Approval (doc is under review), and all other cases
   const getWordEmbedUrl = (doc: Document, forceViewMode = false): string => {
     if (!spContext) return '';
-    const canEditInline = !forceViewMode && isCurrentUserAuthor &&
-      (doc.status === 'Draft' || doc.status === 'Rejected');
+    const authorCanEdit   = isCurrentUserAuthor   && (doc.status === 'Draft' || doc.status === 'Rejected');
+    const approverCanEdit = isCurrentUserApprover && doc.status === 'Pending Approval';
+    const canEditInline   = !forceViewMode && (authorCanEdit || approverCanEdit);
     const action = canEditInline ? 'edit' : 'embedview';
 
     // Use Doc.aspx with server-relative file URL
