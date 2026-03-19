@@ -243,11 +243,11 @@ const DmsShell: React.FC = () => {
     if (effectiveRole === 'Admin') {
       switch (currentView) {
         case 'documents':
-          return <DocumentsViewRouter />;
+          return <DocumentsViewRouter key="admin-all" />;
         case 'myDocuments':
-          return <DocumentsViewRouter filterByCurrentUser={true} />;
+          return <DocumentsViewRouter key="admin-my" filterByCurrentUser={true} />;
         case 'pendingApproval':
-          return <DocumentsViewRouter filterByPending={true} />;
+          return <DocumentsViewRouter key="admin-assigned" filterByPending={true} />;
         case 'templates':
           return <TemplatesViewRouter />;
         case 'categories':
@@ -276,7 +276,9 @@ const DmsShell: React.FC = () => {
           return <AdminDashboard />;
       }
     } else if (effectiveRole === 'Author') {
+      const authorKey = currentView === 'pendingApproval' ? 'author-assigned' : 'author-my';
       return <DocumentsViewRouter
+        key={authorKey}
         filterByCurrentUser={currentView !== 'pendingApproval'}
         filterByPending={currentView === 'pendingApproval'}
         hideAddButton={false}
@@ -285,8 +287,8 @@ const DmsShell: React.FC = () => {
       return <ReviewerDashboard />;
     } else if (effectiveRole === 'Approver') {
       return currentView === 'myDocuments'
-        ? <DocumentsViewRouter filterByCurrentUser={true} />
-        : <DocumentsViewRouter filterByPending={true} />;
+        ? <DocumentsViewRouter key="approver-my" filterByCurrentUser={true} />
+        : <DocumentsViewRouter key="approver-assigned" filterByPending={true} />;
     } else if (effectiveRole === 'HR') {
       return <UsersViewRouter />;
     }
