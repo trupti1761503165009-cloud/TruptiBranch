@@ -132,6 +132,69 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     [provider, sanitizeFolderName]
   );
 
+  // Pre-creates the COMPLETE folder hierarchy for the given mapping type under the drug folder.
+  // Parents are created before children so SP doesn't reject the request.
+  // If a folder already exists the error is silently swallowed.
+  const createFullFolderStructure = React.useCallback(
+    async (drugFolderPath: string, mappingType: string): Promise<void> => {
+      if (!provider) return;
+
+      const buildChain = (nodeId: string, byId: Map<string, FolderItem>): string[] => {
+        const chain: string[] = [];
+        let cur = byId.get(nodeId);
+        while (cur) {
+          chain.unshift(sanitizeFolderName(cur.name));
+          cur = cur.parentId ? byId.get(cur.parentId) : undefined;
+        }
+        return chain;
+      };
+
+      const createPath = async (fullPath: string) => {
+        try { await provider.createFolder(fullPath); } catch { /* already exists */ }
+      };
+
+      try {
+        if (mappingType === 'eCTD' && modules.length > 0) {
+          const byId = new Map(modules.map(m => [m.id, m]));
+          // Sort by depth so parents are always created before children
+          const withDepth = modules.map(m => {
+            let depth = 0;
+            let cur: FolderItem | undefined = m;
+            while (cur?.parentId && byId.has(cur.parentId)) { depth++; cur = byId.get(cur.parentId); }
+            return { m, depth };
+          });
+          withDepth.sort((a, b) => a.depth - b.depth);
+          for (const { m } of withDepth) {
+            const chain = buildChain(m.id, byId);
+            if (chain.length) await createPath(`${drugFolderPath}/${chain.join('/')}`);
+          }
+
+        } else if (mappingType === 'GMP' && gmpModels.length > 0) {
+          for (const model of gmpModels) {
+            await createPath(`${drugFolderPath}/${sanitizeFolderName(model.name)}`);
+          }
+
+        } else if (mappingType === 'TMF' && tmfFolders.length > 0) {
+          const byId = new Map(tmfFolders.map(m => [m.id, m]));
+          const withDepth = tmfFolders.map(m => {
+            let depth = 0;
+            let cur: FolderItem | undefined = m;
+            while (cur?.parentId && byId.has(cur.parentId)) { depth++; cur = byId.get(cur.parentId); }
+            return { m, depth };
+          });
+          withDepth.sort((a, b) => a.depth - b.depth);
+          for (const { m } of withDepth) {
+            const chain = buildChain(m.id, byId);
+            if (chain.length) await createPath(`${drugFolderPath}/${chain.join('/')}`);
+          }
+        }
+      } catch (e) {
+        console.warn('createFullFolderStructure: error pre-creating folders:', e);
+      }
+    },
+    [provider, modules, gmpModels, tmfFolders, sanitizeFolderName]
+  );
+
   const getLibraryUrl = React.useCallback(
     (listName: string) => {
       const base = context?.pageContext?.web?.serverRelativeUrl ?? '';
@@ -571,6 +634,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       const targetFolder = await ensureFolderPath(libraryUrl, [drugName, ...ctdSegments]);
       const targetUrl = `${targetFolder}/${targetFileName}`;
       await provider.copyFile(selTemplate.fileRef, targetUrl);
+
+      // Pre-create the COMPLETE eCTD/GMP/TMF folder hierarchy under this drug folder.
+      // Runs in the background — does not block document creation.
+      const drugFolderPath = `${libraryUrl}/${sanitizeFolderName(drugName)}`;
+      void createFullFolderStructure(drugFolderPath, mappingType);
 
       const created = await provider.getItemsByQuery({
         listName: ListNames.DMSDocuments,
