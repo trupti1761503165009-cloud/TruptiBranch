@@ -85,6 +85,15 @@ export function ManageTemplateUploadData() {
     const errors: Partial<Record<keyof IFormData | 'file', string>> = {};
     if (panelMode === 'add' && !formData.name.trim()) errors.name = 'Template name is required.';
     if (panelMode === 'add' && selectedFiles.length === 0) errors.file = 'Please select a file to upload.';
+    if (panelMode === 'add' && formData.name.trim() && formData.version.trim()) {
+      const normName = formData.name.trim().toLowerCase();
+      const normVersion = formData.version.trim().toLowerCase();
+      const duplicate = items.some(item =>
+        item.name.replace(/\.[^.]+$/, '').toLowerCase() === normName.replace(/\.[^.]+$/, '') &&
+        (item.version || '1.0').trim().toLowerCase() === normVersion
+      );
+      if (duplicate) errors.name = 'A template with this name and version already exists. Use Edit to update it.';
+    }
     if (panelMode === 'edit' && existingFileDeleted && selectedFiles.length === 0) {
       errors.file = 'Please upload a replacement file.';
     }
