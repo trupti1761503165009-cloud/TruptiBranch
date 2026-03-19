@@ -280,14 +280,13 @@ const DmsShell: React.FC = () => {
         filterByCurrentUser={currentView !== 'pendingApproval'}
         filterByPending={currentView === 'pendingApproval'}
         hideAddButton={false}
-        hideFolderSidebar={true}
       />;
     } else if (effectiveRole === 'Reviewer') {
       return <ReviewerDashboard />;
     } else if (effectiveRole === 'Approver') {
       return currentView === 'myDocuments'
-        ? <DocumentsViewRouter filterByCurrentUser={true} hideFolderSidebar={true} />
-        : <DocumentsViewRouter filterByPending={true} hideFolderSidebar={true} />;
+        ? <DocumentsViewRouter filterByCurrentUser={true} />
+        : <DocumentsViewRouter filterByPending={true} />;
     } else if (effectiveRole === 'HR') {
       return <UsersViewRouter />;
     }

@@ -52,10 +52,18 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
 
     if (activeTab === 'myDocuments') {
-      list = list.filter(d =>
-        (currentUserId > 0 && d.authorId === currentUserId) ||
-        (userEmail !== '' && String(d.author || '').toLowerCase().includes(userEmail))
-      );
+      const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+      list = list.filter(d => {
+        const authorDisplay = String(d.author || '').toLowerCase().trim();
+        return (
+          // 1. SP user ID match
+          (currentUserId > 0 && d.authorId === currentUserId) ||
+          // 2. Display name exact match (e.g. "Users" === "Users")
+          (currentDisplayName !== '' && authorDisplay === currentDisplayName) ||
+          // 3. Email substring fallback
+          (userEmail !== '' && authorDisplay.includes(userEmail))
+        );
+      });
     } else if (activeTab === 'assignedToMe') {
       const currentLoginName = String((currentUser as any)?.loginName || '').toLowerCase();
       const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
