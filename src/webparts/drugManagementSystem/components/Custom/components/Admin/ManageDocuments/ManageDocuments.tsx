@@ -541,16 +541,40 @@ export const ManageDocuments: React.FC<any> = (props) => {
       isSortingRequired: true
     },
     {
-      key: 'ctdFolder',
-      name: 'CTD FOLDER',
-      fieldName: 'ctdFolder',
-      minWidth: 140,
-      maxWidth: 220,
+      key: 'mappingType',
+      name: 'MAPPING TYPE',
+      fieldName: 'mappingType',
+      minWidth: 110,
+      maxWidth: 150,
       isSortingRequired: true,
-      onRender: (doc: Document) => {
-        const key = doc.ctdFolder || doc.ctdModule || '';
-        return <span>{folderLabelMap.get(key) || key || 'N/A'}</span>;
-      }
+      onRender: (doc: Document) => <span>{doc.mappingType || '—'}</span>
+    },
+    {
+      key: 'ectdSection',
+      name: 'eCTD SECTION',
+      fieldName: 'ectdSection',
+      minWidth: 130,
+      maxWidth: 200,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.ectdSection || '—'}</span>
+    },
+    {
+      key: 'gmpModel',
+      name: 'GMP MODEL',
+      fieldName: 'gmpModel',
+      minWidth: 120,
+      maxWidth: 180,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.gmpModel || '—'}</span>
+    },
+    {
+      key: 'tmfZone',
+      name: 'TMF ZONE',
+      fieldName: 'tmfZone',
+      minWidth: 110,
+      maxWidth: 170,
+      isSortingRequired: true,
+      onRender: (doc: Document) => <span>{doc.tmfZone || '—'}</span>
     },
     {
       key: 'status',
@@ -1473,6 +1497,38 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   </div>
                 </div>
               </div> */}
+
+              {/* Mapping Type Details */}
+              {viewingDocument.mappingType && viewingDocument.mappingType !== 'None' && (
+                <div className="ms-Grid-row" style={{ marginTop: 16 }}>
+                  <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                    <div className="detail-item">
+                      <div className="detail-label">Mapping Type</div>
+                      <div className="detail-value">{viewingDocument.mappingType}</div>
+                    </div>
+                  </div>
+                  <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
+                    {viewingDocument.mappingType === 'eCTD' && (
+                      <div className="detail-item">
+                        <div className="detail-label">eCTD Section</div>
+                        <div className="detail-value">{viewingDocument.ectdSection || '—'}</div>
+                      </div>
+                    )}
+                    {viewingDocument.mappingType === 'GMP' && (
+                      <div className="detail-item">
+                        <div className="detail-label">GMP Model</div>
+                        <div className="detail-value">{viewingDocument.gmpModel || '—'}</div>
+                      </div>
+                    )}
+                    {viewingDocument.mappingType === 'TMF' && (
+                      <div className="detail-item">
+                        <div className="detail-label">TMF Zone</div>
+                        <div className="detail-value">{viewingDocument.tmfZone || '—'}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Document File — clickable row like View Template */}
               {(viewingDocument.fileName || viewingDocument.fileRef || viewingDocument.sharePointUrl) && (

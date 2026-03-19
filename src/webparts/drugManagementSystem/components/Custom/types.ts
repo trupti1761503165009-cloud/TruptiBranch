@@ -25,6 +25,12 @@ export interface Document {
   ctdFolder?: string;
   ctdModule?: string;
   submodule?: string;
+  mappingType?: string;
+  ectdSection?: string;
+  ectdSubsection?: string;
+  gmpModel?: string;
+  tmfZone?: string;
+  tmfSection?: string;
   template?: string;
   templateId?: number;
   content?: string;
