@@ -1119,8 +1119,10 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         DocumentType: (() => {            // resolves mapping type using folder ID sets
           const gmpSet = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
           const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
-          if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
-          if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+          const cf = doc.ctdFolder || '';
+          const cm = doc.ctdModule || '';
+          if ((cf && tmfSet.has(cf)) || (cm && tmfSet.has(cm))) return 'TMF';
+          if ((cf && gmpSet.has(cf)) || (cm && gmpSet.has(cm))) return 'GMP';
           return 'eCTD';
         })(),
         CTDFolder: doc.ctdFolder || '',      // folder path for signed doc storage
