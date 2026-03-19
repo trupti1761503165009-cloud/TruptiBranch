@@ -142,7 +142,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       // Countries — only active ones
       provider.getItemsByQuery({
         listName: ListNames.Countries,
-        select: ['ID', 'Title', 'IsActive'],
+        select: ['ID', 'Title', 'Status'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
@@ -153,10 +153,10 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         try {
           const q = new CamlBuilder()
             .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status',
-              'Category', 'CategoryId', 'Country', 'CountryId',
-              'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
-              'MappedGMPModel', 'MappedGMPModelId',
-              'MappedTMFFolder', 'MappedTMFFolderId'])
+                   'Category', 'CategoryId', 'Country', 'CountryId',
+                   'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
+                   'MappedGMPModel', 'MappedGMPModelId',
+                   'MappedTMFFolder', 'MappedTMFFolderId'])
             .RowLimit(5000, true)
             .Query();
           const items = await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
@@ -217,7 +217,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     setDrugs((drugItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
     setCountries(
       (countryItems || [])
-        .filter((item: any) => item.IsActive == true)
+        .filter((item: any) => !item.Status || item.Status === 'Active')
         .map((item: any) => ({ id: item.ID, name: item.Title }))
     );
 
@@ -595,6 +595,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         mappingFields.TMFSection = chain.length > 1 ? chain[chain.length - 1].name : (formData.submoduleId || '');
       }
 
+      // Step 1: update all required metadata fields (always succeeds if SP list is correct)
       await provider.updateItem(
         {
           CategoryId: formData.categoryId || null,
@@ -606,16 +607,36 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           Submodule: submoduleValue,
           Status: 'Draft',
           IsEmailSend: true,
-          // DocumentVersion: 1,
           ApproverId: formData.approverId || null,
           SentById: (currentUser as any)?.userId || (currentUser as any)?.Id || null,
           Comments: commentsPayload.length > 0 ? JSON.stringify(commentsPayload) : '',
-          SharePointURL: { Url: absoluteFileUrl, Description: artifactName },
-          ...mappingFields
+          SharePointURL: { Url: absoluteFileUrl, Description: artifactName }
         },
         ListNames.DMSDocuments,
         Number(createdId)
       );
+
+      // Step 2: try to save mapping-type fields separately.
+      // These columns (MappingType, ECTDSection, GMPModel, TMFZone, TMFSection) must exist
+      // in the SharePoint list. If they don't exist yet, this step is silently skipped so
+      // the document creation still succeeds.
+      if (Object.keys(mappingFields).length > 0) {
+        try {
+          await provider.updateItem(mappingFields, ListNames.DMSDocuments, Number(createdId));
+        } catch (mappingErr: any) {
+          const msg = String(mappingErr?.message || mappingErr || '');
+          if (msg.includes('400') || msg.includes('does not exist') || msg.includes('InvalidClientQuery')) {
+            console.warn(
+              'Mapping columns (MappingType / ECTDSection / GMPModel / TMFZone / TMFSection) ' +
+              'do not exist in the DMS Documents list yet. Document created without mapping metadata. ' +
+              'Please add the columns to the SharePoint list to enable this feature.',
+              mappingErr
+            );
+          } else {
+            throw mappingErr;
+          }
+        }
+      }
 
       onSuccess();
       closeAndReset();
