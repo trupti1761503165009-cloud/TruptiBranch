@@ -162,7 +162,8 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           const items = await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
           // Only show Active, non-deleted templates in the Add Document dropdown
           return (items || []).filter((item: any) =>
-            !item.IsDeleted && (item.Status === 'Active' || !item.Status)
+            item.IsDelete !== 'Yes' && item.IsDelete !== true && item['IsDelete.value'] !== '1' &&
+            (item.Status === 'Active' || !item.Status)
           );
         } catch (e) {
           console.error('Templates CAML load failed:', e);

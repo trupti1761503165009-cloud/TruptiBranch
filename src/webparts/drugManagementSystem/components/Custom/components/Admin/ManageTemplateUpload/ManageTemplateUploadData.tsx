@@ -58,7 +58,7 @@ export function ManageTemplateUploadData() {
 
       const data = await provider.getItemsByCAMLQuery(ListNames.Templates, camlQuery.ToString());
       const mapped: ITemplateUploadItem[] = (data || [])
-        .filter((item: any) => !item.IsDeleted && !item.IsDelete)
+        .filter((item: any) => item.IsDelete !== 'Yes' && item.IsDelete !== true && item['IsDelete.value'] !== '1')
         .map((item: any) => ({
           id: item.ID,
           name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',

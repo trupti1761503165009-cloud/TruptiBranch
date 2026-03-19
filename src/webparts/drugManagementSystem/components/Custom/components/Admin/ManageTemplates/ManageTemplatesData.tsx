@@ -112,7 +112,7 @@ export function ManageTemplatesData() {
           mappedGMPModelId: Number(item.MappedGMPModelId || parseLookupId(item.MappedGMPModel)) || 0,
           mappedTMFFolderId: Number(item.MappedTMFFolderId || parseLookupId(item.MappedTMFFolder)) || 0,
           serverRedirectedEmbedUrl: item.ServerRedirectedEmbedUrl || '',
-          isDeleted: !!(item.IsDelete || item.IsDeleted)
+          isDeleted: item.IsDelete === 'Yes' || item.IsDelete === true || item['IsDelete.value'] === '1'
         }))
       );
       setErrorMessage('');

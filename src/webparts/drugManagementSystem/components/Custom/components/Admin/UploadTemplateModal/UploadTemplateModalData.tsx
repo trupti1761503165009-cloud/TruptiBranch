@@ -104,7 +104,7 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
       camlQuery.OrderBy('LinkFilename');
       const data = await provider.getItemsByCAMLQuery(ListNames.Templates, camlQuery.ToString());
       const options: ITemplateOption[] = (data || [])
-        .filter((item: any) => !item.IsDeleted && !item.IsDelete && (item.Status || 'Active') === 'Active')
+        .filter((item: any) => item.IsDelete !== 'Yes' && item.IsDelete !== true && item['IsDelete.value'] !== '1' && (item.Status || 'Active') === 'Active')
         .map((item: any) => ({
           id: item.ID,
           name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
