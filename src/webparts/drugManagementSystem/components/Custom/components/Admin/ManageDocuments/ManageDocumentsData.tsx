@@ -93,7 +93,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   }, [documents, activeTab, currentUser]);
 
   const [filteredDocuments, setFilteredDocuments] = React.useState<Document[]>([]);
-  const [drugs, setDrugs] = React.useState<Array<{ id: number; name: string; category?: string; status?: string; ctdStructure?: 'ectd' | 'dossier' }>>([]);
+  const [drugs, setDrugs] = React.useState<Array<{ id: number; name: string; category?: string; status?: string; ctdStructure?: 'ectd' | 'dossier' | 'gmp' | 'tmf' }>>([]);
   const [selectedDrugId, setSelectedDrugId] = React.useState<number | null>(null);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [ctdFolders, setCtdFolders] = React.useState<CTDFolder[]>([]);
@@ -125,7 +125,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   });
   const [signature, setSignature] = React.useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
-  const [ctdStructure, setCtdStructure] = React.useState<'ectd' | 'dossier'>('ectd');
+  const [ctdStructure, setCtdStructure] = React.useState<'ectd' | 'dossier' | 'gmp' | 'tmf'>('ectd');
   const isStructureDisabled = selectedDrugId !== null;
   const [filters, setFilters] = React.useState<ManageDocumentsFilters>({
     category: '',
@@ -154,7 +154,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   const canDelete = !!(siteAdmin || roleMapping?.isAdmin);
   const canCreate = !!(siteAdmin || roleMapping?.isAuthor || roleMapping?.isAdmin);
 
-  const handleStructureChange = (value: 'ectd' | 'dossier') => {
+  const handleStructureChange = (value: 'ectd' | 'dossier' | 'gmp' | 'tmf') => {
     setCtdStructure(value);
   };
 

@@ -289,7 +289,8 @@ export const ManageDocuments: React.FC<any> = (props) => {
   const structureOptions: IReactDropOptionProps[] = React.useMemo(
     () => [
       { label: 'eCTD', value: 'ectd' },
-      { label: 'DIA reference', value: 'dossier' }
+      { label: 'GMP', value: 'gmp' },
+      { label: 'TMF', value: 'tmf' }
     ],
     []
   );
@@ -366,9 +367,10 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   const activeFolderTree = React.useMemo(() => {
     if (ctdStructure === 'ectd') return ctdFolders;
-    if (ctdStructure === 'dossier') return tmfFolders;
+    if (ctdStructure === 'gmp') return gmpFolders;
+    if (ctdStructure === 'tmf' || ctdStructure === 'dossier') return tmfFolders;
     return ctdFolders;
-  }, [ctdFolders, tmfFolders, ctdStructure]);
+  }, [ctdFolders, tmfFolders, gmpFolders, ctdStructure]);
 
   const currentFolderNode = React.useMemo(
     () => (folderTrail.length ? findFolderNode(activeFolderTree, folderTrail[folderTrail.length - 1]) : undefined),
@@ -743,7 +745,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <div className="formControl">
                 <ReactDropdown name="ctdStructure" options={structureOptions} defaultOption={structureDefault}
-                  onChange={(opt) => handleStructureChange((opt?.value as 'ectd' | 'dossier') ?? 'ectd')}
+                  onChange={(opt) => handleStructureChange((opt?.value as 'ectd' | 'dossier' | 'gmp' | 'tmf') ?? 'ectd')}
                   isCloseMenuOnSelect={true} isSorted={false} isClearable={false} isDisabled={isStructureDisabled} />
               </div>
             </div>
