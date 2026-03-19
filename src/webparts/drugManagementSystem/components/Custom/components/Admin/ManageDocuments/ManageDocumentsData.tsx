@@ -455,17 +455,19 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         .RowLimit(5000, true)
         .Query();
 
+      // Only select columns that exist on the Drugs/Drugs Database list.
+      // 'Category' and 'Status' may not exist — querying them causes a 400.
       const drugsQuery = new CamlBuilder()
-        .View(['ID', 'Title', 'Category', 'Status'])
+        .View(['ID', 'Title'])
         .RowLimit(1000, true)
         .Query();
       drugsQuery.OrderBy('Title');
 
       const [docs, folders, cats, gmp] = await Promise.all([
         provider.getItemsByCAMLQuery(ListNames.DMSDocuments, docsQuery.ToString().replace('<View>', '<View Scope="RecursiveAll">')),
-        provider.getItemsByCAMLQuery(ListNames.CTDFolders, foldersQuery.ToString()),
-        provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()),
-        provider.getItemsByCAMLQuery(ListNames.GmpModels, gmpQuery.ToString())
+        provider.getItemsByCAMLQuery(ListNames.CTDFolders, foldersQuery.ToString()).catch(() => []),
+        provider.getItemsByCAMLQuery(ListNames.Categories, categoriesQuery.ToString()).catch(() => []),
+        provider.getItemsByCAMLQuery(ListNames.GmpModels, gmpQuery.ToString()).catch(() => [])
       ]);
 
       let tmf: any[] = [];
@@ -475,7 +477,12 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         console.warn(`List "${ListNames.TMFFolders}" not found or inaccessible:`, error);
         tmf = [];
       }
-      const drugsItems = await provider.getItemsByCAMLQuery(ListNames.DrugsDatabase, drugsQuery.ToString());
+      let drugsItems: any[] = [];
+      try {
+        drugsItems = await provider.getItemsByCAMLQuery(ListNames.DrugsDatabase, drugsQuery.ToString()) || [];
+      } catch {
+        console.warn(`List "${ListNames.DrugsDatabase}" could not be loaded.`);
+      }
       const mappedDocs = (docs || []).map(mapDocumentItem);
       setDocuments(mappedDocs);
       setCtdFolders(buildCTDFolderTree(folders || []));
@@ -497,8 +504,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         (drugsItems || []).map((item: any) => ({
           id: item.ID,
           name: item.Title,
-          category: item.Category,
-          status: item.Status,
+          category: item.Category || undefined,
+          status: item.Status || undefined,
           ctdStructure: 'ectd'
         }))
       );
