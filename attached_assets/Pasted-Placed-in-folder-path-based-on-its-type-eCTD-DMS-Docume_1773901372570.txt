@@ -1,0 +1,42 @@
+Placed in folder path based on its type:
+eCTD → DMS Documents / {DrugName} / Module 1 / Section 1.1 / ...
+TMF → DMS Documents / {DrugName} / Zone A / Section B / ...
+GMP → DMS Documents / {DrugName} / {GMP Model Name} / ...
+But now when i create document
+only DRug name and there document created there where all folder strture If ectd there all strture ?
+if TMF there all strture ?
+if GMP there ll strture ?
+do we need power automate workflow ech time when document create created folder strtured for that??
+beacuse we have alredy master fodler strture there for Ectd GMP and TMF
+so what we do please do it whole secerio explain me i dont understand scerio for folder strture??
+Full Scenario Explanation
+Tab: All Documents
+Who sees it: Admin only (via left nav)
+What it shows: Every document in the system — no filtering by user
+Drugs Folder sub-tab: Browse by Drug name → inside each drug you see its folder tree:
+If document type = eCTD → shows eCTD Module 1/2/3/4/5 folder tree
+If document type = TMF → shows TMF Zone → Section tree
+If document type = GMP → shows GMP model name as folder
+Document Folder sub-tab: Same documents as a flat list, no tree
+Tab: My Documents
+Who sees it: Admin, Author, Approver
+What it shows: Only documents where you created the document
+How it identifies you (5 checks in order):
+SharePoint "Created By" user ID matches your login ID
+SentBy person field ID matches your login ID ← now saved on every new document
+Author display name exactly matches your display name (e.g. "Users" = "Users")
+SentBy display name exactly matches your display name
+Email substring fallback
+Drugs Folder / Document Folder: Same two sub-views, scoped to your documents only
+Tab: Assigned to Me
+Who sees it: Admin, Author, Approver
+What it shows: Only documents where your name was selected in the Approver dropdown when the document was added
+How it identifies you (5 checks):
+ApproverId user ID matches your login ID
+Approver display name exactly matches your display name
+Email from login claim matches
+Login claim ends-with match
+Email substring fallback
+About the Author Column
+The Author field in CAML is SharePoint's system "Created By" — automatically set by SharePoint when a file is created. There is no separate custom Author column needed. The SentBy column is the DMS custom person field, and it is now explicitly saved with your user ID every time you create a document. The filter checks both, so documents you create will always appear in your "My Documents."
+
