@@ -72,9 +72,16 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     } else if (activeTab === 'assignedToMe') {
       const currentLoginName = String((currentUser as any)?.loginName || '').toLowerCase();
       const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+      const approverStatuses = new Set([
+        'pending approval',
+        'approved',
+        'pending for signature',
+        'initiate for signature',
+        'signed',
+      ]);
       list = list.filter(d => {
         const status = String(d.status || '').toLowerCase().trim();
-        if (status !== 'pending approval') return false;
+        if (!approverStatuses.has(status)) return false;
         const approverDisplay = String(d.approver || '').toLowerCase().trim();
         return (
           // 1. SharePoint user ID match (most reliable)
