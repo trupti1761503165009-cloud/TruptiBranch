@@ -1632,6 +1632,20 @@ ul.HelpDeskEvent li .symbolWrapper .symbolDate {
     color: #fff;
 }
 
+.actionBtn.btnAdd {
+    color: #28a745 !important;
+}
+
+.actionBtn.btnAdd:hover {
+    background: #28a745 !important;
+    color: #fff !important;
+}
+
+.actionBtn.btnAdd:hover svg,
+.actionBtn.btnAdd:hover i {
+    color: #fff !important;
+}
+
 .actionBtn.btnRefresh {
     color: #dd5f15 !important;
 }

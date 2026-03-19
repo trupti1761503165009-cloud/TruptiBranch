@@ -178,8 +178,8 @@ export function ManageTemplatesData() {
   }, [provider]);
 
   useEffect(() => {
-    // Always exclude soft-deleted templates from the grid
-    let filtered = templates.filter(t => !t.isDeleted);
+    // Always exclude soft-deleted and unmapped templates from the grid
+    let filtered = templates.filter(t => !t.isDeleted && t.mappingType !== 'None' && !!t.mappingType);
 
     if (searchTerm.trim()) {
       const s = searchTerm.trim().toLowerCase();

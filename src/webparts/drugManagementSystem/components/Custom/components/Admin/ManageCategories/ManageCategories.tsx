@@ -968,6 +968,52 @@ export const ManageCategories: React.FC<any> = (props) => {
           addEDButton={
             selectedIds.length > 0 && (
               <div className="dflex">
+                {selectedIds.length === 1 && hierarchyLevel !== 'templateName' && hierarchyLevel !== 'items' && (
+                  <Link
+                    className="actionBtn iconSize btnAdd ml-10"
+                    onClick={() => {
+                      const item = (currentItems as any[]).find((i: any) => i.id === selectedIds[0]);
+                      if (!item) return;
+                      const childLevelMap: Record<string, string> = {
+                        documentCategory: 'group',
+                        group: 'subGroup',
+                        subGroup: 'artifactName',
+                        artifactName: 'templateName'
+                      };
+                      const childLabelMap: Record<string, string> = {
+                        documentCategory: 'Group',
+                        group: 'Sub Group',
+                        subGroup: 'Artifact / Document Name',
+                        artifactName: 'Template Name'
+                      };
+                      const childLevel = childLevelMap[hierarchyLevel];
+                      const childLabel = childLabelMap[hierarchyLevel];
+                      if (!childLevel) return;
+                      const updatedPath: HierarchyPath = { ...hierarchyPath };
+                      if (hierarchyLevel === 'documentCategory') updatedPath.documentCategory = item._value;
+                      else if (hierarchyLevel === 'group') updatedPath.group = item._value;
+                      else if (hierarchyLevel === 'subGroup') updatedPath.subGroup = item._value;
+                      else if (hierarchyLevel === 'artifactName') updatedPath.artifactName = item._value;
+                      setHierarchyPath(updatedPath);
+                      setQuickAddDialog({
+                        open: true,
+                        level: levelToField(childLevel),
+                        label: childLabel,
+                        value: '',
+                        linkedTemplate: ''
+                      });
+                    }}
+                  >
+                    <TooltipHost content={
+                      hierarchyLevel === 'documentCategory' ? 'Add Group'
+                        : hierarchyLevel === 'group' ? 'Add Sub Group'
+                          : hierarchyLevel === 'subGroup' ? 'Add Artifact'
+                            : 'Add Template'
+                    }>
+                      <FontAwesomeIcon icon={faPlus} />
+                    </TooltipHost>
+                  </Link>
+                )}
                 {selectedIds.length === 1 && hierarchyLevel === 'items' && (
                   <>
                     <Link
