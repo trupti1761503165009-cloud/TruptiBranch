@@ -1117,9 +1117,9 @@ export const ManageCategories: React.FC<any> = (props) => {
                 autoFocus
               />
             </div>
-            <div style={{ padding: '10px 12px', background: '#fff8e1', borderRadius: 4, border: '1px solid #ffe082', fontSize: 13, color: '#795548', marginBottom: 16 }}>
+            {/* <div style={{ padding: '10px 12px', background: '#fff8e1', borderRadius: 4, border: '1px solid #ffe082', fontSize: 13, color: '#795548', marginBottom: 16 }}>
               Renaming will update all records under this folder. This action cannot be undone.
-            </div>
+            </div> */}
             <div style={{ display: 'flex', gap: 10 }}>
               <PrimaryButton
                 className="btn btn-primary"
