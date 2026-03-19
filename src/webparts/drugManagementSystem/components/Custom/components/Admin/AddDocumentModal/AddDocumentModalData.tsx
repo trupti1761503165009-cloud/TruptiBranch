@@ -57,7 +57,8 @@ interface TemplateItem {
 }
 
 interface FolderItem {
-  id: string;
+  id: string;       // FolderId code (e.g. "1.2") — used as tree key
+  spItemId?: string; // SP list item ID (e.g. "5") — used for lookup-field matching
   name: string;
   parentId?: string;
 }
@@ -250,28 +251,31 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       })
     );
 
-    // eCTD CTD folders keyed by FolderId
+    // eCTD CTD folders — id=FolderId code, spItemId=SP list item ID
     setModules(
       (folderItems || []).map((item: any) => ({
         id: item.FolderId || String(item.ID),
+        spItemId: String(item.ID),
         name: item.Title,
         parentId: item.ParentFolderId || undefined
       }))
     );
 
-    // GMP models keyed by ID (numeric string)
+    // GMP models keyed by SP item ID (numeric string)
     setGmpModels(
       (gmpItems || []).map((item: any) => ({
         id: String(item.ID),
+        spItemId: String(item.ID),
         name: item.Title,
         parentId: undefined
       }))
     );
 
-    // TMF folders keyed by FolderId
+    // TMF folders — id=FolderId code, spItemId=SP list item ID
     setTmfFolders(
       (tmfItems || []).map((item: any) => ({
         id: item.FolderId || String(item.ID),
+        spItemId: String(item.ID),
         name: item.Title,
         parentId: item.ParentFolderId || undefined
       }))
@@ -301,15 +305,17 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     const mappedId = selectedTemplate.mappedFolderId;
 
     if (mappingType === 'eCTD') {
+      // Dual lookup: by FolderId code OR by SP item ID (template lookup field stores SP item ID)
       const byId = new Map(modules.map(m => [m.id, m]));
-      const leaf = byId.get(mappedId);
+      const bySpId = new Map(modules.filter(m => m.spItemId).map(m => [m.spItemId!, m]));
+      const leaf = byId.get(mappedId) || bySpId.get(mappedId);
       if (!leaf) return;
       let root = leaf;
-      while (root.parentId && byId.get(root.parentId)) {
-        root = byId.get(root.parentId)!;
+      while (root.parentId && (byId.get(root.parentId) || bySpId.get(root.parentId))) {
+        root = byId.get(root.parentId) || bySpId.get(root.parentId)!;
       }
       const nextModuleId = root.id;
-      const nextSubmoduleId = mappedId === root.id ? '' : mappedId;
+      const nextSubmoduleId = leaf.id === root.id ? '' : leaf.id;
       setFormData(prev => {
         if (prev.moduleId === nextModuleId && prev.submoduleId === nextSubmoduleId) return prev;
         return { ...prev, moduleId: nextModuleId, submoduleId: nextSubmoduleId };
@@ -317,22 +323,26 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
 
     } else if (mappingType === 'GMP') {
       // GMP: moduleId = GMP model numeric ID string, submoduleId = ''
+      const bySpId = new Map(gmpModels.filter(m => m.spItemId).map(m => [m.spItemId!, m]));
+      const gmpLeaf = gmpModels.find(m => m.id === mappedId) || bySpId.get(mappedId);
+      const resolvedId = gmpLeaf ? gmpLeaf.id : mappedId;
       setFormData(prev => {
-        if (prev.moduleId === mappedId && !prev.submoduleId) return prev;
-        return { ...prev, moduleId: mappedId, submoduleId: '' };
+        if (prev.moduleId === resolvedId && !prev.submoduleId) return prev;
+        return { ...prev, moduleId: resolvedId, submoduleId: '' };
       });
 
     } else if (mappingType === 'TMF') {
-      // TMF: mappedId is FolderId of artifact, walk up to Zone → Section
+      // TMF: mappedId is FolderId or SP item ID — walk up to Zone → Section
       const byId = new Map(tmfFolders.map(m => [m.id, m]));
-      const leaf = byId.get(mappedId);
+      const bySpId = new Map(tmfFolders.filter(m => m.spItemId).map(m => [m.spItemId!, m]));
+      const leaf = byId.get(mappedId) || bySpId.get(mappedId);
       if (!leaf) return;
       let root = leaf;
-      while (root.parentId && byId.get(root.parentId)) {
-        root = byId.get(root.parentId)!;
+      while (root.parentId && (byId.get(root.parentId) || bySpId.get(root.parentId))) {
+        root = byId.get(root.parentId) || bySpId.get(root.parentId)!;
       }
-      const nextModuleId = root.id;      // Zone folderId
-      const nextSubmoduleId = mappedId === root.id ? '' : mappedId;
+      const nextModuleId = root.id;
+      const nextSubmoduleId = leaf.id === root.id ? '' : leaf.id;
       setFormData(prev => {
         if (prev.moduleId === nextModuleId && prev.submoduleId === nextSubmoduleId) return prev;
         return { ...prev, moduleId: nextModuleId, submoduleId: nextSubmoduleId };
