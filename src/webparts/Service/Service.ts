@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { WebPartContext } from "@microsoft/sp-webpart-base";
+import { SPHttpClient, SPHttpClientResponse } from "@microsoft/sp-http";
 import { IDataProvider } from "./models/IDataProvider";
 import IPnPQueryOptions, { IPnPCAMLQueryOptions } from "./models/IPnPQueryOptions";
 
@@ -202,30 +203,88 @@ export default class Service implements IDataProvider {
             return itemUpdateResult;
         } catch (error: any) {
             const errMsg: string = String(error?.message || error || '');
-            const is423 = errMsg.includes('[423]') || errMsg.includes('423') && errMsg.toLowerCase().includes('lock');
+            const is423 = errMsg.includes('[423]') || (errMsg.includes('423') && errMsg.toLowerCase().includes('lock'));
             if (is423) {
-                // File is locked by Word Online. Fall back to validateUpdateListItem which
-                // performs a form-based metadata update without acquiring the file lock.
-                console.warn('[updateItem] 423 lock error — retrying via validateUpdateListItem');
+                // File is locked by Word Online (co-authoring lock).
+                // The standard PATCH fails because SharePoint holds a shared lock on the item.
+                // Fix: use ValidateUpdateListItem REST endpoint with:
+                //   bNewDocumentUpdate: true  → bypasses the file lock for metadata-only updates
+                //   sharedLockId: <lockId>    → passes the existing lock token so SP accepts the request
+                console.warn('[updateItem] 423 lock — falling back to ValidateUpdateListItem with sharedLockId bypass');
                 try {
-                    const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
-                        FieldName,
-                        FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
-                                  : (val === null || val === undefined) ? ''
-                                  : String(val)
-                    }));
-                    const fallbackResult = await this._sp.web.lists
-                        .getByTitle(listName).items.getById(itemId)
-                        .validateUpdateListItem(formValues, false);
-                    return fallbackResult;
+                    return await this._validateUpdateWithLockBypass(listName, itemId, objItems);
                 } catch (fallbackError: any) {
-                    console.log("Error in validateUpdateListItem fallback for -" + listName, fallbackError);
+                    console.error('[updateItem] ValidateUpdateListItem lock-bypass also failed:', fallbackError);
                     throw fallbackError;
                 }
             }
-            console.log("Error in updating item in -" + listName);
+            console.log("Error in updating item in -" + listName, error);
             throw error;
         }
+    }
+
+    /**
+     * Updates list item metadata even when the underlying file is locked (open in Word Online).
+     * Uses the SharePoint ValidateUpdateListItem REST endpoint with bNewDocumentUpdate=true
+     * and the file's current sharedLockId so SharePoint accepts the metadata update.
+     */
+    private async _validateUpdateWithLockBypass(listName: string, itemId: number, fields: any): Promise<any> {
+        const webUrl = this._webPartContext.pageContext.web.absoluteUrl;
+        const spHttpClient = this._webPartContext.spHttpClient;
+
+        // Step 1: get the file's current lock ID (vti_x005f_sourcecontrollockid)
+        let sharedLockId = '';
+        try {
+            const fileResp: SPHttpClientResponse = await spHttpClient.get(
+                `${webUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})/File?$select=UniqueId,CheckOutType`,
+                SPHttpClient.configurations.v1
+            );
+            if (fileResp.ok) {
+                const fileJson = await fileResp.json();
+                sharedLockId = fileJson?.vti_x005f_sourcecontrollockid
+                            || fileJson?.d?.vti_x005f_sourcecontrollockid
+                            || '';
+            }
+        } catch {
+            // If we can't get the lock ID, proceed with empty string — SP still usually accepts it
+            sharedLockId = '';
+        }
+
+        // Step 2: build formValues array (ValidateUpdateListItem format)
+        const formValues = Object.entries(fields).map(([FieldName, val]) => ({
+            FieldName,
+            FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
+                      : (val === null || val === undefined) ? ''
+                      : (typeof val === 'object') ? JSON.stringify(val)
+                      : String(val)
+        }));
+
+        // Step 3: POST to ValidateUpdateListItem with bNewDocumentUpdate=true and sharedLockId
+        const endpoint = `${webUrl}/_api/web/lists/getbytitle('${encodeURIComponent(listName)}')/items(${itemId})/ValidateUpdateListItem()`;
+        const body = JSON.stringify({
+            formValues,
+            bNewDocumentUpdate: true,
+            sharedLockId: sharedLockId || ''
+        });
+
+        const postResp: SPHttpClientResponse = await spHttpClient.post(
+            endpoint,
+            SPHttpClient.configurations.v1,
+            {
+                headers: {
+                    'Accept': 'application/json;odata=nometadata',
+                    'Content-Type': 'application/json;odata=nometadata'
+                },
+                body
+            }
+        );
+
+        if (!postResp.ok) {
+            const errText = await postResp.text();
+            throw new Error(`ValidateUpdateListItem failed [${postResp.status}]: ${errText}`);
+        }
+
+        return await postResp.json();
     }
 
     public async createItemInBatch(objItems: any[], listName: string): Promise<any[]> {
