@@ -889,31 +889,6 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     if (!viewingDocument || !provider) return;
     setIsLoading(true);
     try {
-      const fileRef = viewingDocument.sharePointUrl || (viewingDocument as any).fileRef || '';
-      if (fileRef) {
-        try {
-          let serverRelPath = fileRef.startsWith('http')
-            ? new URL(fileRef).pathname
-            : fileRef;
-          const siteRel = context?.pageContext?.web?.serverRelativeUrl?.replace(/\/$/, '') || '';
-          if (siteRel && serverRelPath.startsWith(`${siteRel}${siteRel}`)) {
-            serverRelPath = serverRelPath.slice(siteRel.length);
-          }
-          await provider.checkInFile(serverRelPath);
-        } catch (checkInErr: any) {
-          const lock = isFileLocked(checkInErr);
-          if (lock.locked) {
-            setErrorMessage(
-              lock.lockedBy
-                ? `"${viewingDocument.name}" is currently open in Word Online by ${lock.lockedBy}. Please close the document and try submitting again.`
-                : `"${viewingDocument.name}" is currently open in Word Online. Please close the document and try submitting again.`
-            );
-            return;
-          }
-          console.warn('[handleSubmitForReview] checkInFile skipped (non-fatal):', checkInErr?.message);
-        }
-      }
-
       const auditLog = {
         id: (viewingDocument.comments?.length || 0) + 1,
         author: 'System',
