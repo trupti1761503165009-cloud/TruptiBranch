@@ -1,0 +1,47 @@
+webpack compiled in 8331 ms
+Type-checking in progress...
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageDocuments/ManageDocumentsData.tsx:1122:26
+TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+    1120 |           const gmpSet = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
+    1121 |           const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+  > 1122 |           if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
+         |                          ^^^^^^^^^^^^^
+    1123 |           if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+    1124 |           return 'eCTD';
+    1125 |         })(),
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageDocuments/ManageDocumentsData.tsx:1122:55
+TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+    1120 |           const gmpSet = new Set(flattenCTDFolders(gmpFolders).map(f => f.folderId));
+    1121 |           const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+  > 1122 |           if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
+         |                                                       ^^^^^^^^^^^^^
+    1123 |           if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+    1124 |           return 'eCTD';
+    1125 |         })(),
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageDocuments/ManageDocumentsData.tsx:1123:26
+TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+    1121 |           const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+    1122 |           if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
+  > 1123 |           if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+         |                          ^^^^^^^^^^^^^
+    1124 |           return 'eCTD';
+    1125 |         })(),
+    1126 |         CTDFolder: doc.ctdFolder || '',      // folder path for signed doc storage
+
+ERROR in ./src/webparts/drugManagementSystem/components/Custom/components/Admin/ManageDocuments/ManageDocumentsData.tsx:1123:55
+TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+    1121 |           const tmfSet = new Set(flattenCTDFolders(tmfFolders).map(f => f.folderId));
+    1122 |           if (tmfSet.has(doc.ctdFolder) || tmfSet.has(doc.ctdModule)) return 'TMF';
+  > 1123 |           if (gmpSet.has(doc.ctdFolder) || gmpSet.has(doc.ctdModule)) return 'GMP';
+         |                                                       ^^^^^^^^^^^^^
+    1124 |           return 'eCTD';
+    1125 |         })(),
+    1126 |         CTDFolder: doc.ctdFolder || '',      // folder path for signed doc storage
+
+Found 4 errors in 64561 ms.
