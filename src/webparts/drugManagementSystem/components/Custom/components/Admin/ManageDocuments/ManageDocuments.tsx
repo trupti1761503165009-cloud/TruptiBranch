@@ -121,9 +121,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!viewingDocument || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+    const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+    const docAuthor = String(viewingDocument.author || '').toLowerCase().trim();
+    const docSentBy = String((viewingDocument as any).sentBy || '').toLowerCase().trim();
     return (
       (userId > 0 && viewingDocument.authorId === userId) ||
-      (userEmail !== '' && String(viewingDocument.author || '').toLowerCase().includes(userEmail))
+      (userId > 0 && (viewingDocument as any).sentById === userId) ||
+      (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
+      (displayName !== '' && (docAuthor === displayName || docSentBy === displayName))
     );
   }, [viewingDocument, currentUser]);
 
@@ -132,9 +137,12 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!viewingDocument || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
+    const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+    const docApprover = String(viewingDocument.approver || '').toLowerCase().trim();
     const isDocLevelApprover =
       (userId > 0 && viewingDocument.approverId === userId) ||
-      (userEmail !== '' && String(viewingDocument.approver || '').toLowerCase().includes(userEmail));
+      (userEmail !== '' && docApprover.includes(userEmail)) ||
+      (displayName !== '' && docApprover === displayName);
     // Allow if: explicitly assigned as approver on this document (regardless of global role)
     // OR: has global canApprove role and no specific approver is assigned
     return isDocLevelApprover || (canApprove && !viewingDocument.approverId);
@@ -582,13 +590,20 @@ export const ManageDocuments: React.FC<any> = (props) => {
       onRender: (doc: Document) => {
         const userEmail = String(currentUser?.email || currentUser?.loginName || '').toLowerCase();
         const userId = currentUser?.id || 0;
+        const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+        const docAuthor = String(doc.author || '').toLowerCase().trim();
+        const docSentBy = String((doc as any).sentBy || '').toLowerCase().trim();
+        const docApprover = String(doc.approver || '').toLowerCase().trim();
         const isRowAuthor =
           (userId > 0 && doc.authorId === userId) ||
-          (userEmail !== '' && String(doc.author || '').toLowerCase().includes(userEmail));
+          (userId > 0 && (doc as any).sentById === userId) ||
+          (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
+          (displayName !== '' && (docAuthor === displayName || docSentBy === displayName));
         const isRowApprover = canApprove ||
           activeTab === 'assignedToMe' ||
           (userId > 0 && doc.approverId === userId) ||
-          (userEmail !== '' && String(doc.approver || '').toLowerCase().includes(userEmail));
+          (userEmail !== '' && docApprover.includes(userEmail)) ||
+          (displayName !== '' && docApprover === displayName);
         // Admin can perform any workflow action; otherwise check role
         const canSubmitRow  = (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
         const canApproveRow = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
@@ -639,7 +654,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             )}
             <TooltipHost content="Comments">
               <Link
-                onClick={() => { setViewingDocument(doc); setIsCommentsModalOpen(true); }}
+                onClick={() => { void handleViewDocument(doc).then(() => setIsCommentsModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#1300a6' }}
               >
                 <FontAwesomeIcon icon={faComments} />
@@ -647,7 +662,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             </TooltipHost>
             <TooltipHost content="Version History">
               <Link
-                onClick={() => { setViewingDocument(doc); setIsHistoryModalOpen(true); }}
+                onClick={() => { void handleViewDocument(doc).then(() => setIsHistoryModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#546e7a' }}
               >
                 <FontAwesomeIcon icon={faClockRotateLeft} />
