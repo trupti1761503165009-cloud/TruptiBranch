@@ -24,6 +24,10 @@ export interface ITemplateOption {
   name: string;
   version: string;
   fileRef: string;
+  mappingType?: string;
+  mappedCTDFolderId?: number;
+  mappedGMPModelId?: number;
+  mappedTMFFolderId?: number;
 }
 
 export interface UploadTemplateModalDataParams {
@@ -98,7 +102,10 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
     if (!provider) return;
     try {
       const camlQuery = new CamlBuilder()
-        .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'TemplateVersion', 'Status', 'IsDelete'])
+        .View([
+          'ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'TemplateVersion', 'Status', 'IsDelete',
+          'MappingType', 'MappedCTDFolderId', 'MappedGMPModelId', 'MappedTMFFolderId'
+        ])
         .RowLimit(5000, true)
         .Query();
       camlQuery.OrderBy('LinkFilename');
@@ -109,7 +116,11 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
           id: Number(item.ID),
           name: item.LinkFilename || item.FileLeafRef || item.Title || 'Template',
           version: item.TemplateVersion || '1.0',
-          fileRef: item.FileRef || ''
+          fileRef: item.FileRef || '',
+          mappingType: item.MappingType || 'None',
+          mappedCTDFolderId: Number(item.MappedCTDFolderId) || 0,
+          mappedGMPModelId: Number(item.MappedGMPModelId) || 0,
+          mappedTMFFolderId: Number(item.MappedTMFFolderId) || 0
         }));
       setTemplateOptions(options);
     } catch (e) {
@@ -259,6 +270,26 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
     if (Object.keys(nextErrors).length > 0) {
       setErrorMessage(Object.values(nextErrors).join(' '));
       return;
+    }
+
+    // Duplicate mapping check: same template + same mapping type + same folder = already exists
+    if (!editMode && formData.selectedTemplateId) {
+      const existing = templateOptions.find(t => t.id === formData.selectedTemplateId);
+      if (existing && existing.mappingType && existing.mappingType !== 'None') {
+        const sameType = existing.mappingType === formData.mappingType;
+        const sameFolder =
+          (formData.mappingType === 'eCTD' && existing.mappedCTDFolderId === formData.mappedCTDFolderId) ||
+          (formData.mappingType === 'GMP'  && existing.mappedGMPModelId  === formData.mappedGMPModelId) ||
+          (formData.mappingType === 'TMF'  && existing.mappedTMFFolderId === formData.mappedTMFFolderId);
+
+        if (sameType && sameFolder) {
+          setErrorMessage(
+            `This template already has a ${formData.mappingType} mapping with the same folder/model. ` +
+            `Use "Edit" to update the existing mapping.`
+          );
+          return;
+        }
+      }
     }
 
     setIsUploading(true);
