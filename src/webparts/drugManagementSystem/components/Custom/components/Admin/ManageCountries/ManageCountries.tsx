@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 import { TextField } from '@fluentui/react/lib/TextField';
+import { Toggle } from '@fluentui/react/lib/Toggle';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPenToSquare, faTrashCan, faArrowsRotate, faEye } from '@fortawesome/free-solid-svg-icons';
 import { Link, TooltipHost } from '@fluentui/react';
@@ -8,21 +9,12 @@ import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import { MemoizedDataGridComponent } from '../../../../Common/DetailList/DataGridComponent';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { Loader } from '../../../../Common/Loader/Loader';
-import ReactDropdown from '../../../../Common/ReactSelectDropdown';
-import { ManageGMPData, GMP_CATEGORIES, fetchGmpCategoriesFromList, type IGMPModel } from './ManageGMPData';
-import { useSetAtom, useAtomValue } from 'jotai';
+import { ManageCountriesData, type ICountry } from './ManageCountriesData';
+import { useSetAtom } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 
-export const ManageGMP: React.FC = () => {
+export const ManageCountries: React.FC = () => {
   const setAppGlobalState = useSetAtom(appGlobalStateAtom);
-  const { provider } = useAtomValue(appGlobalStateAtom);
-  const [categoryOptions, setCategoryOptions] = React.useState(GMP_CATEGORIES.map(c => ({ value: c, label: c })));
-
-  React.useEffect(() => {
-    void fetchGmpCategoriesFromList(provider).then(cats => {
-      setCategoryOptions(cats.map(c => ({ value: c, label: c })));
-    });
-  }, [provider]);
   const {
     filteredItems,
     isLoading,
@@ -34,7 +26,6 @@ export const ManageGMP: React.FC = () => {
     fieldErrors,
     isDeleteDialogOpen,
     itemToDelete,
-    setSearchTerm,
     setFormData,
     setIsDeleteDialogOpen,
     setErrorMessage,
@@ -47,7 +38,7 @@ export const ManageGMP: React.FC = () => {
     openDeleteDialog,
     handleDeleteConfirm,
     loadItems
-  } = ManageGMPData();
+  } = ManageCountriesData();
 
   React.useEffect(() => {
     setAppGlobalState(prev => ({ ...prev, isSidebarHidden: isPanelOpen }));
@@ -56,20 +47,36 @@ export const ManageGMP: React.FC = () => {
 
   const isReadOnly = panelMode === 'view';
 
-  const formTitle = panelMode === 'add' ? 'Add GMP Model'
-    : panelMode === 'edit' ? 'Edit GMP Model'
-    : 'View GMP Model';
+  const formTitle = panelMode === 'add' ? 'Add Country'
+    : panelMode === 'edit' ? 'Edit Country'
+    : 'View Country';
 
   const columns: any[] = [
     {
-      key: 'name', name: 'MODEL NAME', fieldName: 'name', minWidth: 200, isSortingRequired: true,
-      onRender: (item: IGMPModel) => <strong style={{ color: 'var(--primry)' }}>{item.name}</strong>
+      key: 'name', name: 'COUNTRY NAME', fieldName: 'name', minWidth: 200, isSortingRequired: true,
+      onRender: (item: ICountry) => <strong style={{ color: 'var(--primry)' }}>{item.name}</strong>
     },
-    { key: 'category', name: 'CATEGORY', fieldName: 'category', minWidth: 200, isSortingRequired: true },
-    { key: 'subGroup', name: 'SUB GROUP', fieldName: 'subGroup', minWidth: 180, isSortingRequired: true },
+    { key: 'countryCode', name: 'COUNTRY CODE', fieldName: 'countryCode', minWidth: 120, isSortingRequired: true },
+    { key: 'region', name: 'REGION', fieldName: 'region', minWidth: 150, isSortingRequired: true },
+    {
+      key: 'isActive', name: 'STATUS', fieldName: 'isActive', minWidth: 100,
+      onRender: (item: ICountry) => (
+        <span style={{
+          background: item.isActive ? '#e8f5e9' : '#fbe9e7',
+          color: item.isActive ? '#2e7d32' : '#c62828',
+          padding: '3px 10px',
+          borderRadius: 12,
+          fontSize: 12,
+          fontWeight: 600,
+          display: 'inline-block'
+        }}>
+          {item.isActive ? 'Active' : 'Inactive'}
+        </span>
+      )
+    },
     {
       key: 'actions', name: 'ACTIONS', minWidth: 120,
-      onRender: (item: IGMPModel) => (
+      onRender: (item: ICountry) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <TooltipHost content="View">
             <Link className="actionBtn iconSize btnView" onClick={() => openViewPanel(item)}>
@@ -93,7 +100,7 @@ export const ManageGMP: React.FC = () => {
 
   if (isPanelOpen) {
     return (
-      <div className="pageContainer" data-testid="gmp-form-page">
+      <div className="pageContainer" data-testid="country-form-page">
         {isLoading && <Loader />}
 
         <div className="boxCard">
@@ -112,7 +119,7 @@ export const ManageGMP: React.FC = () => {
                 <div className="customebreadcrumb">
                   <Breadcrumb items={[
                     { label: 'Home', onClick: () => {} },
-                    { label: 'GMP Models', onClick: closePanel },
+                    { label: 'Countries', onClick: closePanel },
                     { label: formTitle, isActive: true }
                   ]} />
                 </div>
@@ -122,44 +129,34 @@ export const ManageGMP: React.FC = () => {
             <div className="ms-Grid-row" style={{ marginTop: 20 }}>
               <div className="ms-Grid-col ms-sm12">
                 <div className="boxCard" style={{ background: '#fff', padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-
                   <div className="ms-Grid">
                     <div className="ms-Grid-row">
                       <div className="ms-Grid-col ms-sm12 ms-md6">
                         <div className="formControl">
                           <TextField
-                            label="Model Name"
+                            label="Country Name"
                             required={!isReadOnly}
                             readOnly={isReadOnly}
                             value={formData.name}
                             onChange={(_e, v) => setFormData(prev => ({ ...prev, name: v || '' }))}
                             errorMessage={fieldErrors.name}
-                            placeholder="Enter GMP model name"
+                            placeholder="e.g. United Kingdom"
                             styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
                           />
                         </div>
                       </div>
-
                       <div className="ms-Grid-col ms-sm12 ms-md6">
                         <div className="formControl">
-                          <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 4 }}>
-                            Category {!isReadOnly && <span style={{ color: 'red' }}>*</span>}
-                          </label>
-                          {isReadOnly ? (
-                            <div style={{ padding: '8px 0', color: '#333', fontSize: 14 }}>{formData.category || '-'}</div>
-                          ) : (
-                            <ReactDropdown
-                              name="category"
-                              options={categoryOptions}
-                              defaultOption={formData.category ? { value: formData.category, label: formData.category } : undefined}
-                              onChange={(opt: any) => setFormData(prev => ({ ...prev, category: opt?.value || '' }))}
-                              isCloseMenuOnSelect
-                              isSorted={false}
-                              isClearable={false}
-                              placeholder="Select Category"
-                            />
-                          )}
-                          {fieldErrors.category && <div style={{ color: '#d13438', fontSize: 12, marginTop: 4 }}>{fieldErrors.category}</div>}
+                          <TextField
+                            label="Country Code"
+                            required={!isReadOnly}
+                            readOnly={isReadOnly}
+                            value={formData.countryCode}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, countryCode: v || '' }))}
+                            errorMessage={fieldErrors.countryCode}
+                            placeholder="e.g. GB"
+                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -168,13 +165,29 @@ export const ManageGMP: React.FC = () => {
                       <div className="ms-Grid-col ms-sm12 ms-md6">
                         <div className="formControl">
                           <TextField
-                            label="Sub Group"
+                            label="Region"
                             readOnly={isReadOnly}
-                            value={formData.subGroup}
-                            onChange={(_e, v) => setFormData(prev => ({ ...prev, subGroup: v || '' }))}
-                            placeholder="e.g. Directive, Guideline, Policy..."
+                            value={formData.region}
+                            onChange={(_e, v) => setFormData(prev => ({ ...prev, region: v || '' }))}
+                            placeholder="e.g. Europe"
                             styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
                           />
+                        </div>
+                      </div>
+                      <div className="ms-Grid-col ms-sm12 ms-md6">
+                        <div className="formControl" style={{ paddingTop: 4 }}>
+                          {!isReadOnly ? (
+                            <Toggle
+                              label="Is Active"
+                              checked={formData.isActive}
+                              onChange={(_e, checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
+                            />
+                          ) : (
+                            <div>
+                              <label style={{ fontWeight: 600, fontSize: 14 }}>Is Active</label>
+                              <div style={{ padding: '6px 0', color: '#333' }}>{formData.isActive ? 'Yes' : 'No'}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -187,7 +200,7 @@ export const ManageGMP: React.FC = () => {
                         disabled={isLoading}
                         styles={{ root: { background: 'var(--primry)', border: 'none' } }}
                       >
-                        {panelMode === 'add' ? 'Add GMP Model' : 'Update GMP Model'}
+                        {panelMode === 'add' ? 'Add Country' : 'Update Country'}
                       </PrimaryButton>
                       <DefaultButton onClick={closePanel}>Cancel</DefaultButton>
                     </div>
@@ -224,15 +237,15 @@ export const ManageGMP: React.FC = () => {
   }
 
   return (
-    <div className="pageContainer" data-testid="manage-gmp-page">
+    <div className="pageContainer" data-testid="manage-countries-page">
       {isLoading && <Loader />}
 
-      <h1 className="mainTitle" style={{ marginBottom: 8 }}>GMP Models Master</h1>
+      <h1 className="mainTitle" style={{ marginBottom: 8 }}>Country Master</h1>
 
       <div className="customebreadcrumb" style={{ marginBottom: 16 }}>
         <Breadcrumb items={[
           { label: 'Home', onClick: () => {} },
-          { label: 'GMP Models', isActive: true }
+          { label: 'Countries', isActive: true }
         ]} />
       </div>
 
@@ -254,7 +267,7 @@ export const ManageGMP: React.FC = () => {
                 styles={{ root: { background: 'var(--primry)', border: 'none' } }}
               >
                 <FontAwesomeIcon icon={faPlus} style={{ marginRight: 6 }} />
-                Add GMP Model
+                Add Country
               </PrimaryButton>
               <Link className="actionBtn iconSize btnRefresh ml-10" onClick={loadItems}>
                 <TooltipHost content="Refresh">
@@ -270,7 +283,7 @@ export const ManageGMP: React.FC = () => {
       <CustomModal
         isModalOpenProps={isDeleteDialogOpen}
         setModalpopUpFalse={setIsDeleteDialogOpen}
-        subject="Delete GMP Model"
+        subject="Delete Country"
         isLoading={isLoading}
         message={
           itemToDelete

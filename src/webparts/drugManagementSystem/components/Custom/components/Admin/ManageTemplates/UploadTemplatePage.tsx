@@ -4,13 +4,12 @@ import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { Label } from '@fluentui/react/lib/Label';
 import ReactDropdown from '../../../../Common/ReactSelectDropdown';
-import DragandDropFilePicker from '../../../../Common/dragandDrop/DragandDropFilePicker';
 import { Loader } from '../../../../Common/Loader/Loader';
 import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { UploadTemplateModalData } from '../UploadTemplateModal/UploadTemplateModalData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faTimes, faTrashCan, faFileAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 interface UploadTemplatePageProps {
   onCancel: () => void;
@@ -20,11 +19,11 @@ interface UploadTemplatePageProps {
 }
 
 const ECTD_MODULES = [
-  { label: 'Module 1 – Administrative & Prescribing Information', value: '1' },
-  { label: 'Module 2 – CTD Summaries', value: '2' },
-  { label: 'Module 3 – Quality', value: '3' },
-  { label: 'Module 4 – Nonclinical Study Reports', value: '4' },
-  { label: 'Module 5 – Clinical Study Reports', value: '5' },
+  { label: 'Module 1 \u2013 Administrative & Prescribing Information', value: '1' },
+  { label: 'Module 2 \u2013 CTD Summaries', value: '2' },
+  { label: 'Module 3 \u2013 Quality', value: '3' },
+  { label: 'Module 4 \u2013 Nonclinical Study Reports', value: '4' },
+  { label: 'Module 5 \u2013 Clinical Study Reports', value: '5' },
 ];
 
 export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel, onSuccess, editMode = false, editData }) => {
@@ -38,17 +37,14 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
     countries,
     ctdFolders,
     ectdSections,
-    selectedFiles,
     errorMessage,
     isUploading,
-    handleFileSelection,
     handleUpload,
     closeAndReset,
     gmpModels,
-    tmfFolders
+    tmfFolders,
+    templateOptions
   } = UploadTemplateModalData({ onClose: onCancel, onSuccess, editMode, editItemId, editFileRef });
-
-  const [existingFileDeleted, setExistingFileDeleted] = React.useState(false);
 
   const [selectedModule, setSelectedModule] = React.useState<string>('');
 
@@ -68,7 +64,8 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
         ectdSectionId: editData.ectdSectionId || 0,
         ectdSubsection: editData.ectdSubsection || editData.eCTDSubsection || '',
         mappedGMPModelId: editData.mappedGMPModelId || 0,
-        mappedTMFFolderId: editData.mappedTMFFolderId || 0
+        mappedTMFFolderId: editData.mappedTMFFolderId || 0,
+        selectedTemplateId: editData.id || 0
       });
       if (editData.mappingType === 'eCTD' && editData.mappedCTDFolder) {
         const match = String(editData.mappedCTDFolder).match(/^(\d)/);
@@ -82,6 +79,16 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
       setErrorModal({ open: true, message: errorMessage });
     }
   }, [errorMessage]);
+
+  const templateDropdownOptions = React.useMemo(() =>
+    (templateOptions || []).map(t => ({ label: `${t.name} (v${t.version})`, value: t.id })),
+    [templateOptions]
+  );
+
+  const templateDefault = React.useMemo(() =>
+    templateDropdownOptions.find(o => o.value === formData.selectedTemplateId) ?? null,
+    [templateDropdownOptions, formData.selectedTemplateId]
+  );
 
   const categoryOptions = React.useMemo(() => categories.map(c => ({ label: c.name, value: c.id })), [categories]);
   const countryOptions = React.useMemo(() => countries.map(c => ({ label: c.name, value: c.id })), [countries]);
@@ -129,12 +136,10 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
-    if (!editMode && !formData.name?.trim()) errors.push('Template Name is required.');
-    if (!editMode && selectedFiles.length === 0) errors.push('Please select a file to upload.');
-    if (editMode && existingFileDeleted && selectedFiles.length === 0) errors.push('Please upload a replacement file.');
+    if (!editMode && !formData.selectedTemplateId) errors.push('Please select a template.');
 
     if (formData.mappingType === 'eCTD') {
-      if (!selectedModule) errors.push('eCTD Module (1–5) is required.');
+      if (!selectedModule) errors.push('eCTD Module (1\u20135) is required.');
       if (!formData.mappedCTDFolderId) errors.push('CTD Folder is required for eCTD mapping.');
       if (!formData.ectdSectionId) errors.push('eCTD Section is required for eCTD mapping.');
     } else if (formData.mappingType === 'GMP') {
@@ -180,7 +185,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
 
           <div className="ms-Grid-row">
             <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
-              <h1 className="mainTitle" style={{ margin: 0 }}>{editMode ? 'Edit Template' : 'Upload Template'}</h1>
+              <h1 className="mainTitle" style={{ margin: 0 }}>{editMode ? 'Edit Template Mapping' : 'Add Template Mapping'}</h1>
               <PrimaryButton className="btn btn-danger" text="Close" onClick={closeAndReset} />
             </div>
           </div>
@@ -189,22 +194,46 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
             <div className="ms-Grid-col ms-sm12">
               <Breadcrumb items={[
                 { label: 'Manage Templates', onClick: onCancel },
-                { label: editMode ? 'Edit Template' : 'Upload Template', isActive: true }
+                { label: editMode ? 'Edit Template Mapping' : 'Add Template Mapping', isActive: true }
               ]} />
             </div>
           </div>
 
           <div className="ms-Grid-row mt-20">
-            <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
-              <Label className="formLabel">Template Name<span className="required">*</span></Label>
-              <TextField
-                className="formControl"
-                placeholder="e.g., Clinical Trial Protocol v3.0"
-                value={formData.name}
-                disabled={editMode}
-                onChange={(_e, v) => setFormData((prev) => ({ ...prev, name: v ?? '' }))}
-              />
-            </div>
+            {!editMode && (
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                <Label className="formLabel">Select Template<span className="required">*</span></Label>
+                <ReactDropdown
+                  name="selectTemplate"
+                  options={templateDropdownOptions}
+                  defaultOption={templateDefault}
+                  placeholder="-- Select Template --"
+                  onChange={(opt) => {
+                    const selectedId = Number(opt?.value) || 0;
+                    const selectedTpl = templateOptions.find(t => t.id === selectedId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      selectedTemplateId: selectedId,
+                      name: selectedTpl?.name || '',
+                      version: selectedTpl?.version || '1.0'
+                    }));
+                  }}
+                  isCloseMenuOnSelect={true}
+                  isSorted={true}
+                  isClearable={false}
+                />
+              </div>
+            )}
+            {editMode && (
+              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
+                <Label className="formLabel">Template Name</Label>
+                <TextField
+                  className="formControl"
+                  value={formData.name}
+                  disabled={true}
+                />
+              </div>
+            )}
             <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg3">
               <Label className="formLabel">Category</Label>
               <ReactDropdown
@@ -364,70 +393,6 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
             </div>
           )}
 
-          {!editMode && (
-            <div className="ms-Grid-row mt-20">
-              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg4">
-                <Label className="formLabel">Upload File<span className="required">*</span></Label>
-                <DragandDropFilePicker setFilesToState={handleFileSelection} isMultiple={false} />
-                {selectedFiles.length > 0 && (
-                  <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
-                    <strong>{selectedFiles[0].name}</strong> ({(selectedFiles[0].size / 1024).toFixed(2)} KB)
-                  </div>
-                )}
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
-                  Accepted: DOC, DOCX, PDF, XLS, XLSX
-                </p>
-              </div>
-            </div>
-          )}
-
-          {editMode && (
-            <div className="ms-Grid-row mt-20">
-              <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-                <Label className="formLabel">Template File</Label>
-                {!existingFileDeleted && editFileRef ? (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '10px 14px', background: '#f4f6fb',
-                    borderRadius: 6, border: '1px solid #d0d7e5'
-                  }}>
-                    <FontAwesomeIcon icon={faFileAlt} style={{ fontSize: 20, color: '#1300a6' }} />
-                    <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
-                      {editFileRef.split('/').pop() || editData?.name || 'Current File'}
-                    </span>
-                    <DefaultButton
-                      title="Remove existing file and upload a new one"
-                      className="btn btn-danger"
-                      style={{ minWidth: 'unset', padding: '0 10px', height: 30 }}
-                      onClick={() => setExistingFileDeleted(true)}
-                    >
-                      <FontAwesomeIcon icon={faTrashCan} style={{ marginRight: 4 }} />
-                      Remove
-                    </DefaultButton>
-                  </div>
-                ) : (
-                  <div>
-                    {existingFileDeleted && (
-                      <div style={{ marginBottom: 6, fontSize: 12, color: '#c0392b' }}>
-                        Existing file removed. Upload a replacement below.
-                      </div>
-                    )}
-                    <DragandDropFilePicker setFilesToState={handleFileSelection} isMultiple={false} />
-                    {selectedFiles.length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 13, color: '#333' }}>
-                        <FontAwesomeIcon icon={faFileAlt} style={{ marginRight: 6, color: '#1300a6' }} />
-                        <strong>{selectedFiles[0].name}</strong> ({(selectedFiles[0].size / 1024).toFixed(2)} KB)
-                      </div>
-                    )}
-                    <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
-                      Accepted: DOC, DOCX, PDF, XLS, XLSX
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           <div className="ms-Grid-row mt-20">
             <div className="ms-Grid-col ms-sm12">
               <PrimaryButton
@@ -436,7 +401,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 className="btn btn-primary"
               >
                 <FontAwesomeIcon icon={faSave} style={{ marginRight: 8 }} />
-                {isUploading ? 'Saving...' : editMode ? 'Update Template' : 'Save Template'}
+                {isUploading ? 'Saving...' : editMode ? 'Update Mapping' : 'Save Mapping'}
               </PrimaryButton>
               <DefaultButton
                 onClick={closeAndReset}

@@ -3,51 +3,22 @@ import { useAtomValue } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
 import { ListNames } from '../../../../../../Shared/Enum/ListNames';
 
-export interface IGMPModel {
+export interface IGmpCategory {
   id: number;
   name: string;
-  category: string;
-  subGroup: string;
   sortOrder: number;
 }
 
-export const GMP_CATEGORIES = [
-  'Governance and Procedures',
-  'Manufacturing and Product Quality',
-  'Validation'
-];
-
-export async function fetchGmpCategoriesFromList(provider: any): Promise<string[]> {
-  if (!provider) return GMP_CATEGORIES;
-  try {
-    const data = await provider.getItemsByQuery({
-      listName: ListNames.GmpCategories,
-      select: ['Title'],
-      top: 500,
-      orderBy: 'SortOrder',
-      isSortOrderAsc: true
-    });
-    const names: string[] = (data || []).map((item: any) => item.Title || '').filter(Boolean);
-    // GMP_CATEGORIES serves as a fallback when the list is empty or not yet provisioned
-    return names.length > 0 ? names : GMP_CATEGORIES;
-  } catch {
-    // Fall back to hardcoded constant if the GmpCategories list is unavailable
-    return GMP_CATEGORIES;
-  }
-}
-
-const emptyForm = (): Omit<IGMPModel, 'id'> => ({
+const emptyForm = (): Omit<IGmpCategory, 'id'> => ({
   name: '',
-  category: '',
-  subGroup: '',
   sortOrder: 0
 });
 
-export function ManageGMPData() {
+export function ManageGmpCategoriesData() {
   const appGlobalState = useAtomValue(appGlobalStateAtom);
   const { provider } = appGlobalState;
 
-  const [items, setItems] = React.useState<IGMPModel[]>([]);
+  const [items, setItems] = React.useState<IGmpCategory[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [successMessage, setSuccessMessage] = React.useState('');
@@ -55,35 +26,33 @@ export function ManageGMPData() {
 
   const [panelMode, setPanelMode] = React.useState<'add' | 'edit' | 'view'>('add');
   const [isPanelOpen, setIsPanelOpen] = React.useState(false);
-  const [editingItem, setEditingItem] = React.useState<IGMPModel | null>(null);
-  const [formData, setFormData] = React.useState<Omit<IGMPModel, 'id'>>(emptyForm());
-  const [fieldErrors, setFieldErrors] = React.useState<Partial<Record<keyof Omit<IGMPModel, 'id'>, string>>>({});
+  const [editingItem, setEditingItem] = React.useState<IGmpCategory | null>(null);
+  const [formData, setFormData] = React.useState<Omit<IGmpCategory, 'id'>>(emptyForm());
+  const [fieldErrors, setFieldErrors] = React.useState<Partial<Record<keyof Omit<IGmpCategory, 'id'>, string>>>({});
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [itemToDelete, setItemToDelete] = React.useState<IGMPModel | null>(null);
+  const [itemToDelete, setItemToDelete] = React.useState<IGmpCategory | null>(null);
 
   const loadItems = React.useCallback(async () => {
     if (!provider) return;
     setIsLoading(true);
     try {
       const data = await provider.getItemsByQuery({
-        listName: ListNames.GmpModels,
-        select: ['ID', 'Title', 'Category', 'SubGroup'],
+        listName: ListNames.GmpCategories,
+        select: ['ID', 'Title', 'SortOrder'],
         top: 1000,
-        orderBy: 'Title',
+        orderBy: 'SortOrder',
         isSortOrderAsc: true
       });
-      const mapped: IGMPModel[] = (data || []).map((item: any) => ({
+      const mapped: IGmpCategory[] = (data || []).map((item: any) => ({
         id: item.ID,
         name: item.Title || '',
-        category: item.Category || '',
-        subGroup: item.SubGroup || '',
-        sortOrder: 0
+        sortOrder: item.SortOrder || 0
       }));
       setItems(mapped);
       setErrorMessage('');
     } catch {
-      setErrorMessage('Failed to load GMP Models. Please try again.');
+      setErrorMessage('Failed to load GMP Categories. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -96,17 +65,12 @@ export function ManageGMPData() {
   const filteredItems = React.useMemo(() => {
     const q = searchTerm.toLowerCase().trim();
     if (!q) return items;
-    return items.filter(i =>
-      i.name.toLowerCase().includes(q) ||
-      i.category.toLowerCase().includes(q) ||
-      i.subGroup.toLowerCase().includes(q)
-    );
+    return items.filter(i => i.name.toLowerCase().includes(q));
   }, [items, searchTerm]);
 
   const validateForm = (): boolean => {
-    const errors: Partial<Record<keyof Omit<IGMPModel, 'id'>, string>> = {};
-    if (!formData.name.trim()) errors.name = 'Model name is required.';
-    if (!formData.category.trim()) errors.category = 'Category is required.';
+    const errors: Partial<Record<keyof Omit<IGmpCategory, 'id'>, string>> = {};
+    if (!formData.name.trim()) errors.name = 'Category name is required.';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -119,16 +83,16 @@ export function ManageGMPData() {
     setIsPanelOpen(true);
   };
 
-  const openEditPanel = (item: IGMPModel) => {
-    setFormData({ name: item.name, category: item.category, subGroup: item.subGroup, sortOrder: item.sortOrder });
+  const openEditPanel = (item: IGmpCategory) => {
+    setFormData({ name: item.name, sortOrder: item.sortOrder });
     setFieldErrors({});
     setEditingItem(item);
     setPanelMode('edit');
     setIsPanelOpen(true);
   };
 
-  const openViewPanel = (item: IGMPModel) => {
-    setFormData({ name: item.name, category: item.category, subGroup: item.subGroup, sortOrder: item.sortOrder });
+  const openViewPanel = (item: IGmpCategory) => {
+    setFormData({ name: item.name, sortOrder: item.sortOrder });
     setFieldErrors({});
     setEditingItem(item);
     setPanelMode('view');
@@ -148,28 +112,28 @@ export function ManageGMPData() {
     try {
       if (panelMode === 'add') {
         if (provider) await provider.createItem(
-          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '' },
-          ListNames.GmpModels
+          { Title: formData.name, SortOrder: formData.sortOrder || 0 },
+          ListNames.GmpCategories
         );
-        setSuccessMessage('GMP Model added successfully.');
+        setSuccessMessage('GMP Category added successfully.');
       } else if (panelMode === 'edit' && editingItem) {
         if (provider) await provider.updateItem(
-          { Title: formData.name, Category: formData.category, SubGroup: formData.subGroup || '' },
-          ListNames.GmpModels,
+          { Title: formData.name, SortOrder: formData.sortOrder || 0 },
+          ListNames.GmpCategories,
           editingItem.id
         );
-        setSuccessMessage('GMP Model updated successfully.');
+        setSuccessMessage('GMP Category updated successfully.');
       }
       await loadItems();
       closePanel();
     } catch {
-      setErrorMessage('Failed to save GMP Model. Please try again.');
+      setErrorMessage('Failed to save GMP Category. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const openDeleteDialog = (item: IGMPModel) => {
+  const openDeleteDialog = (item: IGmpCategory) => {
     setItemToDelete(item);
     setIsDeleteDialogOpen(true);
   };
@@ -178,13 +142,13 @@ export function ManageGMPData() {
     if (!itemToDelete) return;
     setIsLoading(true);
     try {
-      if (provider) await provider.deleteItem(ListNames.GmpModels, itemToDelete.id);
-      setSuccessMessage('GMP Model deleted successfully.');
+      if (provider) await provider.deleteItem(ListNames.GmpCategories, itemToDelete.id);
+      setSuccessMessage('GMP Category deleted successfully.');
       await loadItems();
       setIsDeleteDialogOpen(false);
       setItemToDelete(null);
     } catch {
-      setErrorMessage('Failed to delete GMP Model. Please try again.');
+      setErrorMessage('Failed to delete GMP Category. Please try again.');
     } finally {
       setIsLoading(false);
     }

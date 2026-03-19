@@ -9,14 +9,22 @@ import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import { CustomModal } from '../../../../Common/CustomModal';
 import { Loader } from '../../../../Common/Loader/Loader';
 import ReactDropdown from '../../../../Common/ReactSelectDropdown';
-import { ManageTMFData, TMF_ZONE_CHOICES, type ITMFFolder } from './ManageTMFData';
-import { useSetAtom } from 'jotai';
+import { ManageTMFData, TMF_ZONE_CHOICES, fetchTmfZonesFromList, type ITMFFolder, type ITmfZoneOption } from './ManageTMFData';
+import { useSetAtom, useAtomValue } from 'jotai';
 import { appGlobalStateAtom } from '../../../../../jotai/appGlobalStateAtom';
-
-const ZONE_OPTIONS = TMF_ZONE_CHOICES.map(z => ({ value: z.value, label: z.label }));
 
 export const ManageTMF: React.FC = () => {
   const setAppGlobalState = useSetAtom(appGlobalStateAtom);
+  const { provider } = useAtomValue(appGlobalStateAtom);
+  const [zoneChoices, setZoneChoices] = React.useState<ITmfZoneOption[]>(TMF_ZONE_CHOICES);
+
+  React.useEffect(() => {
+    void fetchTmfZonesFromList(provider).then(zones => {
+      setZoneChoices(zones);
+    });
+  }, [provider]);
+
+  const ZONE_OPTIONS = zoneChoices.map(z => ({ value: z.value, label: z.label }));
   const {
     currentLevelItems,
     isLoading,
@@ -117,7 +125,7 @@ export const ManageTMF: React.FC = () => {
                               options={ZONE_OPTIONS}
                               defaultOption={formData.zoneName ? { value: formData.zoneName, label: formData.zoneName } : undefined}
                               onChange={(opt: any) => {
-                                const choice = TMF_ZONE_CHOICES.find(z => z.value === opt?.value);
+                                const choice = zoneChoices.find(z => z.value === opt?.value);
                                 setFormData(prev => ({ ...prev, zoneName: opt?.value || '', zone: choice?.zone || 0 }));
                               }}
                               isCloseMenuOnSelect

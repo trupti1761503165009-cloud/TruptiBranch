@@ -19,6 +19,10 @@ import { CreateDocumentPage } from './Custom/components/Admin/CreateDocumentPage
 import { ManageDocuments } from './Custom/components/Admin/ManageDocuments';
 import { ManageGMP } from './Custom/components/Admin/ManageGMP/ManageGMP';
 import { ManageTMF } from './Custom/components/Admin/ManageTMF/ManageTMF';
+import { ManageCountries } from './Custom/components/Admin/ManageCountries/ManageCountries';
+import { ManageGmpCategories } from './Custom/components/Admin/ManageGmpCategories/ManageGmpCategories';
+import { ManageTmfZones } from './Custom/components/Admin/ManageTmfZones/ManageTmfZones';
+import { ManageTemplateUpload } from './Custom/components/Admin/ManageTemplateUpload/ManageTemplateUpload';
 
 type ManageArgs = { currentComponentName: ComponentNameEnum | ''; componentProps?: any };
 
@@ -151,6 +155,22 @@ export const GMPViewRouter: React.FC = () => {
 
 export const TMFViewRouter: React.FC = () => {
   return <ManageTMF />;
+};
+
+export const CountriesViewRouter: React.FC = () => {
+  return <ManageCountries />;
+};
+
+export const GmpCategoriesViewRouter: React.FC = () => {
+  return <ManageGmpCategories />;
+};
+
+export const TmfZonesViewRouter: React.FC = () => {
+  return <ManageTmfZones />;
+};
+
+export const TemplateUploadViewRouter: React.FC = () => {
+  return <ManageTemplateUpload />;
 };
 
 export const DocumentsViewRouter: React.FC<{ filterByCurrentUser?: boolean; filterByPending?: boolean; hideAddButton?: boolean; hideFolderSidebar?: boolean }> = (props) => {

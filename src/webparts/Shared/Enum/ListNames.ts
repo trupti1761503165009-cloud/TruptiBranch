@@ -30,6 +30,8 @@ export enum ListNames {
     AuditLogs = "Audit Logs",
     TMFFolders = "TMF Folders",
     Countries = "Countries",
+    GmpCategories = "GMP Categories",
+    TmfZones = "TMF Zones",
     eSignature = 'eSignature',
     ProjectDocuments = "Project Documents"
 }

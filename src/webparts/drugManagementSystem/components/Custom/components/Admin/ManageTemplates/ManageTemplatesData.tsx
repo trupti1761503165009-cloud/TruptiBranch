@@ -112,7 +112,7 @@ export function ManageTemplatesData() {
           mappedGMPModelId: Number(item.MappedGMPModelId || parseLookupId(item.MappedGMPModel)) || 0,
           mappedTMFFolderId: Number(item.MappedTMFFolderId || parseLookupId(item.MappedTMFFolder)) || 0,
           serverRedirectedEmbedUrl: item.ServerRedirectedEmbedUrl || '',
-          isDeleted: !!item.IsDeleted
+          isDeleted: !!(item.IsDelete || item.IsDeleted)
         }))
       );
       setErrorMessage('');
@@ -219,9 +219,9 @@ export function ManageTemplatesData() {
     if (!provider || deleteIds.length === 0) return;
     setIsLoading(true);
     try {
-      // Soft delete: set IsDeleted = true (preserves file; removes from grid and dropdowns)
+      // Soft delete: set IsDelete = true (preserves file; removes from grid and dropdowns)
       await Promise.all(
-        deleteIds.map(id => provider.updateItem({ IsDeleted: true }, ListNames.Templates, id))
+        deleteIds.map(id => provider.updateItem({ IsDelete: true }, ListNames.Templates, id))
       );
       await loadTemplates();
       setSelectedIds([]);

@@ -26,6 +26,33 @@ export const TMF_ZONE_CHOICES = [
   { value: 'Zone 4 - IRB or IEC and other Approvals', label: 'Zone 4 - IRB or IEC and other Approvals', zone: 4 }
 ];
 
+export interface ITmfZoneOption { value: string; label: string; zone: number; }
+
+export async function fetchTmfZonesFromList(provider: any): Promise<ITmfZoneOption[]> {
+  if (!provider) return TMF_ZONE_CHOICES;
+  try {
+    const data = await provider.getItemsByQuery({
+      listName: ListNames.TmfZones,
+      select: ['Title', 'ZoneNumber', 'SortOrder'],
+      top: 500,
+      orderBy: 'SortOrder',
+      isSortOrderAsc: true
+    });
+    const zones: ITmfZoneOption[] = (data || [])
+      .map((item: any) => ({
+        value: item.Title || '',
+        label: item.Title || '',
+        zone: item.ZoneNumber || 0
+      }))
+      .filter((z: ITmfZoneOption) => z.value);
+    // TMF_ZONE_CHOICES serves as a fallback when the list is empty or not yet provisioned
+    return zones.length > 0 ? zones : TMF_ZONE_CHOICES;
+  } catch {
+    // Fall back to hardcoded constant if the TmfZones list is unavailable
+    return TMF_ZONE_CHOICES;
+  }
+}
+
 const emptyForm = (): Omit<ITMFFolder, 'id'> => ({
   name: '',
   folderId: '',

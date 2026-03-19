@@ -342,7 +342,7 @@ export const ManageTemplates: React.FC<any> = (props) => {
         onCancel={() => setIsCreatePageOpen(false)}
         onSuccess={() => {
           setIsCreatePageOpen(false);
-          showSuccess('Template uploaded successfully.');
+          showSuccess('Template mapping saved successfully.');
           loadTemplates();
         }}
       />
@@ -358,7 +358,7 @@ export const ManageTemplates: React.FC<any> = (props) => {
         onSuccess={() => {
           setIsEditMappingOpen(false);
           setEditingTemplate(null);
-          showSuccess('Template updated successfully.');
+          showSuccess('Template mapping updated successfully.');
           loadTemplates();
         }}
       />
@@ -527,11 +527,11 @@ export const ManageTemplates: React.FC<any> = (props) => {
             isVisibleCrud.current
               ? (
                 <div className="dflex pb-1">
-                  <TooltipHost content="Upload New Template" id={tooltipId}>
+                  <TooltipHost content="Add Template Mapping" id={tooltipId}>
                     <PrimaryButton
                       className="btn btn-primary"
                       onClick={() => setIsCreatePageOpen(true)}
-                      text="Upload Template"
+                      text="Add Template"
                     />
                   </TooltipHost>
                   <Link

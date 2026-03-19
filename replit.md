@@ -47,7 +47,7 @@ server.js             - Replit standalone preview server (port 5000)
 ```
 
 ## User Roles
-- **Admin** — full access: dashboard, all documents, categories, templates, drugs, GMP models, TMF folder structure, reports, user management
+- **Admin** — full access: dashboard, all documents, categories, templates, drugs, GMP models, TMF folder structure, countries, GMP categories, TMF zones, reports, user management
 - **Author** — My Documents (filtered by author) + Assigned to Me (filtered by approver); folder sidebar hidden; Add Document button visible
 - **HR** — My Documents + Assigned to Me; folder sidebar hidden; no Add Document
 - **Reviewer** — review queue; approve for forwarding or return to author
@@ -59,11 +59,14 @@ server.js             - Replit standalone preview server (port 5000)
 - **TMF** — Zone → Section → Artifact hierarchy (4 zones via TMF_ZONE_CHOICES)
 
 ## Master Data (Admin-only CRUD)
-- **GMP Models** — ManageGMP.tsx + ManageGMPData.tsx; fields: Name, Category, SubGroup, SortOrder
-- **TMF Folder Structure** — ManageTMF.tsx + ManageTMFData.tsx; hierarchical Zone/Section/Artifact tree
+- **GMP Models** — ManageGMP.tsx + ManageGMPData.tsx; fields: Name, Category (from GmpCategories list), SubGroup, SortOrder
+- **TMF Folder Structure** — ManageTMF.tsx + ManageTMFData.tsx; hierarchical Zone/Section/Artifact tree; zones from TmfZones list
+- **Countries** — ManageCountries.tsx + ManageCountriesData.tsx; fields: Name, CountryCode, Region, IsActive; SharePoint list: Countries
+- **GMP Categories** — ManageGmpCategories.tsx + ManageGmpCategoriesData.tsx; fields: Name, SortOrder; SharePoint list: GMP Categories; replaces hardcoded GMP_CATEGORIES constant
+- **TMF Zones** — ManageTmfZones.tsx + ManageTmfZonesData.tsx; fields: Name, ZoneNumber, SortOrder; SharePoint list: TMF Zones; replaces hardcoded TMF_ZONE_CHOICES constant
 
 ## Navigation
-- Admin: MASTER (Categories, Templates, CTD Folder Structure, GMP Models, TMF Folder Structure, Drugs), DOCUMENTS (All, My, Assigned to Me, CTD View, Reports, Workflow Reports), USERS
+- Admin: MASTER (Categories, Templates, CTD Folder Structure, GMP Models, TMF Folder Structure, Drugs, Countries, GMP Categories, TMF Zones), DOCUMENTS (All, My, Assigned to Me, CTD View, Reports, Workflow Reports), USERS
 - Author/HR: DOCUMENTS section only (My Documents, Assigned to Me); hideFolderSidebar=true
 
 ## Key Dependencies
