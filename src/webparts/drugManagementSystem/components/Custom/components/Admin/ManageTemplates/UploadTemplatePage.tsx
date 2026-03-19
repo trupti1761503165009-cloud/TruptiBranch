@@ -81,7 +81,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
   }, [errorMessage]);
 
   const templateDropdownOptions = React.useMemo(() =>
-    (templateOptions || []).map(t => ({ label: `${t.name} (v${t.version})`, value: t.id })),
+    (templateOptions || []).map(t => ({ label: `${t.name} (v${t.version})`, value: Number(t.id) })),
     [templateOptions]
   );
 
