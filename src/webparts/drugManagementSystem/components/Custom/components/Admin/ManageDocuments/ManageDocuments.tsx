@@ -1,9 +1,9 @@
 import * as React from 'react';
 import type { CTDFolder, Document } from '../../../types';
 import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
-import { Label } from '@fluentui/react/lib/Label';
+
 import { TextField } from '@fluentui/react/lib/TextField';
-import { StatusBadge } from '../../../../Common';
+
 import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { getFileTypeIcon } from '../../../../Common/utils';
 import { Link } from '@fluentui/react/lib/Link';
@@ -677,124 +677,6 @@ export const ManageDocuments: React.FC<any> = (props) => {
   const effectiveColumns = activeTab === 'assignedToMe' ? assignedToMeColumns : documentColumns;
 
 
-
-  // ── Simple View Document page (matches View Template layout) ──────────────
-  if (isDocPanelOpen && viewingDocument) {
-    const docUrl = viewingDocument.sharePointUrl || viewingDocument.fileRef || '';
-    const docFileName = viewingDocument.fileName || viewingDocument.name || '';
-    const closeView = () => {
-      setIsDocPanelOpen(false);
-      setReviewerComments([]);
-      setReviewerCommentError('');
-    };
-    return (
-      <div className="pageContainer" data-testid="view-document-page">
-        {isLoading && <Loader />}
-        <div className="boxCard">
-          <div className="ms-Grid">
-            <div className="ms-Grid-row">
-              <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
-                <h1 className="mainTitle">View Document</h1>
-                <DefaultButton onClick={closeView} styles={{ root: { borderColor: '#d13438', color: '#d13438' } }}>
-                  Close
-                </DefaultButton>
-              </div>
-            </div>
-
-            <div className="ms-Grid-row">
-              <div className="ms-Grid-col ms-sm12">
-                <div className="customebreadcrumb">
-                  <CustomBreadcrumb items={[
-                    { label: 'Home', onClick: () => {} },
-                    { label: 'Documents', onClick: closeView },
-                    { label: 'View Document', isActive: true }
-                  ]} />
-                </div>
-              </div>
-            </div>
-
-            <div className="ms-Grid-row" style={{ marginTop: 20 }}>
-              <div className="ms-Grid-col ms-sm12">
-                <div className="boxCard" style={{ background: '#fff', padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <div className="ms-Grid">
-                    <div className="ms-Grid-row">
-                      <div className="ms-Grid-col ms-sm12 ms-md4">
-                        <div className="formControl">
-                          <TextField
-                            label="Document Name"
-                            readOnly
-                            value={viewingDocument.name || ''}
-                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
-                          />
-                        </div>
-                      </div>
-                      <div className="ms-Grid-col ms-sm12 ms-md4">
-                        <div className="formControl">
-                          <TextField
-                            label="Version"
-                            readOnly
-                            value={String(viewingDocument.version || '1')}
-                            styles={{ root: { background: '#fff' }, fieldGroup: { background: '#fff' } }}
-                          />
-                        </div>
-                      </div>
-                      <div className="ms-Grid-col ms-sm12 ms-md4">
-                        <div className="formControl">
-                          <Label className="formLabel">Status</Label>
-                          <StatusBadge
-                            status={(viewingDocument.status || 'Draft').toLowerCase().replace(/\s+/g, '-')}
-                            size="small"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {docFileName && (
-                      <div className="ms-Grid-row" style={{ marginTop: 20 }}>
-                        <div className="ms-Grid-col ms-sm12 ms-md6">
-                          <Label className="formLabel">Document File</Label>
-                          {docUrl ? (
-                            <a href={docUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                              <div style={{
-                                display: 'flex', alignItems: 'center', gap: 12,
-                                padding: '10px 14px', background: '#f4f6fb',
-                                borderRadius: 6, border: '1px solid #d0d7e5', cursor: 'pointer'
-                              }}>
-                                <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 20, color: '#1300a6' }} />
-                                <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
-                                  {docFileName}
-                                </span>
-                                <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 13, color: '#1300a6' }} />
-                              </div>
-                            </a>
-                          ) : (
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 12,
-                              padding: '10px 14px', background: '#f4f6fb',
-                              borderRadius: 6, border: '1px solid #d0d7e5'
-                            }}>
-                              <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 20, color: '#1300a6' }} />
-                              <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
-                                {docFileName}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginTop: 8 }}>
-                    <DefaultButton onClick={closeView}>Close</DefaultButton>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // DRUG SELECTED VIEW (inside a specific drug folder)
   return (

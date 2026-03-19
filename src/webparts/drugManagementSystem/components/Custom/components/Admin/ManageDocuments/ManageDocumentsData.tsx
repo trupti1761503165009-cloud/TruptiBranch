@@ -73,6 +73,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       const currentLoginName = String((currentUser as any)?.loginName || '').toLowerCase();
       const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
       list = list.filter(d => {
+        const status = String(d.status || '').toLowerCase().trim();
+        if (status !== 'pending approval') return false;
         const approverDisplay = String(d.approver || '').toLowerCase().trim();
         return (
           // 1. SharePoint user ID match (most reliable)

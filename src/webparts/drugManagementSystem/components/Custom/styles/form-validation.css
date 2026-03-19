@@ -1,5 +1,14 @@
 /* Form Validation and Styling - Using SPFx ms-Grid for Layout */
 
+/* White Card Section */
+.white-card-section {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
 /* Field Wrapper */
 .form-field {
   display: flex;

@@ -6,6 +6,7 @@ import { faPlus, faSave, faTrashCan, faFileMedical, faUserCheck, faCircleInfo } 
 import ReactDropdown, { type IReactDropOptionProps } from '../../../../Common/ReactSelectDropdown';
 import { AddDocumentModalData } from '../AddDocumentModal/AddDocumentModalData';
 import { Loader } from '../../../../Common/Loader/Loader';
+import { Breadcrumb } from '../../../../Common/Breadcrumb/Breadcrumb';
 import '../../../styles/form-validation.css';
 
 interface CreateDocumentPageProps {
@@ -19,6 +20,17 @@ const toOptions = (
 ): IReactDropOptionProps[] =>
   [{ label: emptyLabel, value: '' }].concat(
     items.map((i) => ({ label: i.name, value: i.id, data: i }))
+  );
+
+const toTemplateOptions = (
+  items: { id: any; name: string; status?: string }[],
+  emptyLabel: string
+): IReactDropOptionProps[] =>
+  [{ label: emptyLabel, value: '' }].concat(
+    items.map((i) => {
+      const badge = i.status === 'Active' || !i.status ? ' (Active)' : ' (Inactive)';
+      return { label: `${i.name}${badge}`, value: i.id, data: i };
+    })
   );
 
 export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel, onSuccess }) => {
@@ -41,7 +53,10 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
 
   const drugOptions     = React.useMemo(() => toOptions(drugs, '-- Select Drug --'), [drugs]);
   const countryOptions  = React.useMemo(() => toOptions(countries, '-- Select Country --'), [countries]);
-  const templateOptions = React.useMemo(() => toOptions(filteredTemplates as any, '-- Select Template --'), [filteredTemplates]);
+  const templateOptions = React.useMemo(
+    () => toTemplateOptions(filteredTemplates as any, '-- Select Template --'),
+    [filteredTemplates]
+  );
   const approverOptions = React.useMemo(() => toOptions(approvers, '-- Select Approver --'), [approvers]);
 
   const isFormComplete  = Boolean(formData.drugId && formData.countryId && formData.templateId && formData.approverId);
@@ -55,9 +70,36 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
         : 'Not mapped to eCTD (metadata only)';
 
   return (
-    <div className="ms-Grid" style={{ padding: 0 }}>
+    <div className="pageContainer" data-testid="create-document-page">
       {isSubmitting && <Loader />}
 
+      <div className="boxCard">
+        <div className="ms-Grid">
+          <div className="ms-Grid-row">
+            <div className="ms-Grid-col ms-sm12 dFlex justifyContentBetween alignItemsCenter">
+              <h1 className="mainTitle">Create New Document</h1>
+              <DefaultButton onClick={closeAndReset} styles={{ root: { borderColor: '#d13438', color: '#d13438' } }}>
+                Cancel
+              </DefaultButton>
+            </div>
+          </div>
+
+          <div className="ms-Grid-row">
+            <div className="ms-Grid-col ms-sm12">
+              <div className="customebreadcrumb">
+                <Breadcrumb
+                  items={[
+                    { label: 'Home', onClick: () => {} },
+                    { label: 'Manage Documents', onClick: onCancel },
+                    { label: 'Create New Document', isActive: true }
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <div className="ms-Grid" style={{ padding: 0, marginTop: 16 }}>
       {/* ── SECTION 1: Document Details ─────────────────────── */}
       <div className="white-card-section" style={{ marginBottom: 16 }}>
         <div className="section-title-row" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -70,9 +112,9 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
         <div className="ms-Grid-row">
           {/* Drug */}
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label className="form-label required" style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                Drug <span style={{ color: 'red' }}>*</span>
+            <div className="formControl" style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 6 }}>
+                Drug <span style={{ color: '#d13438' }}>*</span>
               </label>
               <ReactDropdown
                 name="drug"
@@ -97,9 +139,9 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
 
           {/* Country */}
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label className="form-label required" style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                Country <span style={{ color: 'red' }}>*</span>
+            <div className="formControl" style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 6 }}>
+                Country <span style={{ color: '#d13438' }}>*</span>
               </label>
               <ReactDropdown
                 name="country"
@@ -119,7 +161,7 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
                 isDisabled={!formData.drugId}
               />
               {!formData.drugId && (
-                <div className="cascading-dropdown-hint" style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                <div className="cascading-dropdown-hint">
                   Select Drug first
                 </div>
               )}
@@ -131,9 +173,9 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
         <div className="ms-Grid-row">
           {/* Template */}
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label className="form-label required" style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                Template <span style={{ color: 'red' }}>*</span>
+            <div className="formControl" style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 6 }}>
+                Template <span style={{ color: '#d13438' }}>*</span>
               </label>
               <ReactDropdown
                 name="template"
@@ -148,7 +190,7 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
                 isDisabled={!formData.countryId}
               />
               {!formData.countryId && (
-                <div className="cascading-dropdown-hint" style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                <div className="cascading-dropdown-hint">
                   Select Country first
                 </div>
               )}
@@ -163,9 +205,9 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
 
           {/* Approver (HR group only) */}
           <div className="ms-Grid-col ms-sm12 ms-md6 ms-lg6">
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label className="form-label required" style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-                Approver <span style={{ color: 'red' }}>*</span>
+            <div className="formControl" style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 600, fontSize: 14, display: 'block', marginBottom: 6 }}>
+                Approver <span style={{ color: '#d13438' }}>*</span>
               </label>
               <ReactDropdown
                 name="approver"
@@ -322,6 +364,8 @@ export const CreateDocumentPage: React.FC<CreateDocumentPageProps> = ({ onCancel
           <FontAwesomeIcon icon={faSave} style={{ marginRight: 8 }} />
           {isSubmitting ? 'Creating...' : 'Create Document'}
         </PrimaryButton>
+      </div>
+      </div>
       </div>
     </div>
   );
