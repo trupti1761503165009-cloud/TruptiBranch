@@ -1472,6 +1472,33 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </div>
               </div> */}
 
+              {/* Document File — clickable row like View Template */}
+              {(viewingDocument.fileName || viewingDocument.fileRef || viewingDocument.sharePointUrl) && (
+                <div className="ms-Grid-row" style={{ marginTop: 20 }}>
+                  <div className="ms-Grid-col ms-sm12 ms-md6">
+                    <div className="formLabel" style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Document File</div>
+                    <a
+                      href={viewingDocument.sharePointUrl || viewingDocument.fileRef || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '10px 14px', background: '#f4f6fb',
+                        borderRadius: 6, border: '1px solid #d0d7e5', cursor: 'pointer'
+                      }}>
+                        <FontAwesomeIcon icon={faFileLines} style={{ fontSize: 20, color: '#1300a6' }} />
+                        <span style={{ flex: 1, fontSize: 13, color: '#222', wordBreak: 'break-all' }}>
+                          {viewingDocument.fileName || viewingDocument.name}
+                        </span>
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: 13, color: '#1300a6' }} />
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {/* Word Document Embed with error fallback */}
               {viewingDocument.fileRef && (
                 <>

@@ -342,7 +342,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     sentBy: parseLookupText(item.SentBy),
     sentById: parseLookupId(item.SentById ?? item.SentBy),
     sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
-    isDeleted: !!item.IsDeleted,
+    isDeleted: item.IsDelete === 'Yes' || item.IsDelete === true || item['IsDelete.value'] === '1',
     uniqueId: item.UniqueId ? String(item.UniqueId).replace(/^\{|\}$/g, '') : undefined
   });
   };
@@ -424,7 +424,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           'DrugId',
           'Template',
           'TemplateId',
-          'IsDeleted',
+          'IsDelete',
           'UniqueId'
         ])
         .RowLimit(5000, true)
@@ -1076,7 +1076,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     try {
       // Perform soft-delete
       await Promise.all(selectedIds.map(id => 
-        provider.updateItem({ IsDeleted: true }, ListNames.DMSDocuments, id)
+        provider.updateItem({ IsDelete: true }, ListNames.DMSDocuments, id)
       ));
       await loadData();
       setSelectedIds([]);

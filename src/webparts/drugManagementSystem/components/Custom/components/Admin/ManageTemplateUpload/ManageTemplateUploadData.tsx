@@ -158,8 +158,7 @@ export function ManageTemplateUploadData() {
         UploadDate: new Date().toISOString(),
         Status: formData.status,
         MappingType: 'None',
-        IsDelete: false,
-        IsDeleted: false
+        IsDelete: false
       };
 
       if (panelMode === 'add') {
