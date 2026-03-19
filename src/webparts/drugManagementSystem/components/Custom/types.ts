@@ -32,6 +32,7 @@ export interface Document {
   createdDate?: string;
   modifiedDate?: string;
   sentBy?: string;
+  sentById?: number;
   sharePointUrl?: string;
   isDeleted?: boolean;
   isEmailSend?: boolean;

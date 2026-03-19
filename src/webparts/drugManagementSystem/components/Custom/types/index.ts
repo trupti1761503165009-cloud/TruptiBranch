@@ -73,6 +73,7 @@ export interface Document {
   createdDate?: string;
   createdBy?: string;
   sentBy?: string;
+  sentById?: number;
   sharePointUrl?:string;
   fileRef?: string;
   fileName?: string;

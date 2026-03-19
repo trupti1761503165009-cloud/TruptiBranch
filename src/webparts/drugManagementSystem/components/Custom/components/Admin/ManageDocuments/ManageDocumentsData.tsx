@@ -55,13 +55,18 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
       list = list.filter(d => {
         const authorDisplay = String(d.author || '').toLowerCase().trim();
+        const sentByDisplay = String(d.sentBy || '').toLowerCase().trim();
         return (
-          // 1. SP user ID match
+          // 1. SP system "Created By" user ID match
           (currentUserId > 0 && d.authorId === currentUserId) ||
-          // 2. Display name exact match (e.g. "Users" === "Users")
+          // 2. SentBy person field ID match (explicitly saved on create)
+          (currentUserId > 0 && d.sentById === currentUserId) ||
+          // 3. Display name exact match on Author (e.g. "Users" === "Users")
           (currentDisplayName !== '' && authorDisplay === currentDisplayName) ||
-          // 3. Email substring fallback
-          (userEmail !== '' && authorDisplay.includes(userEmail))
+          // 4. Display name exact match on SentBy
+          (currentDisplayName !== '' && sentByDisplay === currentDisplayName) ||
+          // 5. Email substring fallback
+          (userEmail !== '' && (authorDisplay.includes(userEmail) || sentByDisplay.includes(userEmail)))
         );
       });
     } else if (activeTab === 'assignedToMe') {
@@ -335,6 +340,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     version: Number(item.DocumentVersion || item.OData__UIVersionString || 1),
     createdDate: item.Created ? new Date(item.Created).toISOString().split('T')[0] : '',
     sentBy: parseLookupText(item.SentBy),
+    sentById: parseLookupId(item.SentById ?? item.SentBy),
     sharePointUrl: parseUrlValue(item.SharePointURL) || item.FileRef,
     isDeleted: !!item.IsDeleted,
     uniqueId: item.UniqueId ? String(item.UniqueId).replace(/^\{|\}$/g, '') : undefined
