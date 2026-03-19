@@ -58,17 +58,23 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       );
     } else if (activeTab === 'assignedToMe') {
       const currentLoginName = String((currentUser as any)?.loginName || '').toLowerCase();
-      list = list.filter(d =>
-        // 1. SharePoint user ID match (most reliable)
-        (currentUserId > 0 && d.approverId === currentUserId) ||
-        // 2. Email extracted from person field's LoginName claim
-        (userEmail !== '' && d.approverLoginName === userEmail) ||
-        // 3. loginName claim match (e.g. "i:0#.f|membership|admin@tenant.com")
-        (currentLoginName !== '' && d.approverLoginName !== '' &&
-          (currentLoginName.endsWith(d.approverLoginName || '') || d.approverLoginName === currentLoginName)) ||
-        // 4. Display name includes email (fallback for plain-text name fields)
-        (userEmail !== '' && String(d.approver || '').toLowerCase().includes(userEmail))
-      );
+      const currentDisplayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+      list = list.filter(d => {
+        const approverDisplay = String(d.approver || '').toLowerCase().trim();
+        return (
+          // 1. SharePoint user ID match (most reliable)
+          (currentUserId > 0 && d.approverId === currentUserId) ||
+          // 2. Display name exact match — d.approver = Title from person field (e.g. "Users")
+          (currentDisplayName !== '' && approverDisplay === currentDisplayName) ||
+          // 3. Email extracted from person field's LoginName claim
+          (userEmail !== '' && d.approverLoginName === userEmail) ||
+          // 4. loginName claim ends-with match
+          (currentLoginName !== '' && d.approverLoginName !== '' &&
+            currentLoginName.endsWith(d.approverLoginName || '')) ||
+          // 5. Display name contains email (legacy fallback)
+          (userEmail !== '' && approverDisplay.includes(userEmail))
+        );
+      });
     }
     return list;
   }, [documents, activeTab, currentUser]);
