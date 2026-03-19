@@ -132,13 +132,12 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!viewingDocument || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
-    return (
-      canApprove && (
-        (userId > 0 && viewingDocument.approverId === userId) ||
-        (userEmail !== '' && String(viewingDocument.approver || '').toLowerCase().includes(userEmail)) ||
-        !viewingDocument.approverId // if no approver assigned, any approver-role user can act
-      )
-    );
+    const isDocLevelApprover =
+      (userId > 0 && viewingDocument.approverId === userId) ||
+      (userEmail !== '' && String(viewingDocument.approver || '').toLowerCase().includes(userEmail));
+    // Allow if: explicitly assigned as approver on this document (regardless of global role)
+    // OR: has global canApprove role and no specific approver is assigned
+    return isDocLevelApprover || (canApprove && !viewingDocument.approverId);
   }, [viewingDocument, currentUser, canApprove]);
 
   // REQ 10: Word embed URL — edit mode for Draft/Rejected authors, view mode otherwise
@@ -587,6 +586,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
           (userId > 0 && doc.authorId === userId) ||
           (userEmail !== '' && String(doc.author || '').toLowerCase().includes(userEmail));
         const isRowApprover = canApprove ||
+          activeTab === 'assignedToMe' ||
           (userId > 0 && doc.approverId === userId) ||
           (userEmail !== '' && String(doc.approver || '').toLowerCase().includes(userEmail));
         // Admin can perform any workflow action; otherwise check role
@@ -659,22 +659,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
     },
   ];
 
-  const assignedToMeColumns = [
-    ...documentColumns.filter(c => c.key !== 'status'),
-    {
-      key: 'status',
-      name: 'STATUS',
-      fieldName: 'status',
-      minWidth: 140,
-      maxWidth: 200,
-      isSortingRequired: true,
-      onRender: (doc: Document) => (
-        <span className={`status-badge status-${doc.status.toLowerCase().replace(/\s+/g, '-')}`} style={{ fontWeight: 'bold' }}>{doc.status}</span>
-      )
-    }
-  ];
-
-  const effectiveColumns = activeTab === 'assignedToMe' ? assignedToMeColumns : documentColumns;
+  const effectiveColumns = documentColumns;
 
 
 
@@ -1788,6 +1773,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <div className="form-group">
               <label className="form-label">Category</label>
               <ReactDropdown
+                key={`editCat-${editingDocument?.id ?? 0}`}
                 name="editCategory"
                 options={editCategoryOptions}
                 defaultOption={editCategoryOptions.find(o => o.value === editForm.categoryId) || null}
@@ -1800,6 +1786,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             <div className="form-group">
               <label className="form-label">Status</label>
               <ReactDropdown
+                key={`editStatus-${editingDocument?.id ?? 0}`}
                 name="status"
                 options={statusOptions.filter(opt => opt.value !== 'All')}
                 defaultOption={statusOptions.find(o => o.value === editForm.status) ?? statusOptions[1]}
