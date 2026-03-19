@@ -875,30 +875,20 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     }
   };
 
+  const isFileLocked = (err: any): { locked: boolean; lockedBy?: string } => {
+    const status = err?.status || err?.response?.status || 0;
+    const msg: string = err?.message || err?.data?.responseBody || '';
+    if (status === 423 || msg.includes('[423]') || msg.toLowerCase().includes('locked for shared use')) {
+      const match = msg.match(/locked for shared use by ([^\."]+)/i);
+      return { locked: true, lockedBy: match?.[1]?.trim() };
+    }
+    return { locked: false };
+  };
+
   const handleSubmitForReview = async () => {
     if (!viewingDocument || !provider) return;
     setIsLoading(true);
     try {
-      const fileRef = viewingDocument.sharePointUrl || (viewingDocument as any).fileRef || '';
-      if (fileRef) {
-        try {
-          let serverRelPath = fileRef.startsWith('http')
-            ? new URL(fileRef).pathname
-            : fileRef;
-          // Fix doubled site path that may exist in older documents
-          // e.g. /sites/DMS/sites/DMS/DMSDocuments/... → /sites/DMS/DMSDocuments/...
-          const siteRel = context?.pageContext?.web?.serverRelativeUrl?.replace(/\/$/, '') || '';
-          if (siteRel && serverRelPath.startsWith(`${siteRel}${siteRel}`)) {
-            serverRelPath = serverRelPath.slice(siteRel.length);
-          }
-          await provider.checkInFile(serverRelPath);
-        } catch (checkInErr: any) {
-          // File may be open in Word Online (locked). This is non-fatal for submission —
-          // metadata (status) can still be updated independently of the file lock.
-          console.warn('[handleSubmitForReview] checkInFile skipped (non-fatal):', checkInErr?.message);
-        }
-      }
-
       const auditLog = {
         id: (viewingDocument.comments?.length || 0) + 1,
         author: 'System',
@@ -920,15 +910,15 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       setSuccessMessage('Document submitted for approval.');
     } catch (error: any) {
       console.error('Failed to submit document:', error);
-      if (error?.isFileLockError) {
-        const lockedBy: string | undefined = error.lockedBy;
+      const lock = isFileLocked(error);
+      if (lock.locked) {
         setErrorMessage(
-          lockedBy
-            ? `This document is currently open by ${lockedBy}. Please ask them to close it and try again.`
-            : 'This document is currently locked by another user. Please ask them to close it and try again.'
+          lock.lockedBy
+            ? `"${viewingDocument.name}" is currently open in Word Online by ${lock.lockedBy}. Please close the document and try submitting again.`
+            : `"${viewingDocument.name}" is currently open in Word Online. Please close the document and try submitting again.`
         );
       } else {
-        setErrorMessage('Unable to submit document for review.');
+        setErrorMessage('Unable to submit document for review. Please try again.');
       }
     } finally {
       setIsLoading(false);
