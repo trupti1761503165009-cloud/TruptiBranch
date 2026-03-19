@@ -139,10 +139,10 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         isSortOrderAsc: true
       }).catch(() => []),
 
-      // Countries
+      // Countries — only active ones
       provider.getItemsByQuery({
         listName: ListNames.Countries,
-        select: ['ID', 'Title'],
+        select: ['ID', 'Title', 'Status'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
@@ -215,7 +215,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     ]);
 
     setDrugs((drugItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
-    setCountries((countryItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
+    setCountries(
+      (countryItems || [])
+        .filter((item: any) => item.Status === 'Active')
+        .map((item: any) => ({ id: item.ID, name: item.Title }))
+    );
 
     setTemplates(
       (templateItems || []).map((item: any) => {
