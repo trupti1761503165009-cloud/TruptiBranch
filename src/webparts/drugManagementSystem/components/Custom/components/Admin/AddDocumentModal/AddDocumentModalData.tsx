@@ -366,7 +366,14 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     });
   }, [formData.templateId, templates]);
 
-  const filteredTemplates = React.useMemo(() => templates, [templates]);
+  const filteredTemplates = React.useMemo(() => {
+    const validMappingTypes = ['eCTD', 'GMP', 'TMF'];
+    return templates.filter(t => {
+      if (!t.mappingType || !validMappingTypes.includes(t.mappingType)) return false;
+      if (formData.countryId && t.countryId && t.countryId !== formData.countryId) return false;
+      return true;
+    });
+  }, [templates, formData.countryId]);
 
   const selectedTemplate = React.useMemo(
     () => templates.find(t => t.id === formData.templateId),
