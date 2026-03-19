@@ -665,7 +665,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     setCtdStructure(hasGmp ? 'gmp' : hasTmf ? 'tmf' : 'ectd');
   };
 
-  const handleViewDocument = async (doc: Document) => {
+  const handleViewDocument = async (doc: Document, openPanel = true) => {
     setViewingDocument(doc);
     setReviewerComments([]);
     setReviewerCommentError('');
@@ -699,7 +699,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         setIsLoading(false);
       }
     }
-    setIsDocPanelOpen(true);
+    if (openPanel) setIsDocPanelOpen(true);
   };
 
   const getNextStatus = (currentStatus: string): string => {
@@ -710,61 +710,47 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
   };
 
   const handleApprove = async () => {
-    if (!viewingDocument) return;
-    
-    // Status Flow: Draft -> Pending Approval -> Approved -> Pending for Signature -> Signed -> Final
-    let newStatus = '';
-    if (viewingDocument.status === 'Pending Approval' || viewingDocument.status === 'In Review') {
-      newStatus = 'Approved';
-    } else if (viewingDocument.status === 'Approved') {
-      newStatus = 'Pending for Signature';
-    } else {
-      newStatus = getNextStatus(viewingDocument.status);
-    }
+    if (!viewingDocument) { setErrorMessage('No document selected.'); return; }
+    if (!provider) { setErrorMessage('SharePoint connection not available.'); return; }
 
-    if (newStatus === 'Pending for Signature') {
-      // Logic for Adobe Sign initiation is separate, but we move status here if desired
-      // Or just return and let user click "Initiate Adobe Sign" button in panel
-      return; 
-    }
-
-    if (newStatus === 'Signed') {
-      setIsSignatureModalOpen(true);
+    // Approver action: move 'Pending Approval' → 'Approved'
+    // After approval, author sees document with 'Approved' status and can Initiate Signature.
+    if (viewingDocument.status !== 'Pending Approval' && viewingDocument.status !== 'In Review') {
+      setErrorMessage('Only documents with "Pending Approval" status can be approved here.');
       return;
     }
 
-    if (provider) {
-      setIsLoading(true);
-      try {
-        const auditLog = {
-          id: (viewingDocument.comments?.length || 0) + 1,
-          author: 'System',
-          text: `Status approved and changed from ${viewingDocument.status} to ${newStatus} by ${currentUser?.displayName || 'Unknown'}`,
-          timestamp: new Date().toISOString()
-        };
-        const nextComments = [...(viewingDocument.comments || []), auditLog];
+    setIsLoading(true);
+    try {
+      const auditLog = {
+        id: (viewingDocument.comments?.length || 0) + 1,
+        author: currentUser?.displayName || 'Approver',
+        text: `Document approved by ${currentUser?.displayName || 'Approver'}. Status changed from ${viewingDocument.status} to Approved.`,
+        timestamp: new Date().toISOString()
+      };
+      const nextComments = [...(viewingDocument.comments || []), auditLog];
 
-        await provider.updateItem(
-          {
-            Status: newStatus,
-            IsEmailSend: true,
-            Comments: JSON.stringify(nextComments)
-          },
-          ListNames.DMSDocuments,
-          viewingDocument.id
-        );
-        await loadData();
-        // Keep panel open if Approved so they can Initiate Sign
-        if (newStatus !== 'Approved') {
-          setIsDocPanelOpen(false);
-        }
-        setSuccessMessage(`Document moved to ${newStatus}.`);
-      } catch (error) {
-        console.error('Failed to update document status:', error);
-        setErrorMessage('Unable to update document status.');
-      } finally {
-        setIsLoading(false);
+      await provider.updateItem(
+        {
+          Status: 'Approved',
+          IsEmailSend: true,
+          Comments: JSON.stringify(nextComments)
+        },
+        ListNames.DMSDocuments,
+        viewingDocument.id
+      );
+      await loadData();
+      setIsDocPanelOpen(false);
+      setSuccessMessage('Document has been approved. The author can now initiate the signature process.');
+    } catch (error: any) {
+      console.error('Failed to approve document:', error);
+      if (error?.status === 423 || (error?.message || '').includes('423')) {
+        setErrorMessage('The file is currently open in Word Online. Please close it and try again.');
+      } else {
+        setErrorMessage('Unable to approve document. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1014,9 +1000,13 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
       setIsRejectModalOpen(false);
       setIsDocPanelOpen(false);
       setSuccessMessage('Document has been rejected.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to reject document:', error);
-      setErrorMessage('Unable to reject document.');
+      if (error?.status === 423 || (error?.message || '').includes('423')) {
+        setErrorMessage('The file is currently open in Word Online. Please close it and try again.');
+      } else {
+        setErrorMessage('Unable to reject document. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

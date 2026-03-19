@@ -678,7 +678,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             )}
             <TooltipHost content="Comments">
               <Link
-                onClick={() => { void handleViewDocument(doc).then(() => setIsCommentsModalOpen(true)); }}
+                onClick={() => { void handleViewDocument(doc, false).then(() => setIsCommentsModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#1300a6' }}
               >
                 <FontAwesomeIcon icon={faComments} />
@@ -686,7 +686,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
             </TooltipHost>
             <TooltipHost content="Version History">
               <Link
-                onClick={() => { void handleViewDocument(doc).then(() => setIsHistoryModalOpen(true)); }}
+                onClick={() => { void handleViewDocument(doc, false).then(() => setIsHistoryModalOpen(true)); }}
                 style={{ fontSize: 16, color: '#546e7a' }}
               >
                 <FontAwesomeIcon icon={faClockRotateLeft} />
@@ -1361,14 +1361,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
                 </PrimaryButton>
               )}
 
-              {/* Initiate Adobe Sign when Approved */}
-              {viewingDocument.status === 'Approved' && (
+              {/* Initiate Adobe Sign — shown to author (or admin) when document is Approved */}
+              {viewingDocument.status === 'Approved' && (isCurrentUserAuthor || canApprove) && (
                 <PrimaryButton
                   onClick={() => initiateAdobeSign(viewingDocument)}
                   styles={{ root: { background: '#6200EE', borderColor: '#6200EE', color: '#fff' }, rootHovered: { background: '#3700B3', color: '#fff' } }}
                 >
                   <FontAwesomeIcon icon={faFileSignature} style={{ marginRight: 6 }} />
-                  Initiate Adobe Sign
+                  Initiate Signature
                 </PrimaryButton>
               )}
 
