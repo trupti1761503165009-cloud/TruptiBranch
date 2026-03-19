@@ -153,23 +153,22 @@ export const ManageDocuments: React.FC<any> = (props) => {
     if (!spContext) return '';
     const canEditInline = !forceViewMode && isCurrentUserAuthor &&
       (doc.status === 'Draft' || doc.status === 'Rejected');
-    const action = canEditInline ? 'edit' : 'view';
+    const action = canEditInline ? 'edit' : 'embedview';
 
-    // Use WopiFrame.aspx with server-relative file URL (most reliable for SP Online)
-    // Prefer sharePointUrl (explicitly stored on create) over fileRef which may be a folder path
+    // Use Doc.aspx with server-relative file URL
     const fileRef =  doc.fileRef || '';
     if (fileRef) {
       const serverRelative = fileRef.startsWith('http')
         ? new URL(fileRef).pathname
         : fileRef;
       const encodedUrl = encodeURIComponent(serverRelative);
-      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodedUrl}&action=${action}`;
+      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=${encodedUrl}&action=${action}`;
     }
 
     // Last resort: Doc.aspx with UniqueId
     if (doc.uniqueId) {
       const guid = doc.uniqueId.replace(/^\{|\}$/g, '');
-      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=%7B${guid}%7D&action=${action === 'edit' ? 'edit' : 'embedview'}`;
+      return `${spContext.pageContext.web.absoluteUrl}/_layouts/15/Doc.aspx?sourcedoc=%7B${guid}%7D&action=${action}`;
     }
     return '';
   };
@@ -628,10 +627,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
           (userId > 0 && doc.approverId === userId) ||
           (userEmail !== '' && docApprover.includes(userEmail)) ||
           (displayName !== '' && docApprover === displayName);
+        // Suppress all workflow actions for deleted/hidden documents
+        const isDocActive = !(doc as any).isDeleted && !(doc as any).isHidden;
         // Admin can perform any workflow action; otherwise check role
-        const canSubmitRow  = (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
-        const canApproveRow = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
-        const canRejectRow  = (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canSubmitRow  = isDocActive && (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
+        const canApproveRow = isDocActive && (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canRejectRow  = isDocActive && (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canInitiateSignatureRow = isDocActive && doc.status === 'Approved' && (isAdmin || isRowAuthor || isRowApprover);
+        const canSignRow = isDocActive && doc.status === 'Pending for Signature';
         return (
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'nowrap' }}>
             <TooltipHost content="View Details">
@@ -673,6 +676,26 @@ export const ManageDocuments: React.FC<any> = (props) => {
                   style={{ fontSize: 16, color: '#d32f2f' }}
                 >
                   <FontAwesomeIcon icon={faXmark} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canInitiateSignatureRow && (
+              <TooltipHost content="Initiate Signature">
+                <Link
+                  onClick={() => void handleViewDocument(doc)}
+                  style={{ fontSize: 16, color: '#7B1FA2' }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canSignRow && (
+              <TooltipHost content="Sign Document">
+                <Link
+                  onClick={() => void handleViewDocument(doc)}
+                  style={{ fontSize: 16, color: '#00796B' }}
+                >
+                  <FontAwesomeIcon icon={faFileSignature} />
                 </Link>
               </TooltipHost>
             )}
@@ -943,7 +966,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                       <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
                     </Link>
                   )}
-                  {canEdit && isDisplayEditButtonview && (
+                  {canEdit && isDisplayEditButtonview && updateItem[0] && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
                     <Link className="actionBtn iconSize btnEdit ml-10" onClick={onclickEdit}>
                       <TooltipHost content="Edit"><FontAwesomeIcon icon={faPenToSquare} /></TooltipHost>
                     </Link>
@@ -1178,7 +1201,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                             <FontAwesomeIcon icon={faEye} />
                           </TooltipHost>
                         </Link>
-                        {canEdit && (
+                        {canEdit && updateItem[0] && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
                           <Link
                             className="actionBtn iconSize btnEdit ml-10"
                             onClick={onclickEdit}
