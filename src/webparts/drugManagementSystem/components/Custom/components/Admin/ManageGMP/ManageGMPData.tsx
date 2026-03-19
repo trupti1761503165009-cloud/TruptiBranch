@@ -21,17 +21,18 @@ export async function fetchGmpCategoriesFromList(provider: any): Promise<string[
   if (!provider) return GMP_CATEGORIES;
   try {
     const data = await provider.getItemsByQuery({
-      listName: ListNames.GmpCategories,
-      select: ['Title'],
-      top: 500,
-      orderBy: 'SortOrder',
-      isSortOrderAsc: true
+      listName: ListNames.GmpModels,
+      select: ['Category'],
+      top: 2000
     });
-    const names: string[] = (data || []).map((item: any) => item.Title || '').filter(Boolean);
-    // GMP_CATEGORIES serves as a fallback when the list is empty or not yet provisioned
+    const seen = new Set<string>();
+    const names: string[] = [];
+    (data || []).forEach((item: any) => {
+      const cat = (item.Category || '').trim();
+      if (cat && !seen.has(cat)) { seen.add(cat); names.push(cat); }
+    });
     return names.length > 0 ? names : GMP_CATEGORIES;
   } catch {
-    // Fall back to hardcoded constant if the GmpCategories list is unavailable
     return GMP_CATEGORIES;
   }
 }

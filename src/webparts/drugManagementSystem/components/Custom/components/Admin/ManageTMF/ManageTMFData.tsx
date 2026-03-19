@@ -32,23 +32,23 @@ export async function fetchTmfZonesFromList(provider: any): Promise<ITmfZoneOpti
   if (!provider) return TMF_ZONE_CHOICES;
   try {
     const data = await provider.getItemsByQuery({
-      listName: ListNames.TmfZones,
-      select: ['Title', 'ZoneNumber', 'SortOrder'],
-      top: 500,
-      orderBy: 'SortOrder',
-      isSortOrderAsc: true
+      listName: ListNames.TMFFolders,
+      select: ['Zone', 'ZoneName'],
+      top: 2000
     });
-    const zones: ITmfZoneOption[] = (data || [])
-      .map((item: any) => ({
-        value: item.Title || '',
-        label: item.Title || '',
-        zone: item.ZoneNumber || 0
-      }))
-      .filter((z: ITmfZoneOption) => z.value);
-    // TMF_ZONE_CHOICES serves as a fallback when the list is empty or not yet provisioned
+    const seen = new Set<number>();
+    const zones: ITmfZoneOption[] = [];
+    (data || []).forEach((item: any) => {
+      const zoneNum: number = item.Zone || 0;
+      const zoneName: string = (item.ZoneName || '').trim();
+      if (zoneNum && zoneName && !seen.has(zoneNum)) {
+        seen.add(zoneNum);
+        zones.push({ value: zoneName, label: zoneName, zone: zoneNum });
+      }
+    });
+    zones.sort((a, b) => a.zone - b.zone);
     return zones.length > 0 ? zones : TMF_ZONE_CHOICES;
   } catch {
-    // Fall back to hardcoded constant if the TmfZones list is unavailable
     return TMF_ZONE_CHOICES;
   }
 }

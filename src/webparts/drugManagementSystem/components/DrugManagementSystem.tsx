@@ -23,7 +23,7 @@ import { appGlobalStateAtom } from '../jotai/appGlobalStateAtom';
 import { appDescriptionAtom, currentUserAtom, roleMappingAtom, sharePointGroupsAtom, siteAdminAtom } from '../jotai/adminAtoms';
 import ReactDropdown, { type IReactDropOptionProps } from './Common/ReactSelectDropdown';
 import { ComponentNameEnum } from '../models/ComponentNameEnum';
-import { CategoriesViewRouter, TemplatesViewRouter, DrugsViewRouter, UsersViewRouter, DocumentsViewRouter, GMPViewRouter, TMFViewRouter, CountriesViewRouter, GmpCategoriesViewRouter, TmfZonesViewRouter, TemplateUploadViewRouter } from './AdminRouters';
+import { CategoriesViewRouter, TemplatesViewRouter, DrugsViewRouter, UsersViewRouter, DocumentsViewRouter, GMPViewRouter, TMFViewRouter, CountriesViewRouter, TemplateUploadViewRouter } from './AdminRouters';
 import { ToastHost } from './Common/Toast/ToastHost';
 require('../assets/css/styles.css')
 require('./Custom/styles/app.css')
@@ -42,8 +42,6 @@ type View =
   | 'gmpMaster'
   | 'tmfMaster'
   | 'countriesMaster'
-  | 'gmpCategoriesMaster'
-  | 'tmfZonesMaster'
   | 'templateUploadMaster'
   | 'approvals'
   | 'authorDocs'
@@ -206,8 +204,6 @@ const DmsShell: React.FC = () => {
           { id: 'tmfMaster', label: 'TMF Folder Structure', icon: '🗂' },
           { id: 'drugsDatabase', label: 'Drugs', icon: '💊' },
           { id: 'countriesMaster', label: 'Countries', icon: '🌍' },
-          { id: 'gmpCategoriesMaster', label: 'GMP Categories', icon: '🏷️' },
-          { id: 'tmfZonesMaster', label: 'TMF Zones', icon: '🗺️' },
           { id: '_documents', label: 'DOCUMENTS', isSection: true },
           { id: 'documents', label: 'All Documents', icon: '📄' },
           { id: 'myDocuments', label: 'My Documents', icon: '📝' },
@@ -280,10 +276,6 @@ const DmsShell: React.FC = () => {
           return <TMFViewRouter />;
         case 'countriesMaster':
           return <CountriesViewRouter />;
-        case 'gmpCategoriesMaster':
-          return <GmpCategoriesViewRouter />;
-        case 'tmfZonesMaster':
-          return <TmfZonesViewRouter />;
         case 'templateUploadMaster':
           return <TemplateUploadViewRouter />;
         case 'ctdView':
