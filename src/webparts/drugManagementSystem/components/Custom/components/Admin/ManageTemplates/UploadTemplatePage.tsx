@@ -47,6 +47,7 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
   } = UploadTemplateModalData({ onClose: onCancel, onSuccess, editMode, editItemId, editFileRef });
 
   const [selectedModule, setSelectedModule] = React.useState<string>('');
+  const [selectedTemplateOpt, setSelectedTemplateOpt] = React.useState<{ label: string; value: number } | null>(null);
 
   const [validationModal, setValidationModal] = React.useState<{ open: boolean; message: string }>({ open: false, message: '' });
   const [errorModal, setErrorModal] = React.useState<{ open: boolean; message: string }>({ open: false, message: '' });
@@ -83,11 +84,6 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
   const templateDropdownOptions = React.useMemo(() =>
     (templateOptions || []).map(t => ({ label: `${t.name} (v${t.version})`, value: Number(t.id) })),
     [templateOptions]
-  );
-
-  const templateDefault = React.useMemo(() =>
-    templateDropdownOptions.find(o => o.value === formData.selectedTemplateId) ?? null,
-    [templateDropdownOptions, formData.selectedTemplateId]
   );
 
   const categoryOptions = React.useMemo(() => categories.map(c => ({ label: c.name, value: c.id })), [categories]);
@@ -206,11 +202,12 @@ export const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ onCancel
                 <ReactDropdown
                   name="selectTemplate"
                   options={templateDropdownOptions}
-                  defaultOption={templateDefault}
+                  defaultOption={selectedTemplateOpt}
                   placeholder="-- Select Template --"
                   onChange={(opt) => {
                     const selectedId = Number(opt?.value) || 0;
-                    const selectedTpl = templateOptions.find(t => t.id === selectedId);
+                    const selectedTpl = templateOptions.find(t => Number(t.id) === selectedId);
+                    setSelectedTemplateOpt(selectedId > 0 ? { label: opt?.label ?? '', value: selectedId } : null);
                     setFormData((prev) => ({
                       ...prev,
                       selectedTemplateId: selectedId,
