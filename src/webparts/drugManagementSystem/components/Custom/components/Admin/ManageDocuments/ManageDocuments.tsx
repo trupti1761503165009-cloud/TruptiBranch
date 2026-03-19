@@ -116,21 +116,27 @@ export const ManageDocuments: React.FC<any> = (props) => {
   const spContext = appGlobalState?.context;
   const currentUser = appGlobalState?.currentUser;
 
-  // Per-document permission: is current user the document author?
-  const isCurrentUserAuthor = React.useMemo(() => {
-    if (!viewingDocument || !currentUser) return false;
+  // Helper: check author identity for any document object
+  const isAuthorForDoc = React.useCallback((doc: Document | null | undefined): boolean => {
+    if (!doc || !currentUser) return false;
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
     const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
-    const docAuthor = String(viewingDocument.author || '').toLowerCase().trim();
-    const docSentBy = String((viewingDocument as any).sentBy || '').toLowerCase().trim();
+    const docAuthor = String(doc.author || '').toLowerCase().trim();
+    const docSentBy = String((doc as any).sentBy || '').toLowerCase().trim();
     return (
-      (userId > 0 && viewingDocument.authorId === userId) ||
-      (userId > 0 && (viewingDocument as any).sentById === userId) ||
+      (userId > 0 && doc.authorId === userId) ||
+      (userId > 0 && (doc as any).sentById === userId) ||
       (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
       (displayName !== '' && (docAuthor === displayName || docSentBy === displayName))
     );
-  }, [viewingDocument, currentUser]);
+  }, [currentUser]);
+
+  // Per-document permission: is current user the document author?
+  const isCurrentUserAuthor = React.useMemo(
+    () => isAuthorForDoc(viewingDocument),
+    [viewingDocument, isAuthorForDoc]
+  );
 
   // Per-document permission: is current user the assigned approver?
   const isCurrentUserApprover = React.useMemo(() => {
@@ -138,11 +144,18 @@ export const ManageDocuments: React.FC<any> = (props) => {
     const userId = Number((currentUser as any)?.userId || (currentUser as any)?.Id || (currentUser as any)?.id || 0);
     const userEmail = String(currentUser?.email || '').toLowerCase().trim();
     const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+    const loginName = String((currentUser as any)?.loginName || '').toLowerCase();
     const docApprover = String(viewingDocument.approver || '').toLowerCase().trim();
+    const approverLoginName = String((viewingDocument as any).approverLoginName || '').toLowerCase();
     const isDocLevelApprover =
+      // 1. SharePoint user ID match (most reliable)
       (userId > 0 && viewingDocument.approverId === userId) ||
-      (userEmail !== '' && docApprover.includes(userEmail)) ||
-      (displayName !== '' && docApprover === displayName);
+      // 2. Email match against approver display or login name
+      (userEmail !== '' && (docApprover.includes(userEmail) || approverLoginName === userEmail)) ||
+      // 3. Display name exact match
+      (displayName !== '' && docApprover === displayName) ||
+      // 4. loginName claim ends-with match (handles i:0#.f|membership|user@domain format)
+      (loginName !== '' && approverLoginName !== '' && loginName.endsWith(approverLoginName));
     // Allow if: explicitly assigned as approver on this document (regardless of global role)
     // OR: has global canApprove role and no specific approver is assigned
     return isDocLevelApprover || (canApprove && !viewingDocument.approverId);
@@ -969,7 +982,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                       <TooltipHost content="View"><FontAwesomeIcon icon={faEye} /></TooltipHost>
                     </Link>
                   )}
-                  {canEdit && isDisplayEditButtonview && updateItem[0] && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
+                  {canEdit && isDisplayEditButtonview && updateItem[0] && isAuthorForDoc(updateItem[0]) && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
                     <Link className="actionBtn iconSize btnEdit ml-10" onClick={onclickEdit}>
                       <TooltipHost content="Edit"><FontAwesomeIcon icon={faPenToSquare} /></TooltipHost>
                     </Link>
@@ -1204,7 +1217,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
                             <FontAwesomeIcon icon={faEye} />
                           </TooltipHost>
                         </Link>
-                        {canEdit && updateItem[0] && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
+                        {canEdit && updateItem[0] && isAuthorForDoc(updateItem[0]) && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
                           <Link
                             className="actionBtn iconSize btnEdit ml-10"
                             onClick={onclickEdit}
