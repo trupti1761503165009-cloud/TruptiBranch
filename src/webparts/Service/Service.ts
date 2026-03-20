@@ -210,11 +210,10 @@ export default class Service implements IDataProvider {
         return msg.includes('[423]') || (msg.includes('423') && msg.includes('lock'));
     }
 
-    // Updates list item metadata via the SharePoint SOAP endpoint, which bypasses
-    // the co-authoring file lock that blocks REST MERGE/validateUpdateListItem.
+    // Updates list item metadata via the SharePoint SOAP endpoint.
     private async _updateItemViaSoap(objItems: any, listName: string, itemId: number): Promise<void> {
-        // absoluteUrl may be a URL object or string depending on SPFx version — normalise to string
         const webUrl: string = String(this._webPartContext.pageContext.web.absoluteUrl).replace(/\/$/, '');
+        console.log('[SOAP] webUrl:', webUrl, '| list:', listName, '| itemId:', itemId, '| fields:', Object.keys(objItems));
 
         const fieldsXml = Object.entries(objItems).map(([k, v]) => {
             const raw = (v === null || v === undefined) ? '' : String(v);
@@ -238,22 +237,22 @@ export default class Service implements IDataProvider {
             '</UpdateListItems></soap:Body></soap:Envelope>'
         ].join('');
 
-        // Prefer the in-page form digest (no extra HTTP call); fall back to contextinfo
-        let digest: string = (this._webPartContext as any)?.pageContext?.legacyPageContext?.formDigestValue || '';
-        if (!digest) {
-            try {
-                const digestResp = await fetch(`${webUrl}/_api/contextinfo`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json' }
-                });
-                const digestJson = await digestResp.json();
-                digest = digestJson.FormDigestValue || '';
-            } catch (_) {
-                // continue without digest — some SharePoint versions don't require it on same origin
-            }
+        // Always fetch a fresh form digest — legacyPageContext value can be stale
+        let digest = '';
+        try {
+            const digestResp = await fetch(`${webUrl}/_api/contextinfo`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json' }
+            });
+            const digestJson = await digestResp.json();
+            digest = digestJson.FormDigestValue || '';
+            console.log('[SOAP] digest obtained:', !!digest);
+        } catch (dErr) {
+            console.warn('[SOAP] failed to get digest:', dErr);
         }
 
+        console.log('[SOAP] sending request to', `${webUrl}/_vti_bin/Lists.asmx`);
         const soapResp = await fetch(`${webUrl}/_vti_bin/Lists.asmx`, {
             method: 'POST',
             credentials: 'include',
@@ -264,16 +263,20 @@ export default class Service implements IDataProvider {
             },
             body: soapBody
         });
+        console.log('[SOAP] response status:', soapResp.status, soapResp.statusText);
         if (!soapResp.ok) {
-            throw new Error(`SOAP UpdateListItems failed: HTTP ${soapResp.status}`);
+            throw new Error(`SOAP UpdateListItems failed: HTTP ${soapResp.status} ${soapResp.statusText}`);
         }
         const xml = await soapResp.text();
+        console.log('[SOAP] response body (first 500):', xml.slice(0, 500));
         // SOAP returns HTTP 200 even for errors — check the XML error code
         const errorCodeMatch = xml.match(/<ErrorCode>([^<]+)<\/ErrorCode>/);
         if (errorCodeMatch && errorCodeMatch[1] !== '0x00000000') {
             const errText = xml.match(/<ErrorText>([^<]*)<\/ErrorText>/)?.[1] || `ErrorCode ${errorCodeMatch[1]}`;
+            console.error('[SOAP] error in response:', errText);
             throw new Error(`SOAP UpdateListItems error: ${errText}`);
         }
+        console.log('[SOAP] success — item updated via SOAP');
     }
 
     public async updateItem(objItems: any, listName: string, itemId: number): Promise<any> {
