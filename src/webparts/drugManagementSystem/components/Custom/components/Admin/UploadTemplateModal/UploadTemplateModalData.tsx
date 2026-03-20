@@ -261,6 +261,11 @@ export function UploadTemplateModalData(params: UploadTemplateModalDataParams) {
 
     if (!editMode && !formData.selectedTemplateId) nextErrors.selectedTemplateId = 'Please select a template.';
 
+    // Mapping type is mandatory — 'None' is not allowed
+    if (!formData.mappingType || formData.mappingType === 'None') {
+      nextErrors.mappingType = 'Mapping type is required. Please select eCTD, GMP, or TMF.';
+    }
+
     if (formData.mappingType === 'eCTD') {
       if (!formData.mappedCTDFolderId) nextErrors.mappedCTDFolderId = 'Mapped CTD Folder is required for eCTD mapping.';
       if (!formData.ectdSectionId) nextErrors.ectdSectionId = 'eCTD Section is required for eCTD mapping.';
