@@ -8,6 +8,18 @@ import { ListNames } from '../../../../../../Shared/Enum/ListNames';
 const parseLookupId = (value: any): number => {
   if (!value) return 0;
   if (typeof value === 'number') return value;
+  // SP lookup column: [{lookupId: 5, lookupValue: "..."}] or [{LookupId: 5}]
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0];
+    const id = first?.lookupId ?? first?.LookupId ?? first?.ID ?? first?.Id;
+    return Number(id) || 0;
+  }
+  // SP lookup object: {lookupId: 5, lookupValue: "..."}
+  if (typeof value === 'object' && value !== null) {
+    const id = value.lookupId ?? value.LookupId ?? value.ID ?? value.Id;
+    if (id !== undefined) return Number(id) || 0;
+  }
+  // plain numeric string like "5" or "5;#Some Value"
   const m = String(value).match(/^(\d+)/);
   return m ? Number(m[1]) : 0;
 };
@@ -50,6 +62,8 @@ interface TemplateItem {
   fileRef?: string;
   fileLeafRef?: string;
   mappingType?: 'eCTD' | 'GMP' | 'TMF' | 'None';
+  mappedCTDFolderId?: number;
+  ectdSectionId?: number;
   mappedGMPModelId?: number;
   mappedGMPModel?: string;
   mappedTMFFolderId?: number;
@@ -118,6 +132,69 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     [provider, sanitizeFolderName]
   );
 
+  // Pre-creates the COMPLETE folder hierarchy for the given mapping type under the drug folder.
+  // Parents are created before children so SP doesn't reject the request.
+  // If a folder already exists the error is silently swallowed.
+  const createFullFolderStructure = React.useCallback(
+    async (drugFolderPath: string, mappingType: string): Promise<void> => {
+      if (!provider) return;
+
+      const buildChain = (nodeId: string, byId: Map<string, FolderItem>): string[] => {
+        const chain: string[] = [];
+        let cur = byId.get(nodeId);
+        while (cur) {
+          chain.unshift(sanitizeFolderName(cur.name));
+          cur = cur.parentId ? byId.get(cur.parentId) : undefined;
+        }
+        return chain;
+      };
+
+      const createPath = async (fullPath: string) => {
+        try { await provider.createFolder(fullPath); } catch { /* already exists */ }
+      };
+
+      try {
+        if (mappingType === 'eCTD' && modules.length > 0) {
+          const byId = new Map(modules.map(m => [m.id, m]));
+          // Sort by depth so parents are always created before children
+          const withDepth = modules.map(m => {
+            let depth = 0;
+            let cur: FolderItem | undefined = m;
+            while (cur?.parentId && byId.has(cur.parentId)) { depth++; cur = byId.get(cur.parentId); }
+            return { m, depth };
+          });
+          withDepth.sort((a, b) => a.depth - b.depth);
+          for (const { m } of withDepth) {
+            const chain = buildChain(m.id, byId);
+            if (chain.length) await createPath(`${drugFolderPath}/${chain.join('/')}`);
+          }
+
+        } else if (mappingType === 'GMP' && gmpModels.length > 0) {
+          for (const model of gmpModels) {
+            await createPath(`${drugFolderPath}/${sanitizeFolderName(model.name)}`);
+          }
+
+        } else if (mappingType === 'TMF' && tmfFolders.length > 0) {
+          const byId = new Map(tmfFolders.map(m => [m.id, m]));
+          const withDepth = tmfFolders.map(m => {
+            let depth = 0;
+            let cur: FolderItem | undefined = m;
+            while (cur?.parentId && byId.has(cur.parentId)) { depth++; cur = byId.get(cur.parentId); }
+            return { m, depth };
+          });
+          withDepth.sort((a, b) => a.depth - b.depth);
+          for (const { m } of withDepth) {
+            const chain = buildChain(m.id, byId);
+            if (chain.length) await createPath(`${drugFolderPath}/${chain.join('/')}`);
+          }
+        }
+      } catch (e) {
+        console.warn('createFullFolderStructure: error pre-creating folders:', e);
+      }
+    },
+    [provider, modules, gmpModels, tmfFolders, sanitizeFolderName]
+  );
+
   const getLibraryUrl = React.useCallback(
     (listName: string) => {
       const base = context?.pageContext?.web?.serverRelativeUrl ?? '';
@@ -153,10 +230,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         try {
           const q = new CamlBuilder()
             .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status',
-              'Category', 'CategoryId', 'Country', 'CountryId',
-              'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
-              'MappedGMPModel', 'MappedGMPModelId',
-              'MappedTMFFolder', 'MappedTMFFolderId'])
+                   'Category', 'CategoryId', 'Country', 'CountryId',
+                   'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
+                   'eCTDSectionId',
+                   'MappedGMPModel', 'MappedGMPModelId',
+                   'MappedTMFFolder', 'MappedTMFFolderId'])
             .RowLimit(5000, true)
             .Query();
           const items = await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
@@ -224,11 +302,13 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     setTemplates(
       (templateItems || []).map((item: any) => {
         const mappingType: 'eCTD' | 'GMP' | 'TMF' | 'None' = item.MappingType || 'None';
-        const mappedCTDFolderId = item.MappedCTDFolderId || parseLookupId(item.MappedCTDFolder);
-        const mappedGMPModelId = item.MappedGMPModelId || parseLookupId(item.MappedGMPModel);
-        const mappedTMFFolderId = item.MappedTMFFolderId || parseLookupId(item.MappedTMFFolder);
+        // Prefer direct numeric field; fall back to parsing from lookup column (handles array, object, or string formats)
+        const mappedCTDFolderId = Number(item.MappedCTDFolderId) || parseLookupId(item.MappedCTDFolder);
+        const ectdSectionId    = Number(item.eCTDSectionId)      || parseLookupId(item.eCTDSection);
+        const mappedGMPModelId = Number(item.MappedGMPModelId)   || parseLookupId(item.MappedGMPModel);
+        const mappedTMFFolderId= Number(item.MappedTMFFolderId)  || parseLookupId(item.MappedTMFFolder);
 
-        // Resolve mappedFolderId based on mappingType
+        // Resolve mappedFolderId (unified string ID used by auto-select effect)
         let mappedFolderId: string | undefined;
         if (mappingType === 'eCTD' && mappedCTDFolderId) {
           mappedFolderId = String(mappedCTDFolderId);
@@ -248,10 +328,12 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
           fileLeafRef: item.FileLeafRef || item.LinkFilename || '',
           mappingType,
           mappedFolderId,
+          mappedCTDFolderId: mappedCTDFolderId || undefined,
+          ectdSectionId: ectdSectionId || undefined,
           mappedGMPModelId: mappedGMPModelId || undefined,
-          mappedGMPModel: item.MappedGMPModel?.[0]?.lookupValue || '',
+          mappedGMPModel: item.MappedGMPModel?.[0]?.lookupValue || item.MappedGMPModel || '',
           mappedTMFFolderId: mappedTMFFolderId || undefined,
-          mappedTMFFolder: item.MappedTMFFolder?.[0]?.lookupValue || ''
+          mappedTMFFolder: item.MappedTMFFolder?.[0]?.lookupValue || item.MappedTMFFolder || ''
         };
       })
     );
@@ -553,6 +635,11 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       const targetUrl = `${targetFolder}/${targetFileName}`;
       await provider.copyFile(selTemplate.fileRef, targetUrl);
 
+      // Pre-create the COMPLETE eCTD/GMP/TMF folder hierarchy under this drug folder.
+      // Runs in the background — does not block document creation.
+      const drugFolderPath = `${libraryUrl}/${sanitizeFolderName(drugName)}`;
+      void createFullFolderStructure(drugFolderPath, mappingType);
+
       const created = await provider.getItemsByQuery({
         listName: ListNames.DMSDocuments,
         select: ['ID', 'FileRef'],
@@ -570,30 +657,6 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       // and includes the site path (e.g. /sites/DMS/...). Concatenating with
       // absoluteUrl (https://tenant.sharepoint.com/sites/DMS) would double the path.
       const absoluteFileUrl = `${new URL(context.pageContext.web.absoluteUrl).origin}${targetUrl}`;
-      // Build dedicated mapping-type fields for the new SP columns
-      const mappingFields: Record<string, string> = { MappingType: mappingType };
-      if (mappingType === 'eCTD') {
-        const byId = new Map(modules.map(m => [m.id, m]));
-        const leafId = formData.submoduleId || formData.moduleId;
-        const chain: FolderItem[] = [];
-        let n = leafId ? byId.get(leafId) : undefined;
-        while (n) { chain.push(n); if (!n.parentId) break; n = byId.get(n.parentId); }
-        chain.reverse();
-        mappingFields.ECTDSection = chain.length > 0 ? chain[0].name : (formData.moduleId || '');
-        mappingFields.ECTDSubsection = chain.length > 1 ? chain[chain.length - 1].name : (formData.submoduleId || '');
-      } else if (mappingType === 'GMP') {
-        const gmpModel = gmpModels.find(g => g.id === formData.moduleId);
-        mappingFields.GMPModel = gmpModel?.name || formData.moduleId || '';
-      } else if (mappingType === 'TMF') {
-        const byId = new Map(tmfFolders.map(m => [m.id, m]));
-        const leafId = formData.submoduleId || formData.moduleId;
-        const chain: FolderItem[] = [];
-        let n = leafId ? byId.get(leafId) : undefined;
-        while (n) { chain.push(n); if (!n.parentId) break; n = byId.get(n.parentId); }
-        chain.reverse();
-        mappingFields.TMFZone = chain.length > 0 ? chain[0].name : (formData.moduleId || '');
-        mappingFields.TMFSection = chain.length > 1 ? chain[chain.length - 1].name : (formData.submoduleId || '');
-      }
 
       // Step 1: update all required metadata fields (always succeeds if SP list is correct)
       await provider.updateItem(
@@ -616,25 +679,35 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         Number(createdId)
       );
 
-      // Step 2: try to save mapping-type fields separately.
-      // These columns (MappingType, ECTDSection, GMPModel, TMFZone, TMFSection) must exist
-      // in the SharePoint list. If they don't exist yet, this step is silently skipped so
-      // the document creation still succeeds.
-      if (Object.keys(mappingFields).length > 0) {
-        try {
-          await provider.updateItem(mappingFields, ListNames.DMSDocuments, Number(createdId));
-        } catch (mappingErr: any) {
-          const msg = String(mappingErr?.message || mappingErr || '');
-          if (msg.includes('400') || msg.includes('does not exist') || msg.includes('InvalidClientQuery')) {
-            console.warn(
-              'Mapping columns (MappingType / ECTDSection / GMPModel / TMFZone / TMFSection) ' +
-              'do not exist in the DMS Documents list yet. Document created without mapping metadata. ' +
-              'Please add the columns to the SharePoint list to enable this feature.',
-              mappingErr
-            );
-          } else {
-            throw mappingErr;
-          }
+      // Step 2: save mapping lookup IDs using the same column names as the Templates library.
+      // These columns must exist in DMSDocuments as lookup columns (same type as Templates library):
+      //   MappingType (text/choice), MappedCTDFolderId (lookup→CTDFolders),
+      //   eCTDSectionId (lookup→EctdSections), MappedGMPModelId (lookup→GmpModels),
+      //   MappedTMFFolderId (lookup→TMFFolders)
+      // If the columns don't exist yet the error is swallowed so document creation still succeeds.
+      const mappingFields: Record<string, string | number | null> = { MappingType: mappingType };
+      if (mappingType === 'eCTD') {
+        mappingFields.MappedCTDFolderId = selTemplate.mappedCTDFolderId || null;
+        mappingFields.eCTDSectionId     = selTemplate.ectdSectionId     || null;
+      } else if (mappingType === 'GMP') {
+        mappingFields.MappedGMPModelId  = selTemplate.mappedGMPModelId  || null;
+      } else if (mappingType === 'TMF') {
+        mappingFields.MappedTMFFolderId = selTemplate.mappedTMFFolderId || null;
+      }
+
+      try {
+        await provider.updateItem(mappingFields, ListNames.DMSDocuments, Number(createdId));
+      } catch (mappingErr: any) {
+        const msg = String(mappingErr?.message || mappingErr || '');
+        if (msg.includes('400') || msg.includes('does not exist') || msg.includes('InvalidClientQuery')) {
+          console.warn(
+            'Mapping lookup columns (MappingType / MappedCTDFolderId / eCTDSectionId / ' +
+            'MappedGMPModelId / MappedTMFFolderId) do not exist in the DMSDocuments library. ' +
+            'Please add them as lookup columns matching the Templates library setup.',
+            mappingErr
+          );
+        } else {
+          throw mappingErr;
         }
       }
 

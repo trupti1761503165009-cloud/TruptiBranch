@@ -176,6 +176,20 @@ export function ManageTemplateUploadData() {
         const ext = extMatch ? extMatch[0] : '';
         const uploadName = `${sanitizeFileBase(formData.name)}${ext}`;
 
+        // Auto-deactivate all previous versions with the same base name before uploading new version
+        const newBaseName = sanitizeFileBase(formData.name).toLowerCase();
+        const previousVersions = items.filter(item => {
+          const existingBase = item.name.replace(/\.[^.]+$/, '').toLowerCase();
+          return existingBase === newBaseName && item.status === 'Active';
+        });
+        if (previousVersions.length > 0) {
+          await Promise.all(
+            previousVersions.map(prev =>
+              provider.updateItem({ Status: 'Inactive' }, ListNames.Templates, prev.id)
+            )
+          );
+        }
+
         await provider.uploadFile(
           { name: uploadName, file, folderServerRelativeURL: folderUrl },
           true,

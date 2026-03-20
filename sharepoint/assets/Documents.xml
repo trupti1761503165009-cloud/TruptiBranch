@@ -8,9 +8,16 @@
     - Set to TRUE by SPFx code on every status change
     - Power Automate reads this flag, sends email, then sets it back to FALSE
     - This prevents duplicate emails on subsequent item updates
+
+  Mapping columns mirror the Templates library exactly:
+    MappingType   → Choice (eCTD / GMP / TMF / None)
+    MappedCTDFolder → Lookup → CTDFolders (ShowField=FolderId)
+    MappedGMPModel  → Lookup → GMPModels  (ShowField=Title)
+    MappedTMFFolder → Lookup → TMFFolders (ShowField=Title)
+    eCTDSection     → Lookup → eCTDSections (ShowField=SectionCode)
+    eCTDSubsection  → Text (optional free-text subsection)
 -->
-<List xmlns:ows="Microsoft SharePoint" Title="DMS Documents" Direction="$Resources:Directio
-  n;" Url="Sam" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
+<List xmlns:ows="Microsoft SharePoint" Title="DMS Documents" Direction="$Resources:Direction;" Url="DMSDocuments" BaseType="1" xmlns="http://schemas.microsoft.com/sharepoint/">
   <MetaData>
     <ContentTypes>
       <ContentTypeRef ID="0x0101">
@@ -50,7 +57,7 @@
       <!-- Audit Trail: JSON array of { id, author, text, timestamp } entries -->
       <Field ID="{ebcf7b26-9050-44c5-9dfc-2591634b5ab2}" Type="Note" Name="Comments" DisplayName="Comments" NumLines="10" />
 
-      <!-- CTD/eCTD Mapping Fields -->
+      <!-- Legacy CTD text fields (kept for backward compatibility) -->
       <Field ID="{625ae34d-afbc-4d09-a947-8e013921ccc1}" Type="Text" Name="CTDFolder" DisplayName="CTD Folder" />
       <Field ID="{e90ae974-ee12-469a-98f8-212723cb3cc0}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
       <Field ID="{965afcd0-0aab-4727-a811-bfcd29d7912c}" Type="Text" Name="Submodule" DisplayName="Submodule" />
@@ -70,10 +77,7 @@
       <!-- URL: SharePoint document URL -->
       <Field ID="{d6a6eddf-2aef-444b-b86e-3e24a15111ce}" Type="URL" Name="SharePointURL" DisplayName="SharePoint URL" />
 
-      <!-- EMAIL TRIGGER FLAG
-           Set to TRUE by SPFx whenever Status changes.
-           Power Automate triggers on item modification, reads this flag, sends email, then sets it to FALSE.
-           This prevents duplicate email sends on subsequent minor updates. -->
+      <!-- EMAIL TRIGGER FLAG -->
       <Field ID="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" Type="Boolean" Name="IsEmailSend" DisplayName="Is Email Send" />
 
       <!-- Adobe Sign: Agreement ID returned by Adobe Sign after initiation -->
@@ -84,6 +88,37 @@
 
       <!-- Soft delete flag -->
       <Field ID="{D4E5F6A7-B8C9-0123-DEF0-234567890123}" Type="Boolean" Name="IsDeleted" DisplayName="Is Deleted" />
+
+      <!-- ═══════════════════════════════════════════════════════════════════
+           MAPPING COLUMNS — mirror the Templates library exactly.
+           These allow the document grid to show the full eCTD/GMP/TMF
+           hierarchy and let Power Automate / reporting query by framework.
+           ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- MappingType: which regulatory framework this document belongs to -->
+      <Field ID="{1A2B3C4D-5E6F-7890-ABCD-EF1234567891}" Type="Choice" Name="MappingType" DisplayName="Mapping Type" Default="None">
+        <CHOICES>
+          <CHOICE>eCTD</CHOICE>
+          <CHOICE>GMP</CHOICE>
+          <CHOICE>TMF</CHOICE>
+          <CHOICE>None</CHOICE>
+        </CHOICES>
+      </Field>
+
+      <!-- Lookup: CTD Folder this document is mapped to (eCTD documents) -->
+      <Field ID="{2B3C4D5E-6F7A-8901-BCDE-F12345678902}" Type="Lookup" Name="MappedCTDFolder" DisplayName="Mapped CTD Folder" List="Lists/CTDFolders" ShowField="FolderId" />
+
+      <!-- Lookup: GMP Model this document is mapped to (GMP documents) -->
+      <Field ID="{3C4D5E6F-7A8B-9012-CDEF-123456789013}" Type="Lookup" Name="MappedGMPModel" DisplayName="Mapped GMP Model" List="Lists/GMPModels" ShowField="Title" />
+
+      <!-- Lookup: TMF Folder this document is mapped to (TMF documents) -->
+      <Field ID="{4D5E6F7A-8B9C-0123-DEF0-234567890124}" Type="Lookup" Name="MappedTMFFolder" DisplayName="Mapped TMF Folder" List="Lists/TMFFolders" ShowField="Title" />
+
+      <!-- Lookup: eCTD Section this document sits under (eCTD documents) -->
+      <Field ID="{5E6F7A8B-9C0D-1234-EF01-345678901235}" Type="Lookup" Name="eCTDSection" DisplayName="eCTD Section" List="Lists/eCTDSections" ShowField="SectionCode" />
+
+      <!-- Optional free-text eCTD subsection label -->
+      <Field ID="{6F7A8B9C-0D1E-2345-F012-456789012346}" Type="Text" Name="eCTDSubsection" DisplayName="eCTD Subsection" />
     </Fields>
     <Views>
       <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,AllDocuments;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/dlicon.png" Url="Forms/AllItems.aspx">
@@ -96,16 +131,21 @@
           <FieldRef Name="Drug"></FieldRef>
           <FieldRef Name="Country"></FieldRef>
           <FieldRef Name="Status"></FieldRef>
+          <FieldRef Name="MappingType"></FieldRef>
+          <FieldRef Name="MappedCTDFolder"></FieldRef>
+          <FieldRef Name="MappedGMPModel"></FieldRef>
+          <FieldRef Name="MappedTMFFolder"></FieldRef>
+          <FieldRef Name="eCTDSection"></FieldRef>
+          <FieldRef Name="eCTDSubsection"></FieldRef>
           <FieldRef Name="Reviewer"></FieldRef>
           <FieldRef Name="Approver"></FieldRef>
-          <FieldRef Name="IsEmailSend"></FieldRef>
-          <FieldRef Name="AdobeAgreementId"></FieldRef>
-          <FieldRef Name="CTDFolder"></FieldRef>
-          <FieldRef Name="CTDModule"></FieldRef>
-          <FieldRef Name="Submodule"></FieldRef>
           <FieldRef Name="Template"></FieldRef>
           <FieldRef Name="DocumentVersion"></FieldRef>
           <FieldRef Name="SentBy"></FieldRef>
+          <FieldRef Name="IsEmailSend"></FieldRef>
+          <FieldRef Name="CTDFolder"></FieldRef>
+          <FieldRef Name="CTDModule"></FieldRef>
+          <FieldRef Name="Submodule"></FieldRef>
           <FieldRef Name="Modified"></FieldRef>
         </ViewFields>
         <Query>
