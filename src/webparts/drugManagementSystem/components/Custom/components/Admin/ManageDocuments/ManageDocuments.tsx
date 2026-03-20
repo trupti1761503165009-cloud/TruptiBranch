@@ -508,7 +508,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
     // Append documents that are mapped directly to the current folder node
     const docRows = docsForCurrentFolder.map((d) => ({
       id: `doc-${d.id}`,
-      name: d.title || d.fileName || '',
+      name: d.name || d.fileName || '',
       count: undefined as any,
       isDocument: true,
       docItem: d
