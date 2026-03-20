@@ -62,8 +62,8 @@
       <Field ID="{e90ae974-ee12-469a-98f8-212723cb3cc0}" Type="Text" Name="CTDModule" DisplayName="CTD Module" />
       <Field ID="{965afcd0-0aab-4727-a811-bfcd29d7912c}" Type="Text" Name="Submodule" DisplayName="Submodule" />
 
-      <!-- Lookup: Template used to create this document -->
-      <Field ID="{d58e269f-77ba-4ea9-afc6-dbe1c16e5546}" Type="Lookup" Name="Template" DisplayName="Template" List="Templates" ShowField="Title" />
+      <!-- Number: Template ID (plain number, avoids SP lookup column limit) -->
+      <Field ID="{d58e269f-77ba-4ea9-afc6-dbe1c16e5546}" Type="Number" Name="TemplateId" DisplayName="TemplateId" Decimals="0" />
 
       <!-- Document content (metadata only) -->
       <Field ID="{2e53bce2-d700-4442-9f04-5c036459cd7d}" Type="Note" Name="Content" DisplayName="Content" />
@@ -139,7 +139,7 @@
           <FieldRef Name="eCTDSubsection"></FieldRef>
           <FieldRef Name="Reviewer"></FieldRef>
           <FieldRef Name="Approver"></FieldRef>
-          <FieldRef Name="Template"></FieldRef>
+          <FieldRef Name="TemplateId"></FieldRef>
           <FieldRef Name="DocumentVersion"></FieldRef>
           <FieldRef Name="SentBy"></FieldRef>
           <FieldRef Name="IsEmailSend"></FieldRef>
