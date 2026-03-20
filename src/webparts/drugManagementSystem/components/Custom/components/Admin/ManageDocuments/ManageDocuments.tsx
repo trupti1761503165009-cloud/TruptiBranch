@@ -375,7 +375,14 @@ export const ManageDocuments: React.FC<any> = (props) => {
     setFolderTrail([]);
     setFolderSearchTerm('');
     setIsFolderLoading(false);
-  }, [selectedDrugId]);
+    // Auto-switch the folder tree structure to match the selected drug's mapping type
+    if (selectedDrugId !== null) {
+      const drug = drugs.find(d => Number(d.id) === Number(selectedDrugId));
+      if (drug?.ctdStructure && drug.ctdStructure !== ctdStructure) {
+        handleStructureChange(drug.ctdStructure as 'ectd' | 'gmp' | 'tmf' | 'dossier');
+      }
+    }
+  }, [selectedDrugId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const findFolderNode = React.useCallback((nodes: CTDFolder[], key: any): CTDFolder | undefined => {
     const keyStr = String(key);
