@@ -142,7 +142,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
       // Countries — only active ones
       provider.getItemsByQuery({
         listName: ListNames.Countries,
-        select: ['ID', 'Title', 'Status'],
+        select: ['ID', 'Title', 'IsActive'],
         top: 5000,
         orderBy: 'Title',
         isSortOrderAsc: true
@@ -153,10 +153,10 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
         try {
           const q = new CamlBuilder()
             .View(['ID', 'LinkFilename', 'FileLeafRef', 'FileRef', 'Status',
-                   'Category', 'CategoryId', 'Country', 'CountryId',
-                   'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
-                   'MappedGMPModel', 'MappedGMPModelId',
-                   'MappedTMFFolder', 'MappedTMFFolderId'])
+              'Category', 'CategoryId', 'Country', 'CountryId',
+              'MappingType', 'MappedCTDFolder', 'MappedCTDFolderId',
+              'MappedGMPModel', 'MappedGMPModelId',
+              'MappedTMFFolder', 'MappedTMFFolderId'])
             .RowLimit(5000, true)
             .Query();
           const items = await provider.getItemsByCAMLQuery(ListNames.Templates, q.ToString());
@@ -217,7 +217,7 @@ export function AddDocumentModalData(params: AddDocumentModalDataParams) {
     setDrugs((drugItems || []).map((item: any) => ({ id: item.ID, name: item.Title })));
     setCountries(
       (countryItems || [])
-        .filter((item: any) => !item.Status || item.Status === 'Active')
+        .filter((item: any) => item.IsActive == true)
         .map((item: any) => ({ id: item.ID, name: item.Title }))
     );
 

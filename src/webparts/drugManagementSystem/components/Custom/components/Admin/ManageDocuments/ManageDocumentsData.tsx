@@ -865,6 +865,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     const status = err?.status || err?.response?.status || 0;
     const msg: string = err?.message || err?.data?.responseBody || '';
     if (status === 423 || msg.includes('[423]') || msg.toLowerCase().includes('locked for shared use')) {
+      // eslint-disable-next-line no-useless-escape
       const match = msg.match(/locked for shared use by ([^\."]+)/i);
       return { locked: true, lockedBy: match?.[1]?.trim() };
     }
@@ -889,7 +890,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           Comments: JSON.stringify(nextComments)
         },
         ListNames.DMSDocuments,
-        viewingDocument.id
+        Number(viewingDocument.id)
       );
       await loadData();
       setIsDocPanelOpen(false);
@@ -994,7 +995,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           Comments: JSON.stringify(nextComments)
         },
         ListNames.DMSDocuments,
-        viewingDocument.id
+        Number(viewingDocument.id)
       );
       await loadData();
       setIsRejectModalOpen(false);

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-
 import { IDataProvider } from "./models/IDataProvider";
 import IPnPQueryOptions, { IPnPCAMLQueryOptions } from "./models/IPnPQueryOptions";
 
@@ -204,26 +203,26 @@ export default class Service implements IDataProvider {
         } catch (error: any) {
             const errMsg: string = String(error?.message || error || '');
             const is423 = errMsg.includes('[423]') || errMsg.includes('423') && errMsg.toLowerCase().includes('lock');
-            if (is423) {
-                // File is locked by Word Online. Fall back to validateUpdateListItem which
-                // performs a form-based metadata update without acquiring the file lock.
-                console.warn('[updateItem] 423 lock error — retrying via validateUpdateListItem');
-                try {
-                    const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
-                        FieldName,
-                        FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
-                                  : (val === null || val === undefined) ? ''
-                                  : String(val)
-                    }));
-                    const fallbackResult = await this._sp.web.lists
-                        .getByTitle(listName).items.getById(itemId)
-                        .validateUpdateListItem(formValues, false);
-                    return fallbackResult;
-                } catch (fallbackError: any) {
-                    console.log("Error in validateUpdateListItem fallback for -" + listName, fallbackError);
-                    throw fallbackError;
-                }
-            }
+            // if (is423) {
+            //     // File is locked by Word Online. Fall back to validateUpdateListItem which
+            //     // performs a form-based metadata update without acquiring the file lock.
+            //     console.warn('[updateItem] 423 lock error — retrying via validateUpdateListItem');
+            //     try {
+            //         const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
+            //             FieldName,
+            //             FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
+            //                       : (val === null || val === undefined) ? ''
+            //                       : String(val)
+            //         }));
+            //         const fallbackResult = await this._sp.web.lists
+            //             .getByTitle(listName).items.getById(itemId)
+            //             .validateUpdateListItem(formValues, false);
+            //         return fallbackResult;
+            //     } catch (fallbackError: any) {
+            //         console.log("Error in validateUpdateListItem fallback for -" + listName, fallbackError);
+            //         throw fallbackError;
+            //     }
+            // }
             console.log("Error in updating item in -" + listName);
             throw error;
         }
