@@ -467,14 +467,19 @@ export const ManageDocuments: React.FC<any> = (props) => {
   const currentFolderId = folderTrail.length ? folderTrail[folderTrail.length - 1] : undefined;
 
   const docsForCurrentFolder = React.useMemo(() => {
-    if (!currentFolderNode) return filteredDocuments;
+    if (!currentFolderNode) {
+      // At drug root — only show documents with no folder mapping at all
+      return filteredDocuments.filter(
+        (d) => !normalized(d.ctdFolder) && !normalized(d.ctdModule) && !normalized(d.submodule)
+      );
+    }
+    // Match only against ctdFolder (the deepest selection saved on the document).
+    // Matching ctdModule (parent) would cause the document to appear at ancestor levels too.
     const folderKeys = new Set<string>();
     if (currentFolderNode.id != null) folderKeys.add(String(currentFolderNode.id));
     if (currentFolderNode.folderId) folderKeys.add(String(currentFolderNode.folderId));
-    return filteredDocuments.filter((d) =>
-      (normalized(d.ctdFolder) && folderKeys.has(normalized(d.ctdFolder))) ||
-      (normalized(d.ctdModule) && folderKeys.has(normalized(d.ctdModule))) ||
-      (normalized(d.submodule) && folderKeys.has(normalized(d.submodule)))
+    return filteredDocuments.filter(
+      (d) => normalized(d.ctdFolder) && folderKeys.has(normalized(d.ctdFolder))
     );
   }, [currentFolderNode, filteredDocuments]);
 
@@ -516,39 +521,128 @@ export const ManageDocuments: React.FC<any> = (props) => {
     return [...folderRows, ...docRows];
   }, [currentFolderChildren, filteredDocuments, getDescendantKeys, docsForCurrentFolder]);
 
-  const folderColumns: any[] = React.useMemo(
-    () => [
-      {
-        key: 'name',
-        name: 'FOLDER / DOCUMENT',
-        fieldName: 'name',
-        minWidth: 260,
-        maxWidth: 520,
-        isSortingRequired: true,
-        onRender: (item: any) => (
-          <div className="doc-name-cell">
-            <img
-              className="doc-icon"
-              src={getFileTypeIcon(item.isDocument ? (item.docItem?.fileName || 'docx') : 'folder')}
-              alt=""
-              style={{ width: 16, height: 16, marginRight: 8 }}
-            />
-            <span>{item.name}</span>
+  const folderColumns: any[] = [
+    {
+      key: 'name',
+      name: 'FOLDER / DOCUMENT',
+      fieldName: 'name',
+      minWidth: 260,
+      maxWidth: 520,
+      isSortingRequired: true,
+      onRender: (item: any) => (
+        <div className="doc-name-cell">
+          <img
+            className="doc-icon"
+            src={getFileTypeIcon(item.isDocument ? (item.docItem?.fileName || 'docx') : 'folder')}
+            alt=""
+            style={{ width: 16, height: 16, marginRight: 8 }}
+          />
+          <span>{item.name}</span>
+        </div>
+      )
+    },
+    {
+      key: 'count',
+      name: 'DOCUMENTS',
+      fieldName: 'count',
+      minWidth: 110,
+      maxWidth: 140,
+      isSortingRequired: true,
+      onRender: (item: any) => item.isDocument ? <span style={{ color: '#888' }}>—</span> : <span>{item.count}</span>
+    },
+    {
+      key: 'actions',
+      name: 'ACTIONS',
+      minWidth: 200,
+      maxWidth: 280,
+      onRender: (item: any) => {
+        if (!item.isDocument) return null;
+        const doc: Document = item.docItem;
+        const userEmail = String(currentUser?.email || currentUser?.loginName || '').toLowerCase();
+        const userId = currentUser?.id || 0;
+        const displayName = String((currentUser as any)?.displayName || '').toLowerCase().trim();
+        const docAuthor = String(doc.author || '').toLowerCase().trim();
+        const docSentBy = String((doc as any).sentBy || '').toLowerCase().trim();
+        const docApprover = String(doc.approver || '').toLowerCase().trim();
+        const isRowAuthor =
+          (userId > 0 && doc.authorId === userId) ||
+          (userId > 0 && (doc as any).sentById === userId) ||
+          (userEmail !== '' && (docAuthor.includes(userEmail) || docSentBy.includes(userEmail))) ||
+          (displayName !== '' && (docAuthor === displayName || docSentBy === displayName));
+        const isRowApprover = canApprove ||
+          (userId > 0 && doc.approverId === userId) ||
+          (userEmail !== '' && docApprover.includes(userEmail)) ||
+          (displayName !== '' && docApprover === displayName);
+        const isDocActive = !(doc as any).isDeleted && !(doc as any).isHidden;
+        const canSubmitRow  = isDocActive && (isAdmin || isRowAuthor) && (doc.status === 'Draft' || doc.status === 'Rejected');
+        const canApproveRow = isDocActive && (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canRejectRow  = isDocActive && (isAdmin || isRowApprover) && doc.status === 'Pending Approval';
+        const canInitiateSignatureRow = isDocActive && doc.status === 'Approved' && (isAdmin || isRowAuthor || isRowApprover);
+        const canSignRow = isDocActive && doc.status === 'Pending for Signature';
+        return (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'nowrap' }}>
+            <TooltipHost content="View Details">
+              <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#1E88E5' }}>
+                <FontAwesomeIcon icon={faEye} />
+              </Link>
+            </TooltipHost>
+            {doc.sharePointUrl && (
+              <TooltipHost content="Open Document">
+                <Link href={doc.sharePointUrl} target="_blank" style={{ fontSize: 16, color: '#43A047' }}>
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canSubmitRow && (
+              <TooltipHost content={doc.status === 'Rejected' ? 'Resubmit for Approval' : 'Submit for Approval'}>
+                <Link onClick={() => { setViewingDocument(doc); setIsSubmitConfirmOpen(true); }} style={{ fontSize: 16, color: doc.status === 'Rejected' ? '#F57C00' : '#1565C0' }}>
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canApproveRow && (
+              <TooltipHost content="Approve">
+                <Link onClick={() => { setViewingDocument(doc); setIsApproveConfirmOpen(true); }} style={{ fontSize: 16, color: '#2e7d32' }}>
+                  <FontAwesomeIcon icon={faCheck} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canRejectRow && (
+              <TooltipHost content="Reject">
+                <Link onClick={() => { setViewingDocument(doc); handleReject(); }} style={{ fontSize: 16, color: '#d32f2f' }}>
+                  <FontAwesomeIcon icon={faXmark} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canInitiateSignatureRow && (
+              <TooltipHost content="Initiate Signature">
+                <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#7B1FA2' }}>
+                  <FontAwesomeIcon icon={faFileSignature} />
+                </Link>
+              </TooltipHost>
+            )}
+            {canSignRow && (
+              <TooltipHost content="Sign Document">
+                <Link onClick={() => void handleViewDocument(doc)} style={{ fontSize: 16, color: '#00796B' }}>
+                  <FontAwesomeIcon icon={faFileSignature} />
+                </Link>
+              </TooltipHost>
+            )}
+            <TooltipHost content="Comments">
+              <Link onClick={() => { void handleViewDocument(doc, false).then(() => setIsCommentsModalOpen(true)); }} style={{ fontSize: 16, color: '#1300a6' }}>
+                <FontAwesomeIcon icon={faComments} />
+              </Link>
+            </TooltipHost>
+            <TooltipHost content="Version History">
+              <Link onClick={() => { void handleViewDocument(doc, false).then(() => setIsHistoryModalOpen(true)); }} style={{ fontSize: 16, color: '#546e7a' }}>
+                <FontAwesomeIcon icon={faClockRotateLeft} />
+              </Link>
+            </TooltipHost>
           </div>
-        )
-      },
-      {
-        key: 'count',
-        name: 'DOCUMENTS',
-        fieldName: 'count',
-        minWidth: 110,
-        maxWidth: 140,
-        isSortingRequired: true,
-        onRender: (item: any) => item.isDocument ? <span style={{ color: '#888' }}>—</span> : <span>{item.count}</span>
+        );
       }
-    ],
-    []
-  );
+    }
+  ];
 
   const documentColumns: any[] = [
     {
