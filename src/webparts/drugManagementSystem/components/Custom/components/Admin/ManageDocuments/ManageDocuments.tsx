@@ -495,7 +495,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
   }, [currentPage, docsForCurrentFolder, itemsPerPage]);
 
   const folderGridItems = React.useMemo(() => {
-    return currentFolderChildren.map((f) => {
+    const folderRows = currentFolderChildren.map((f) => {
       const descendantKeys = new Set(getDescendantKeys(f));
       const count = filteredDocuments.filter(
         (d) =>
@@ -503,15 +503,24 @@ export const ManageDocuments: React.FC<any> = (props) => {
           (normalized(d.ctdModule) && descendantKeys.has(normalized(d.ctdModule))) ||
           (normalized(d.submodule) && descendantKeys.has(normalized(d.submodule)))
       ).length;
-      return { id: f.id, name: f.name, count };
+      return { id: f.id, name: f.name, count, isDocument: false, docItem: undefined as any };
     });
-  }, [currentFolderChildren, filteredDocuments, getDescendantKeys]);
+    // Append documents that are mapped directly to the current folder node
+    const docRows = docsForCurrentFolder.map((d) => ({
+      id: `doc-${d.id}`,
+      name: d.title || d.fileName || '',
+      count: undefined as any,
+      isDocument: true,
+      docItem: d
+    }));
+    return [...folderRows, ...docRows];
+  }, [currentFolderChildren, filteredDocuments, getDescendantKeys, docsForCurrentFolder]);
 
   const folderColumns: any[] = React.useMemo(
     () => [
       {
         key: 'name',
-        name: 'FOLDER',
+        name: 'FOLDER / DOCUMENT',
         fieldName: 'name',
         minWidth: 260,
         maxWidth: 520,
@@ -520,7 +529,7 @@ export const ManageDocuments: React.FC<any> = (props) => {
           <div className="doc-name-cell">
             <img
               className="doc-icon"
-              src={getFileTypeIcon('folder')}
+              src={getFileTypeIcon(item.isDocument ? (item.docItem?.fileName || 'docx') : 'folder')}
               alt=""
               style={{ width: 16, height: 16, marginRight: 8 }}
             />
@@ -528,7 +537,15 @@ export const ManageDocuments: React.FC<any> = (props) => {
           </div>
         )
       },
-      { key: 'count', name: 'DOCUMENTS', fieldName: 'count', minWidth: 110, maxWidth: 140, isSortingRequired: true }
+      {
+        key: 'count',
+        name: 'DOCUMENTS',
+        fieldName: 'count',
+        minWidth: 110,
+        maxWidth: 140,
+        isSortingRequired: true,
+        onRender: (item: any) => item.isDocument ? <span style={{ color: '#888' }}>—</span> : <span>{item.count}</span>
+      }
     ],
     []
   );
@@ -1150,104 +1167,51 @@ export const ManageDocuments: React.FC<any> = (props) => {
               )}
             </div>
           ) : isShowingFolders ? (
-            <>
-              <MemoizedDataGridComponent
-                key={`folder-tree-${folderTrail.join('-') || 'root'}`}
-                items={folderGridItems}
-                columns={folderColumns}
-                reRenderComponent={true}
-                searchable={true}
-                isPagination={true}
-                onItemInvoked={(item?: any) => {
-                  if (item?.id) navigateToFolder(item.id);
-                }}
-                isAddNew={true}
-                addNewContent={
-                  <div className="dflex pb-1">
+            <MemoizedDataGridComponent
+              key={`folder-tree-${folderTrail.join('-') || 'root'}`}
+              items={folderGridItems}
+              columns={folderColumns}
+              reRenderComponent={true}
+              searchable={true}
+              isPagination={true}
+              onItemInvoked={(item?: any) => {
+                if (!item) return;
+                if (item.isDocument) {
+                  void handleViewDocument(item.docItem as Document);
+                } else if (item.id) {
+                  navigateToFolder(item.id);
+                }
+              }}
+              isAddNew={true}
+              addNewContent={
+                <div className="dflex pb-1">
+                  <Link
+                    className="actionBtn iconSize btnRefresh icon-mr"
+                    onClick={loadData}
+                  >
+                    <TooltipHost content={"Refresh Grid"}>
+                      <FontAwesomeIcon icon={faArrowsRotate} />
+                    </TooltipHost>
+                  </Link>
+                  {canCreate && !hideAddButton && (
                     <Link
-                      className="actionBtn iconSize btnRefresh icon-mr"
-                      onClick={loadData}
+                      className="actionBtn iconSize btnEdit ml-10"
+                      onClick={() => {
+                        props.manageComponentView({
+                          currentComponentName: ComponentNameEnum.AddDocument,
+                          componentProps: { drugId: selectedDrugId }
+                        });
+                      }}
                     >
-                      <TooltipHost content={"Refresh Grid"}>
-                        <FontAwesomeIcon icon={faArrowsRotate} />
+                      <TooltipHost content="Add Document">
+                        <FontAwesomeIcon icon={faPlus} />
                       </TooltipHost>
                     </Link>
-                    {canCreate && !hideAddButton && (
-                      <Link
-                        className="actionBtn iconSize btnEdit ml-10"
-                        onClick={() => {
-                          props.manageComponentView({
-                            currentComponentName: ComponentNameEnum.AddDocument,
-                            componentProps: { drugId: selectedDrugId }
-                          });
-                        }}
-                      >
-                        <TooltipHost content="Add Document">
-                          <FontAwesomeIcon icon={faPlus} />
-                        </TooltipHost>
-                      </Link>
-                    )}
-                  </div>
-                }
-                onSelectedItem={() => {}}
-              />
-              {docsForCurrentFolder.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#555', padding: '6px 0 8px 4px', borderBottom: '1px solid #e0e0e0', marginBottom: 8 }}>
-                    Documents at this level ({docsForCurrentFolder.length})
-                  </div>
-                  <MemoizedDataGridComponent
-                    key={`folder-inline-docs-${currentFolderId || 'root'}`}
-                    items={folderCurrentPageData}
-                    columns={effectiveColumns}
-                    reRenderComponent={true}
-                    searchable={false}
-                    isPagination={true}
-                    CustomselectionMode={isVisibleCrud.current ? 2 : 0}
-                    onSelectedItem={_onItemSelected}
-                    onItemInvoked={(item?: any) => { if (item) void handleViewDocument(item as Document); }}
-                    isAddNew={false}
-                    addEDButton={
-                      isDisplayEDbtn && isVisibleCrud.current && (
-                        <div className="dflex">
-                          {isDisplayEditButtonview && (
-                            <>
-                              <Link
-                                className="actionBtn iconSize btnView"
-                                onClick={() => { if (updateItem.length > 0) void handleViewDocument(updateItem[0]); }}
-                              >
-                                <TooltipHost content={"View Detail"}>
-                                  <FontAwesomeIcon icon={faEye} />
-                                </TooltipHost>
-                              </Link>
-                              {canEdit && updateItem[0] && isAuthorForDoc(updateItem[0]) && (updateItem[0].status === 'Draft' || updateItem[0].status === 'Rejected') && (
-                                <Link className="actionBtn iconSize btnEdit ml-10" onClick={onclickEdit}>
-                                  <TooltipHost content={"Edit Detail"}>
-                                    <FontAwesomeIcon icon={faPenToSquare} />
-                                  </TooltipHost>
-                                </Link>
-                              )}
-                            </>
-                          )}
-                          {canDelete && (
-                            <Link className="actionBtn iconSize btnDanger ml-10" onClick={onclickconfirmdelete}>
-                              <TooltipHost content={"Delete"}>
-                                <FontAwesomeIcon icon={faTrashCan} />
-                              </TooltipHost>
-                            </Link>
-                          )}
-                          <Link className="actionBtn iconSize btnGreen ml-10" onClick={() => handleExport('pdf')}>
-                            <TooltipHost content={"Export"}>
-                              <FontAwesomeIcon icon={faFileExport} />
-                            </TooltipHost>
-                          </Link>
-                        </div>
-                      )
-                    }
-                  />
+                  )}
                 </div>
-              )}
-            </>
+              }
+              onSelectedItem={() => {}}
+            />
           ) : (
             <MemoizedDataGridComponent
               key={`folder-docs-${currentFolderId || 'root'}`}
