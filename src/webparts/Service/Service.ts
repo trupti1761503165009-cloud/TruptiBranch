@@ -285,6 +285,7 @@ export default class Service implements IDataProvider {
                 // File is locked by Word Online.
                 // Fallback 1: validateUpdateListItem (form-based metadata update)
                 console.warn('[updateItem] 423 lock — retrying via validateUpdateListItem');
+                let needsSoap = false;
                 try {
                     const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
                         FieldName,
@@ -292,18 +293,31 @@ export default class Service implements IDataProvider {
                                   : (val === null || val === undefined) ? ''
                                   : String(val)
                     }));
-                    return await this._sp.web.lists
+                    const vResult: any[] = await this._sp.web.lists
                         .getByTitle(listName).items.getById(itemId)
                         .validateUpdateListItem(formValues, false);
+                    // validateUpdateListItem returns HTTP 200 even when fields are locked —
+                    // check each field's HasException flag to detect a silent failure.
+                    const failed = vResult?.filter?.((f: any) => f.HasException);
+                    if (failed && failed.length > 0) {
+                        console.warn('[updateItem] validateUpdateListItem had field exceptions:', failed.map((f: any) => `${f.FieldName}: ${f.ErrorMessage}`).join(', '));
+                        needsSoap = true;
+                    } else {
+                        return vResult;
+                    }
                 } catch (fallback1Error: any) {
+                    console.warn('[updateItem] validateUpdateListItem threw:', fallback1Error?.message);
+                    needsSoap = true;
+                }
+                if (needsSoap) {
                     // Fallback 2: SOAP UpdateListItems — bypasses co-authoring file lock
-                    console.warn('[updateItem] validateUpdateListItem also failed — retrying via SOAP');
+                    console.warn('[updateItem] retrying via SOAP Lists.asmx');
                     try {
                         await this._updateItemViaSoap(objItems, listName, itemId);
                         return { success: true };
                     } catch (soapError: any) {
                         console.error('[updateItem] SOAP fallback failed', soapError);
-                        throw fallback1Error;
+                        throw error; // throw original error so isFileLocked() shows the right message
                     }
                 }
             }
