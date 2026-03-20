@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { WebPartContext } from "@microsoft/sp-webpart-base";
+
 import { IDataProvider } from "./models/IDataProvider";
 import IPnPQueryOptions, { IPnPCAMLQueryOptions } from "./models/IPnPQueryOptions";
 
@@ -196,33 +197,90 @@ export default class Service implements IDataProvider {
         }
     }
 
+    // Detects a SharePoint 423 file-lock error regardless of how PnPjs surfaces it.
+    private _is423(error: any): boolean {
+        const status = Number(
+            (error as HttpRequestError)?.response?.status ??
+            error?.status ??
+            error?.data?.status ??
+            0
+        );
+        if (status === 423) return true;
+        const msg = String(error?.message || error || '').toLowerCase();
+        return msg.includes('[423]') || (msg.includes('423') && msg.includes('lock'));
+    }
+
+    // Updates list item metadata via the SharePoint SOAP endpoint, which bypasses
+    // the co-authoring file lock that blocks REST MERGE/validateUpdateListItem.
+    private async _updateItemViaSoap(objItems: any, listName: string, itemId: number): Promise<void> {
+        const webUrl: string = this._webPartContext.pageContext.web.absoluteUrl.replace(/\/$/, '');
+        const fieldsXml = Object.entries(objItems).map(([k, v]) => {
+            const raw = (v === null || v === undefined) ? '' : String(v);
+            const safe = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<Field Name="${k}">${safe}</Field>`;
+        }).join('');
+        const soapBody = `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><UpdateListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/"><listName>${listName}</listName><updates><Batch><Method ID="1" Cmd="Update"><Field Name="ID">${itemId}</Field>${fieldsXml}</Method></Batch></updates></UpdateListItems></soap:Body></soap:Envelope>`;
+
+        // Get form digest (required for authenticated POST to SOAP endpoint)
+        const digestResp = await fetch(`${webUrl}/_api/contextinfo`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json' }
+        });
+        const digestJson = await digestResp.json();
+        const digest: string = digestJson.FormDigestValue || '';
+
+        const soapResp = await fetch(`${webUrl}/_vti_bin/Lists.asmx`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'text/xml; charset=utf-8',
+                'SOAPAction': 'http://schemas.microsoft.com/sharepoint/soap/UpdateListItems',
+                'X-RequestDigest': digest
+            },
+            body: soapBody
+        });
+        if (!soapResp.ok) {
+            throw new Error(`SOAP UpdateListItems failed: HTTP ${soapResp.status}`);
+        }
+        const xml = await soapResp.text();
+        if (xml.includes('<ErrorCode>') && !xml.includes('<ErrorCode>0x00000000</ErrorCode>')) {
+            const errText = xml.match(/<ErrorText>([\s\S]*?)<\/ErrorText>/)?.[1] || 'SOAP error';
+            throw new Error(`SOAP UpdateListItems error: ${errText}`);
+        }
+    }
+
     public async updateItem(objItems: any, listName: string, itemId: number): Promise<any> {
         try {
             const itemUpdateResult = await this._sp.web.lists.getByTitle(listName).items.getById(itemId).update(objItems);
             return itemUpdateResult;
         } catch (error: any) {
-            const errMsg: string = String(error?.message || error || '');
-            const is423 = errMsg.includes('[423]') || errMsg.includes('423') && errMsg.toLowerCase().includes('lock');
-            // if (is423) {
-            //     // File is locked by Word Online. Fall back to validateUpdateListItem which
-            //     // performs a form-based metadata update without acquiring the file lock.
-            //     console.warn('[updateItem] 423 lock error — retrying via validateUpdateListItem');
-            //     try {
-            //         const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
-            //             FieldName,
-            //             FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
-            //                       : (val === null || val === undefined) ? ''
-            //                       : String(val)
-            //         }));
-            //         const fallbackResult = await this._sp.web.lists
-            //             .getByTitle(listName).items.getById(itemId)
-            //             .validateUpdateListItem(formValues, false);
-            //         return fallbackResult;
-            //     } catch (fallbackError: any) {
-            //         console.log("Error in validateUpdateListItem fallback for -" + listName, fallbackError);
-            //         throw fallbackError;
-            //     }
-            // }
+            if (this._is423(error)) {
+                // File is locked by Word Online.
+                // Fallback 1: validateUpdateListItem (form-based metadata update)
+                console.warn('[updateItem] 423 lock — retrying via validateUpdateListItem');
+                try {
+                    const formValues = Object.entries(objItems).map(([FieldName, val]) => ({
+                        FieldName,
+                        FieldValue: (typeof val === 'boolean') ? (val ? '1' : '0')
+                                  : (val === null || val === undefined) ? ''
+                                  : String(val)
+                    }));
+                    return await this._sp.web.lists
+                        .getByTitle(listName).items.getById(itemId)
+                        .validateUpdateListItem(formValues, false);
+                } catch (fallback1Error: any) {
+                    // Fallback 2: SOAP UpdateListItems — bypasses co-authoring file lock
+                    console.warn('[updateItem] validateUpdateListItem also failed — retrying via SOAP');
+                    try {
+                        await this._updateItemViaSoap(objItems, listName, itemId);
+                        return { success: true };
+                    } catch (soapError: any) {
+                        console.error('[updateItem] SOAP fallback failed', soapError);
+                        throw fallback1Error;
+                    }
+                }
+            }
             console.log("Error in updating item in -" + listName);
             throw error;
         }
