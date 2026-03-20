@@ -449,8 +449,12 @@ export const ManageDocuments: React.FC<any> = (props) => {
   }, [activeFolderTree, currentFolderNode, folderTrail.length]);
 
   const currentFolderChildren = React.useMemo(() => {
+    // Inside a drug view (Drug Structure tab): show ALL CTD/GMP/TMF folders so the full
+    // hierarchy is visible even when some modules have no documents yet.
+    // Outside a drug view: only show folders that have at least one document.
+    if (selectedDrugId !== null) return allFolderChildren;
     return allFolderChildren.filter((f) => folderHasDocuments(f, filteredDocuments));
-  }, [allFolderChildren, filteredDocuments, folderHasDocuments]);
+  }, [allFolderChildren, filteredDocuments, folderHasDocuments, selectedDrugId]);
 
   const isShowingFolders = currentFolderChildren.length > 0;
   const currentFolderId = folderTrail.length ? folderTrail[folderTrail.length - 1] : undefined;
