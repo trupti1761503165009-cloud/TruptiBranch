@@ -521,13 +521,27 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
         }))
       );
       setDrugs(
-        (drugsItems || []).map((item: any) => ({
-          id: item.ID,
-          name: item.Title,
-          category: item.Category || undefined,
-          status: item.Status || undefined,
-          ctdStructure: 'ectd'
-        }))
+        (drugsItems || []).map((item: any) => {
+          // Derive the dominant mapping type from this drug's already-mapped documents
+          const drugDocs = mappedDocs.filter(d => Number(d.drugId) === Number(item.ID));
+          const counts: Record<string, number> = { ectd: 0, gmp: 0, tmf: 0 };
+          for (const doc of drugDocs) {
+            const mt = (doc.mappingType || '').toLowerCase();
+            if (mt === 'ectd') counts.ectd++;
+            else if (mt === 'gmp') counts.gmp++;
+            else if (mt === 'tmf') counts.tmf++;
+          }
+          const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+          const ctdStructure: 'ectd' | 'gmp' | 'tmf' =
+            dominant && dominant[1] > 0 ? (dominant[0] as 'ectd' | 'gmp' | 'tmf') : 'ectd';
+          return {
+            id: item.ID,
+            name: item.Title,
+            category: item.Category || undefined,
+            status: item.Status || undefined,
+            ctdStructure
+          };
+        })
       );
       setErrorMessage('');
     } catch (error) {
