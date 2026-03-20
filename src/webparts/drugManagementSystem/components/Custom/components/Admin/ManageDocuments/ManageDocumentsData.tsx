@@ -349,8 +349,8 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     gmpModel: item.GMPModel || '',
     tmfZone: item.TMFZone || '',
     tmfSection: item.TMFSection || '',
-    template: parseLookupText(item.Template),
-    templateId: parseLookupId(item.TemplateId ?? item.Template),
+    template: '',
+    templateId: Number(item.TemplateId) || 0,
     content: item.Content || '',
     version: Number(item.DocumentVersion || item.OData__UIVersionString || 1),
     createdDate: item.Created ? new Date(item.Created).toISOString().split('T')[0] : '',
@@ -443,7 +443,6 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           'CategoryId',
           'Drug',
           'DrugId',
-          'Template',
           'TemplateId',
           'IsDelete',
           'UniqueId'
@@ -872,7 +871,6 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     const status = err?.status || err?.response?.status || 0;
     const msg: string = err?.message || err?.data?.responseBody || '';
     if (status === 423 || msg.includes('[423]') || msg.toLowerCase().includes('locked for shared use')) {
-      // eslint-disable-next-line no-useless-escape
       const match = msg.match(/locked for shared use by ([^\."]+)/i);
       return { locked: true, lockedBy: match?.[1]?.trim() };
     }
@@ -897,7 +895,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           Comments: JSON.stringify(nextComments)
         },
         ListNames.DMSDocuments,
-        Number(viewingDocument.id)
+        viewingDocument.id
       );
       await loadData();
       setIsDocPanelOpen(false);
@@ -1002,7 +1000,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
           Comments: JSON.stringify(nextComments)
         },
         ListNames.DMSDocuments,
-        Number(viewingDocument.id)
+        viewingDocument.id
       );
       await loadData();
       setIsRejectModalOpen(false);
