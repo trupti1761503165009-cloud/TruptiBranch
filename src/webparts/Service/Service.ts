@@ -213,22 +213,46 @@ export default class Service implements IDataProvider {
     // Updates list item metadata via the SharePoint SOAP endpoint, which bypasses
     // the co-authoring file lock that blocks REST MERGE/validateUpdateListItem.
     private async _updateItemViaSoap(objItems: any, listName: string, itemId: number): Promise<void> {
-        const webUrl: string = this._webPartContext.pageContext.web.absoluteUrl.replace(/\/$/, '');
+        // absoluteUrl may be a URL object or string depending on SPFx version — normalise to string
+        const webUrl: string = String(this._webPartContext.pageContext.web.absoluteUrl).replace(/\/$/, '');
+
         const fieldsXml = Object.entries(objItems).map(([k, v]) => {
             const raw = (v === null || v === undefined) ? '' : String(v);
             const safe = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return `<Field Name="${k}">${safe}</Field>`;
         }).join('');
-        const soapBody = `<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><UpdateListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/"><listName>${listName}</listName><updates><Batch><Method ID="1" Cmd="Update"><Field Name="ID">${itemId}</Field>${fieldsXml}</Method></Batch></updates></UpdateListItems></soap:Body></soap:Envelope>`;
 
-        // Get form digest (required for authenticated POST to SOAP endpoint)
-        const digestResp = await fetch(`${webUrl}/_api/contextinfo`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json' }
-        });
-        const digestJson = await digestResp.json();
-        const digest: string = digestJson.FormDigestValue || '';
+        const soapBody = [
+            '<?xml version="1.0" encoding="utf-8"?>',
+            '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+            '  xmlns:xsd="http://www.w3.org/2001/XMLSchema"',
+            '  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">',
+            '<soap:Body>',
+            '<UpdateListItems xmlns="http://schemas.microsoft.com/sharepoint/soap/">',
+            `<listName>${listName}</listName>`,
+            '<updates><Batch>',
+            '<Method ID="1" Cmd="Update">',
+            `<Field Name="ID">${itemId}</Field>`,
+            fieldsXml,
+            '</Method></Batch></updates>',
+            '</UpdateListItems></soap:Body></soap:Envelope>'
+        ].join('');
+
+        // Prefer the in-page form digest (no extra HTTP call); fall back to contextinfo
+        let digest: string = (this._webPartContext as any)?.pageContext?.legacyPageContext?.formDigestValue || '';
+        if (!digest) {
+            try {
+                const digestResp = await fetch(`${webUrl}/_api/contextinfo`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json' }
+                });
+                const digestJson = await digestResp.json();
+                digest = digestJson.FormDigestValue || '';
+            } catch (_) {
+                // continue without digest — some SharePoint versions don't require it on same origin
+            }
+        }
 
         const soapResp = await fetch(`${webUrl}/_vti_bin/Lists.asmx`, {
             method: 'POST',
@@ -236,7 +260,7 @@ export default class Service implements IDataProvider {
             headers: {
                 'Content-Type': 'text/xml; charset=utf-8',
                 'SOAPAction': 'http://schemas.microsoft.com/sharepoint/soap/UpdateListItems',
-                'X-RequestDigest': digest
+                ...(digest ? { 'X-RequestDigest': digest } : {})
             },
             body: soapBody
         });
@@ -244,8 +268,10 @@ export default class Service implements IDataProvider {
             throw new Error(`SOAP UpdateListItems failed: HTTP ${soapResp.status}`);
         }
         const xml = await soapResp.text();
-        if (xml.includes('<ErrorCode>') && !xml.includes('<ErrorCode>0x00000000</ErrorCode>')) {
-            const errText = xml.match(/<ErrorText>([\s\S]*?)<\/ErrorText>/)?.[1] || 'SOAP error';
+        // SOAP returns HTTP 200 even for errors — check the XML error code
+        const errorCodeMatch = xml.match(/<ErrorCode>([^<]+)<\/ErrorCode>/);
+        if (errorCodeMatch && errorCodeMatch[1] !== '0x00000000') {
+            const errText = xml.match(/<ErrorText>([^<]*)<\/ErrorText>/)?.[1] || `ErrorCode ${errorCodeMatch[1]}`;
             throw new Error(`SOAP UpdateListItems error: ${errText}`);
         }
     }
