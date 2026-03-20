@@ -605,7 +605,7 @@ export function ManageDocumentsData(options?: { filterByCurrentUser?: boolean; f
     }
 
     if (selectedDrugId !== null) {
-      filtered = filtered.filter(d => d.drugId === selectedDrugId);
+      filtered = filtered.filter(d => d.drugId != null && Number(d.drugId) === Number(selectedDrugId));
     }
 
     if (selectedFolder !== 'All') {
