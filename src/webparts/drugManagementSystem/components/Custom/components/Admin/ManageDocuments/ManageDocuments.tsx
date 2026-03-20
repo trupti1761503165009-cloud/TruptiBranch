@@ -403,10 +403,26 @@ export const ManageDocuments: React.FC<any> = (props) => {
 
   // Only show drug folders that have at least one document (any status).
   // Uses the unfiltered `documents` list so search/status filters don't hide drug folders.
-  const drugsWithDocs = React.useMemo(
-    () => (drugs || []).filter(drug => (documents || []).some(d => d.drugId === drug.id)),
-    [drugs, documents]
-  );
+  // Strategy 1: match against the loaded drugs list (Number() cast handles string/number mismatch).
+  // Strategy 2: if the drugs list is empty or yields no matches, derive drug entries directly
+  //             from the documents array — this handles cases where DrugsDatabase list fails
+  //             to load (wrong name, permissions) without breaking the folder view.
+  const drugsWithDocs = React.useMemo(() => {
+    const fromList = (drugs || []).filter(drug =>
+      (documents || []).some(d => d.drugId != null && Number(d.drugId) === Number(drug.id))
+    );
+    if (fromList.length > 0) return fromList;
+
+    // Fallback: build unique drug entries from documents themselves
+    const seen = new Map<number, { id: number; name: string }>();
+    for (const doc of (documents || [])) {
+      const id = Number(doc.drugId);
+      if (id > 0 && doc.drugName && !seen.has(id)) {
+        seen.set(id, { id, name: doc.drugName });
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [drugs, documents]);
 
   const normalized = (v?: string | number | null) => (v != null ? String(v) : '');
   const getDescendantKeys = React.useCallback((node: CTDFolder): string[] => {
